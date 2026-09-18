@@ -171,21 +171,60 @@ export function FraudGuardDashboard({
     [],
   );
 
-  // Sync nav items with product tabs
+  // Sync nav items with product tabs & rail
   const handleProductTabChange = useCallback((tab: string) => {
     setActiveProductTab(tab);
-    if (tab === "Overview") setActiveNavItem("risk-overview");
-    else if (tab === "Alerts") setActiveNavItem("recent-alerts");
-    else if (tab === "Cases") setActiveNavItem("active-cases");
-    else if (tab === "Rules") setActiveNavItem("rule-templates");
+    if (tab === "Overview" || tab === "Transactions") {
+      setActiveNavItem("risk-overview");
+      setActiveRailItem("dashboard");
+    } else if (tab === "Alerts") {
+      setActiveNavItem("recent-alerts");
+      setActiveRailItem("alerts");
+    } else if (tab === "Cases") {
+      setActiveNavItem("active-cases");
+      setActiveRailItem("cases");
+    } else if (tab === "Rules") {
+      setActiveNavItem("rule-templates");
+      setActiveRailItem("rules");
+    }
   }, []);
 
   const handleNavItemChange = useCallback((id: string) => {
     setActiveNavItem(id as SecondaryView);
-    if (id === "risk-overview") setActiveProductTab("Overview");
-    else if (id === "recent-alerts") setActiveProductTab("Alerts");
-    else if (id === "active-cases") setActiveProductTab("Cases");
-    else if (id === "rule-templates") setActiveProductTab("Rules");
+    if (id === "risk-overview") {
+      setActiveProductTab("Overview");
+      setActiveRailItem("dashboard");
+    } else if (id === "recent-alerts") {
+      setActiveProductTab("Alerts");
+      setActiveRailItem("alerts");
+    } else if (id === "active-cases") {
+      setActiveProductTab("Cases");
+      setActiveRailItem("cases");
+    } else if (id === "rule-templates") {
+      setActiveProductTab("Rules");
+      setActiveRailItem("rules");
+    } else if (id === "reports" || id === "audit-trail") {
+      setActiveRailItem("reports");
+    }
+  }, []);
+
+  const handleRailNavigate = useCallback((id: string) => {
+    setActiveRailItem(id);
+    if (id === "dashboard") {
+      setActiveNavItem("risk-overview");
+      setActiveProductTab("Overview");
+    } else if (id === "alerts") {
+      setActiveNavItem("recent-alerts");
+      setActiveProductTab("Alerts");
+    } else if (id === "cases") {
+      setActiveNavItem("active-cases");
+      setActiveProductTab("Cases");
+    } else if (id === "rules") {
+      setActiveNavItem("rule-templates");
+      setActiveProductTab("Rules");
+    } else if (id === "reports") {
+      setActiveNavItem("reports" as SecondaryView);
+    }
   }, []);
 
   /* ── Render active view ── */
@@ -295,7 +334,7 @@ export function FraudGuardDashboard({
   return (
     <ToastProvider>
       <div className={styles.root} data-theme={theme}>
-        <AppRail activeItem={activeRailItem} onNavigate={setActiveRailItem} />
+        <AppRail activeItem={activeRailItem} onNavigate={handleRailNavigate} />
         <div className={styles.workspace}>
           <ProductHeader
             activeTab={activeProductTab}

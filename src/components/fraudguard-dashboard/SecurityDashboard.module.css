@@ -14,7 +14,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  border-right: 1px solid #433752;
+  border-right: 1px solid var(--security-border);
   background: var(--security-rail);
   padding: 12px 8px 18px;
 }
@@ -38,6 +38,8 @@
   border-radius: 5px;
   background: transparent;
   color: #b9b2ca;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .railButton:hover,
@@ -99,6 +101,7 @@
   background: transparent;
   color: var(--security-muted);
   padding: 0 3px;
+  cursor: pointer;
 }
 
 .topNavButton:hover {
@@ -140,23 +143,41 @@
   align-items: stretch;
   border-right: 1px solid var(--security-border);
   background: var(--security-panel);
-  padding: 28px 12px 18px;
+  padding: 20px 8px 16px;
+  overflow-y: auto;
+}
+
+.navSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 18px;
 }
 
 .sectionLabel {
-  margin: 0 10px 16px;
+  margin: 0 10px 8px;
   color: var(--security-subtle);
   font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .secondaryNavButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
   border: 0;
   border-radius: 4px;
   background: transparent;
   color: var(--security-muted);
-  padding: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 400;
   text-align: left;
+  cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
@@ -167,15 +188,30 @@
 
 .secondaryNavButtonActive {
   background: var(--security-blue-bg);
-  box-shadow: inset 2px 0 var(--security-blue);
+  box-shadow: inset 3px 0 var(--security-blue);
   color: var(--security-blue);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.secondaryNavButtonActive:hover {
+  background: var(--security-blue-bg);
+  color: var(--security-blue);
+}
+
+.navItemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .systemStatus {
-  margin: 36px 10px 0;
+  margin-top: auto;
+  padding: 14px 10px 0;
+  border-top: 1px solid var(--security-border);
   color: var(--security-muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.8;
 }
 

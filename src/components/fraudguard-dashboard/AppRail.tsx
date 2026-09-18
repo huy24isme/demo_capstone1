@@ -1,10 +1,11 @@
-import { Shield, BarChart3, AlertTriangle, Briefcase, FileText, Settings } from "lucide-react";
+import { Shield, BarChart3, AlertTriangle, Briefcase, Sliders, FileText, Settings } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 
 const navItems = [
-  { id: "dashboard", icon: BarChart3, label: "Dashboard" },
-  { id: "alerts", icon: AlertTriangle, label: "Alerts" },
-  { id: "cases", icon: Briefcase, label: "Cases" },
+  { id: "dashboard", icon: BarChart3, label: "Risk Overview" },
+  { id: "alerts", icon: AlertTriangle, label: "Recent Alerts" },
+  { id: "cases", icon: Briefcase, label: "Active Cases" },
+  { id: "rules", icon: Sliders, label: "Rule Templates" },
   { id: "reports", icon: FileText, label: "Reports" },
   { id: "settings", icon: Settings, label: "Settings" },
 ];
