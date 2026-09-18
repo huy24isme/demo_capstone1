@@ -3,38 +3,25 @@
 import { Settings, Sun, Moon } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 
-const tabs = ["Overview", "Alerts", "Cases", "Rules"];
-
 interface ProductHeaderProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeViewTitle?: string;
   theme?: "dark" | "light";
   onToggleTheme?: () => void;
 }
 
 export function ProductHeader({
-  activeTab,
-  onTabChange,
+  activeViewTitle = "Risk Overview",
   theme = "dark",
   onToggleTheme,
 }: ProductHeaderProps) {
   return (
     <header className={styles.productHeader}>
       <div className={styles.headerLeft}>
-        <nav className={styles.topNav} aria-label="Product navigation">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              className={`${styles.topNavButton} ${
-                activeTab === tab ? styles.topNavButtonActive : ""
-              }`}
-              onClick={() => onTabChange(tab)}
-              type="button"
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
+        <div className={styles.headerBreadcrumb}>
+          <span className={styles.breadcrumbMuted}>FraudGuard</span>
+          <span className={styles.breadcrumbDivider}>/</span>
+          <span className={styles.breadcrumbCurrent}>{activeViewTitle}</span>
+        </div>
       </div>
 
       <div className={styles.headerRight}>
@@ -65,4 +52,5 @@ export function ProductHeader({
     </header>
   );
 }
+
 

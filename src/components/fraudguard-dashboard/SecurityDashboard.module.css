@@ -283,6 +283,28 @@
   gap: 24px;
 }
 
+.headerBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.breadcrumbMuted {
+  color: var(--security-muted);
+}
+
+.breadcrumbDivider {
+  color: var(--security-subtle);
+  font-size: 12px;
+}
+
+.breadcrumbCurrent {
+  color: var(--security-text);
+  font-weight: 600;
+}
+
 .headerRight {
   display: flex;
   align-items: center;

@@ -52,9 +52,7 @@ export function FraudGuardDashboard({
   const deferredQuery = useDeferredValue(filters.query.trim().toLowerCase());
 
   // Navigation state
-  const [activeProductTab, setActiveProductTab] = useState("Overview");
   const [activeNavItem, setActiveNavItem] = useState<SecondaryView>("risk-overview");
-  const [activeRailItem, setActiveRailItem] = useState("dashboard");
 
   // Global Theme state (dark / light)
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -170,31 +168,8 @@ export function FraudGuardDashboard({
     [],
   );
 
-  // Sync nav items with product tabs
-  const handleProductTabChange = useCallback((tab: string) => {
-    setActiveProductTab(tab);
-    if (tab === "Overview" || tab === "Transactions") {
-      setActiveNavItem("risk-overview");
-    } else if (tab === "Alerts") {
-      setActiveNavItem("recent-alerts");
-    } else if (tab === "Cases") {
-      setActiveNavItem("active-cases");
-    } else if (tab === "Rules") {
-      setActiveNavItem("rule-templates");
-    }
-  }, []);
-
   const handleNavItemChange = useCallback((id: string) => {
     setActiveNavItem(id as SecondaryView);
-    if (id === "risk-overview") {
-      setActiveProductTab("Overview");
-    } else if (id === "recent-alerts") {
-      setActiveProductTab("Alerts");
-    } else if (id === "active-cases") {
-      setActiveProductTab("Cases");
-    } else if (id === "rule-templates") {
-      setActiveProductTab("Rules");
-    }
   }, []);
 
   /* ── Render active view ── */
@@ -310,8 +285,15 @@ export function FraudGuardDashboard({
         />
         <div className={styles.workspace}>
           <ProductHeader
-            activeTab={activeProductTab}
-            onTabChange={handleProductTabChange}
+            activeViewTitle={
+              activeNavItem === "recent-alerts"
+                ? "Recent Alerts"
+                : activeNavItem === "active-cases"
+                ? "Active Cases"
+                : activeNavItem === "rule-templates"
+                ? "Rule Templates"
+                : "Risk Overview"
+            }
             theme={theme}
             onToggleTheme={toggleTheme}
           />
