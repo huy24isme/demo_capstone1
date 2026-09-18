@@ -1,0 +1,126 @@
+:root {
+  color-scheme: dark;
+
+  /* Background hierarchy */
+  --security-bg: #17181c;
+  --security-header: #1f2025;
+  --security-panel: #202126;
+  --security-panel-hover: #292c35;
+  --security-control: #292a32;
+  --security-control-hover: #353640;
+  --security-rail: #252130;
+
+  /* Borders */
+  --security-border: #35363e;
+  --security-border-strong: #454752;
+
+  /* Typography */
+  --security-text: #e5e5ec;
+  --security-text-secondary: #b5b8c4;
+  --security-muted: #9799a7;
+  --security-subtle: #777b8b;
+
+  /* Accent colors */
+  --security-blue: #71b9f4;
+  --security-blue-bg: #34546c;
+  --security-purple: #ad8af3;
+  --security-purple-bg: #594076;
+  --security-green: #78c9ac;
+  --security-orange: #eda765;
+  --security-red: #ed6775;
+
+  /* Severity */
+  --critical-text: #f68992;
+  --critical-bg: #512d35;
+  --critical-border: #7b3d46;
+  --high-text: #efb485;
+  --high-bg: #443328;
+  --high-border: #715139;
+  --medium-text: #c5a7f9;
+  --medium-bg: #372e49;
+  --medium-border: #5c4778;
+
+  /* Layout */
+  --app-rail-width: 56px;
+  --secondary-nav-width: 200px;
+  --product-header-height: 60px;
+  --panel-radius: 5px;
+  --content-max-width: 1900px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--security-bg);
+  color: var(--security-text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+}
+
+button,
+input,
+select {
+  color: inherit;
+  font: inherit;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
+a {
+  color: var(--security-blue);
+  text-decoration: none;
+}
+
+:where(button, a, input, select):focus-visible {
+  outline: 2px solid var(--security-blue);
+  outline-offset: 3px;
+}
+
+/* Skeleton loading */
+.skeleton {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    #25262c 25%,
+    #303139 50%,
+    #25262c 75%
+  );
+  background-size: 200% 100%;
+  animation: dashboardShimmer 1.3s linear infinite;
+}
+
+@keyframes dashboardShimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* Responsive layout variable overrides */
+@media (max-width: 1150px) {
+  :root {
+    --secondary-nav-width: 175px;
+  }
+}
+
+@media (max-width: 680px) {
+  :root {
+    --app-rail-width: 44px;
+  }
+}
