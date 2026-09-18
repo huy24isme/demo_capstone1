@@ -35,7 +35,9 @@ export function AppRail({ activeItem, onNavigate }: AppRailProps) {
       ))}
 
       <div className={styles.railBottom}>
-        <div className={styles.avatar} title="User">U</div>
+        <a href="/login" className={styles.avatar} title="Tài khoản (Click để Đăng xuất / Login)">
+          A
+        </a>
       </div>
     </nav>
   );
