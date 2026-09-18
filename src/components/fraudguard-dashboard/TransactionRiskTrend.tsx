@@ -36,15 +36,15 @@ export function TransactionRiskTrend() {
     <div className={styles.chartArea}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={mockTrendData}>
-          <CartesianGrid stroke="#383a44" strokeDasharray="3 3" />
-          <XAxis dataKey="date" stroke="#81889a" fontSize={10} />
-          <YAxis stroke="#81889a" fontSize={10} />
+          <CartesianGrid stroke="var(--security-border)" strokeDasharray="3 3" />
+          <XAxis dataKey="date" stroke="var(--security-muted)" fontSize={10} />
+          <YAxis stroke="var(--security-muted)" fontSize={10} />
           <Tooltip
             contentStyle={{
-              background: "#25272e",
-              border: "1px solid #454752",
+              background: "var(--security-panel)",
+              border: "1px solid var(--security-border)",
               borderRadius: 4,
-              color: "#e5e5ec",
+              color: "var(--security-text)",
             }}
           />
           <Legend />

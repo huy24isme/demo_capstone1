@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
 
-  /* Background hierarchy */
+  /* Background hierarchy (Dark Mode default) */
   --security-bg: #17181c;
   --security-header: #1f2025;
   --security-panel: #202126;
@@ -39,6 +39,9 @@
   --medium-text: #c5a7f9;
   --medium-bg: #372e49;
   --medium-border: #5c4778;
+  --low-text: #78c9ac;
+  --low-bg: #2d453b;
+  --low-border: #3f6858;
 
   /* Layout */
   --app-rail-width: 56px;
@@ -46,6 +49,52 @@
   --product-header-height: 60px;
   --panel-radius: 5px;
   --content-max-width: 1900px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Background hierarchy (Light Theme) */
+  --security-bg: #f3f4f7;
+  --security-header: #ffffff;
+  --security-panel: #ffffff;
+  --security-panel-hover: #f8fafc;
+  --security-control: #f0f2f6;
+  --security-control-hover: #e2e5ec;
+  --security-rail: #201c2e;
+
+  /* Borders */
+  --security-border: #e2e5eb;
+  --security-border-strong: #cbd2df;
+
+  /* Typography */
+  --security-text: #0f172a;
+  --security-text-secondary: #334155;
+  --security-muted: #64748b;
+  --security-subtle: #94a3b8;
+
+  /* Accent colors */
+  --security-blue: #2563eb;
+  --security-blue-bg: #dbeafe;
+  --security-purple: #7c3aed;
+  --security-purple-bg: #ede9fe;
+  --security-green: #059669;
+  --security-orange: #d97706;
+  --security-red: #dc2626;
+
+  /* Severity badges in Light Theme */
+  --critical-text: #991b1b;
+  --critical-bg: #fee2e2;
+  --critical-border: #fca5a5;
+  --high-text: #92400e;
+  --high-bg: #fef3c7;
+  --high-border: #fcd34d;
+  --medium-text: #5b21b6;
+  --medium-bg: #ede9fe;
+  --medium-border: #c4b5fd;
+  --low-text: #065f46;
+  --low-bg: #d1fae5;
+  --low-border: #6ee7b7;
 }
 
 * {
@@ -63,6 +112,7 @@ body {
   color: var(--security-text);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   font-size: 14px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 button,
@@ -114,13 +164,13 @@ a {
 
 /* Responsive layout variable overrides */
 @media (max-width: 1150px) {
-  :root {
+  :root, [data-theme="light"] {
     --secondary-nav-width: 175px;
   }
 }
 
 @media (max-width: 680px) {
-  :root {
+  :root, [data-theme="light"] {
     --app-rail-width: 44px;
   }
 }

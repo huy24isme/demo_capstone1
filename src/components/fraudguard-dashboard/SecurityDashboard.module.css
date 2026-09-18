@@ -106,7 +106,7 @@
 }
 
 .topNavButtonActive {
-  color: #fff;
+  color: var(--security-text);
 }
 
 .topNavButtonActive::after {
@@ -154,24 +154,27 @@
   border: 0;
   border-radius: 4px;
   background: transparent;
-  color: #b9bbc6;
+  color: var(--security-muted);
   padding: 10px;
   text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .secondaryNavButton:hover {
-  background: #30313b;
+  background: var(--security-control);
+  color: var(--security-text);
 }
 
 .secondaryNavButtonActive {
   background: var(--security-blue-bg);
   box-shadow: inset 2px 0 var(--security-blue);
-  color: #b9e1ff;
+  color: var(--security-blue);
+  font-weight: 500;
 }
 
 .systemStatus {
   margin: 36px 10px 0;
-  color: #a8abb5;
+  color: var(--security-muted);
   font-size: 12px;
   line-height: 1.8;
 }
@@ -195,7 +198,7 @@
 
 .breadcrumb {
   margin-bottom: 18px;
-  color: #818695;
+  color: var(--security-muted);
   font-size: 12px;
 }
 
@@ -238,7 +241,7 @@
   border: 1px solid var(--security-border-strong);
   border-radius: 4px;
   background: var(--security-control);
-  color: #d7d9e3;
+  color: var(--security-text);
   padding: 7px 10px;
   font-size: 12px;
 }
@@ -253,7 +256,7 @@
   min-height: 34px;
   border: 1px solid var(--security-border-strong);
   border-radius: 4px;
-  background: #191b21;
+  background: var(--security-control);
   color: var(--security-text);
   padding: 7px 10px;
 }
@@ -296,7 +299,7 @@
 .statDescription {
   display: block;
   margin-top: 9px;
-  color: #838896;
+  color: var(--security-muted);
   font-size: 11px;
 }
 
@@ -354,7 +357,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
-  color: #a4a8b5;
+  color: var(--security-muted);
   font-size: 10px;
 }
 
@@ -397,9 +400,9 @@
 }
 
 .low {
-  border-color: #3f665a;
-  background: #263c36;
-  color: #8cd5bc;
+  border-color: var(--low-border);
+  background: var(--low-bg);
+  color: var(--low-text);
 }
 
 /* Scoring source badges */
@@ -421,8 +424,8 @@
 }
 
 .scoringRule {
-  border-color: #2d5a7b;
-  background: #1e3a52;
+  border-color: var(--security-blue);
+  background: var(--security-blue-bg);
   color: var(--security-blue);
 }
 
@@ -460,7 +463,7 @@
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  color: #9fa4b4;
+  color: var(--security-muted);
   padding: 10px 0;
   font-size: 12px;
 }
@@ -468,6 +471,7 @@
 .tabActive {
   border-bottom-color: var(--security-blue);
   color: var(--security-blue);
+  font-weight: 500;
 }
 
 .tableScroll {
@@ -482,17 +486,17 @@
 }
 
 .table th {
-  border-bottom: 1px solid #3a3c46;
-  background: #25272e;
-  color: #a4aab9;
+  border-bottom: 1px solid var(--security-border);
+  background: var(--security-control);
+  color: var(--security-muted);
   padding: 10px 17px;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .table td {
-  border-bottom: 1px solid #30323b;
-  color: #aeb4c2;
+  border-bottom: 1px solid var(--security-border);
+  color: var(--security-text);
   padding: 13px 17px;
   font-size: 11px;
 }
@@ -502,7 +506,7 @@
 }
 
 .findingName {
-  color: #c5cae0;
+  color: var(--security-text);
   font-size: 12px;
   font-weight: 500;
 }
@@ -510,7 +514,7 @@
 .findingMeta {
   display: block;
   margin-top: 4px;
-  color: #818899;
+  color: var(--security-muted);
   font-size: 10px;
 }
 
@@ -781,9 +785,9 @@
 }
 
 .toast_success {
-  border-color: #3f665a;
-  background: #1e3a2f;
-  color: var(--security-green);
+  border-color: var(--low-border);
+  background: var(--low-bg);
+  color: var(--low-text);
 }
 
 .toast_error {
@@ -793,8 +797,8 @@
 }
 
 .toast_info {
-  border-color: #2d5a7b;
-  background: #1e3a52;
+  border-color: var(--security-blue);
+  background: var(--security-blue-bg);
   color: var(--security-blue);
 }
 
@@ -990,7 +994,7 @@
 .conditionGroup {
   border: 1px solid var(--security-border);
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--security-control) 60%, transparent);
   padding: 12px;
   margin-top: 8px;
 }
@@ -1179,7 +1183,7 @@
 .evidenceCard {
   border: 1px solid var(--security-border);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--security-control) 40%, transparent);
   padding: 12px 14px;
 }
 
@@ -1201,9 +1205,9 @@
   display: inline-block;
   padding: 2px 7px;
   border-radius: 3px;
-  background: rgba(237, 103, 117, 0.15);
-  border: 1px solid var(--security-red);
-  color: var(--security-red);
+  background: var(--critical-bg);
+  border: 1px solid var(--critical-border);
+  color: var(--critical-text);
   font-size: 10px;
   font-weight: 600;
 }
@@ -1212,7 +1216,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--security-control);
   border-radius: 4px;
   padding: 8px 10px;
   margin-bottom: 6px;

@@ -36,15 +36,15 @@ export function RiskDistributionChart({
     <div className={styles.chartArea}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={distribution}>
-          <CartesianGrid stroke="#383a44" strokeDasharray="3 3" />
-          <XAxis dataKey="level" stroke="#81889a" fontSize={10} />
-          <YAxis stroke="#81889a" fontSize={10} />
+          <CartesianGrid stroke="var(--security-border)" strokeDasharray="3 3" />
+          <XAxis dataKey="level" stroke="var(--security-muted)" fontSize={10} />
+          <YAxis stroke="var(--security-muted)" fontSize={10} />
           <Tooltip
             contentStyle={{
-              background: "#25272e",
-              border: "1px solid #454752",
+              background: "var(--security-panel)",
+              border: "1px solid var(--security-border)",
               borderRadius: 4,
-              color: "#e5e5ec",
+              color: "var(--security-text)",
             }}
           />
           <Bar dataKey="count" radius={[3, 3, 0, 0]}>

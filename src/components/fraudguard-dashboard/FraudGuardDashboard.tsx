@@ -57,6 +57,12 @@ export function FraudGuardDashboard({
   const [activeNavItem, setActiveNavItem] = useState<SecondaryView>("risk-overview");
   const [activeRailItem, setActiveRailItem] = useState("dashboard");
 
+  // Global Theme state (dark / light)
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  }, []);
+
   // Table state
   const [activeTab, setActiveTab] = useState<TableTab>("all");
   const [sort, setSort] = useState<SortState>({
@@ -288,12 +294,14 @@ export function FraudGuardDashboard({
 
   return (
     <ToastProvider>
-      <div className={styles.root}>
+      <div className={styles.root} data-theme={theme}>
         <AppRail activeItem={activeRailItem} onNavigate={setActiveRailItem} />
         <div className={styles.workspace}>
           <ProductHeader
             activeTab={activeProductTab}
             onTabChange={handleProductTabChange}
+            theme={theme}
+            onToggleTheme={toggleTheme}
           />
           <div className={styles.bodyLayout}>
             <SecondaryNav
