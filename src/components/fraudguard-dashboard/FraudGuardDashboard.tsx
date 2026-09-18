@@ -10,9 +10,8 @@ import type {
   TableTab,
   TransactionRisk,
 } from "./types";
-import { AppRail } from "./AppRail";
+import { Sidebar } from "./Sidebar";
 import { ProductHeader } from "./ProductHeader";
-import { SecondaryNav } from "./SecondaryNav";
 import { DashboardToolbar } from "./DashboardToolbar";
 import { StatCard } from "./StatCard";
 import { Panel } from "./Panel";
@@ -171,21 +170,17 @@ export function FraudGuardDashboard({
     [],
   );
 
-  // Sync nav items with product tabs & rail
+  // Sync nav items with product tabs
   const handleProductTabChange = useCallback((tab: string) => {
     setActiveProductTab(tab);
     if (tab === "Overview" || tab === "Transactions") {
       setActiveNavItem("risk-overview");
-      setActiveRailItem("dashboard");
     } else if (tab === "Alerts") {
       setActiveNavItem("recent-alerts");
-      setActiveRailItem("alerts");
     } else if (tab === "Cases") {
       setActiveNavItem("active-cases");
-      setActiveRailItem("cases");
     } else if (tab === "Rules") {
       setActiveNavItem("rule-templates");
-      setActiveRailItem("rules");
     }
   }, []);
 
@@ -193,37 +188,12 @@ export function FraudGuardDashboard({
     setActiveNavItem(id as SecondaryView);
     if (id === "risk-overview") {
       setActiveProductTab("Overview");
-      setActiveRailItem("dashboard");
     } else if (id === "recent-alerts") {
       setActiveProductTab("Alerts");
-      setActiveRailItem("alerts");
     } else if (id === "active-cases") {
       setActiveProductTab("Cases");
-      setActiveRailItem("cases");
     } else if (id === "rule-templates") {
       setActiveProductTab("Rules");
-      setActiveRailItem("rules");
-    } else if (id === "reports" || id === "audit-trail") {
-      setActiveRailItem("reports");
-    }
-  }, []);
-
-  const handleRailNavigate = useCallback((id: string) => {
-    setActiveRailItem(id);
-    if (id === "dashboard") {
-      setActiveNavItem("risk-overview");
-      setActiveProductTab("Overview");
-    } else if (id === "alerts") {
-      setActiveNavItem("recent-alerts");
-      setActiveProductTab("Alerts");
-    } else if (id === "cases") {
-      setActiveNavItem("active-cases");
-      setActiveProductTab("Cases");
-    } else if (id === "rules") {
-      setActiveNavItem("rule-templates");
-      setActiveProductTab("Rules");
-    } else if (id === "reports") {
-      setActiveNavItem("reports" as SecondaryView);
     }
   }, []);
 
@@ -334,7 +304,10 @@ export function FraudGuardDashboard({
   return (
     <ToastProvider>
       <div className={styles.root} data-theme={theme}>
-        <AppRail activeItem={activeRailItem} onNavigate={handleRailNavigate} />
+        <Sidebar
+          activeItem={activeNavItem}
+          onItemChange={handleNavItemChange}
+        />
         <div className={styles.workspace}>
           <ProductHeader
             activeTab={activeProductTab}
@@ -342,13 +315,7 @@ export function FraudGuardDashboard({
             theme={theme}
             onToggleTheme={toggleTheme}
           />
-          <div className={styles.bodyLayout}>
-            <SecondaryNav
-              activeItem={activeNavItem}
-              onItemChange={handleNavItemChange}
-            />
-            <main className={styles.main}>{renderView()}</main>
-          </div>
+          <main className={styles.main}>{renderView()}</main>
         </div>
 
         <AlertCaseDrawer

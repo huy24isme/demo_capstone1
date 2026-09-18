@@ -3,7 +3,7 @@
 import { Settings, Sun, Moon } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 
-const tabs = ["Overview", "Transactions", "Alerts", "Cases", "Rules"];
+const tabs = ["Overview", "Alerts", "Cases", "Rules"];
 
 interface ProductHeaderProps {
   activeTab: string;
@@ -20,57 +20,49 @@ export function ProductHeader({
 }: ProductHeaderProps) {
   return (
     <header className={styles.productHeader}>
-      <span className={styles.productName}>FraudGuard</span>
+      <div className={styles.headerLeft}>
+        <nav className={styles.topNav} aria-label="Product navigation">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              className={`${styles.topNavButton} ${
+                activeTab === tab ? styles.topNavButtonActive : ""
+              }`}
+              onClick={() => onTabChange(tab)}
+              type="button"
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-      <nav className={styles.topNav} aria-label="Product navigation">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={`${styles.topNavButton} ${
-              activeTab === tab ? styles.topNavButtonActive : ""
-            }`}
-            onClick={() => onTabChange(tab)}
-            type="button"
-          >
-            {tab}
-          </button>
-        ))}
-      </nav>
-
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+      <div className={styles.headerRight}>
         {/* Theme Toggle Button */}
         {onToggleTheme && (
           <button
-            className={styles.railButton}
+            className={styles.themeToggleBtn}
             onClick={onToggleTheme}
             title={theme === "dark" ? "Chuyển sang Light Theme" : "Chuyển sang Dark Theme"}
             aria-label="Toggle Theme"
             type="button"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 36,
-              height: 36,
-              borderRadius: 6,
-              border: "1px solid var(--security-border)",
-              background: "var(--security-control)",
-              color: theme === "dark" ? "#eda765" : "#7c3aed",
-            }}
           >
-            {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            {theme === "dark" ? <Sun size={15} color="#eda765" /> : <Moon size={15} color="#7c3aed" />}
+            <span>{theme === "dark" ? "Light" : "Dark"}</span>
           </button>
         )}
 
         <button
-          className={`${styles.railButton} ${styles.settingsButton}`}
+          className={styles.control}
           title="Settings"
           aria-label="Settings"
           type="button"
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, padding: 0 }}
         >
-          <Settings size={18} />
+          <Settings size={16} />
         </button>
       </div>
     </header>
   );
 }
+

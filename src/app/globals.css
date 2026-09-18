@@ -44,10 +44,9 @@
   --low-border: #3f6858;
 
   /* Layout */
-  --app-rail-width: 56px;
-  --secondary-nav-width: 200px;
+  --sidebar-width: 240px;
   --product-header-height: 60px;
-  --panel-radius: 5px;
+  --panel-radius: 6px;
   --content-max-width: 1900px;
 }
 
@@ -165,12 +164,7 @@ a {
 /* Responsive layout variable overrides */
 @media (max-width: 1150px) {
   :root, [data-theme="light"] {
-    --secondary-nav-width: 175px;
+    --sidebar-width: 210px;
   }
 }
 
-@media (max-width: 680px) {
-  :root, [data-theme="light"] {
-    --app-rail-width: 44px;
-  }
-}
