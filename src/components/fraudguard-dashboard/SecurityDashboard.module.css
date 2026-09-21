@@ -1433,3 +1433,178 @@
   line-height: 1.4;
 }
 
+/* Projects View */
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.projectCard {
+  border: 1px solid var(--security-border);
+  border-radius: 8px;
+  background: var(--security-panel);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.projectCard:hover {
+  border-color: var(--security-border-strong);
+}
+
+.projectCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.projectCardTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--security-text);
+  margin: 0 0 4px;
+}
+
+.projectCardDesc {
+  font-size: 11px;
+  color: var(--security-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.projectEnvBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.envProd {
+  background: rgba(120, 201, 172, 0.12);
+  border: 1px solid var(--security-green);
+  color: var(--security-green);
+}
+
+.envStaging {
+  background: rgba(237, 167, 101, 0.12);
+  border: 1px solid var(--security-orange);
+  color: var(--security-orange);
+}
+
+.apiKeyBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--security-control);
+  border: 1px solid var(--security-border-strong);
+}
+
+.apiKeyCode {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--security-text);
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quotaSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quotaHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--security-muted);
+}
+
+.quotaBar {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--security-control);
+  overflow: hidden;
+}
+
+.quotaFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.webhookRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--security-muted);
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--security-control) 40%, transparent);
+  border: 1px dashed var(--security-border);
+}
+
+.webhookUrl {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--security-blue);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Audit Trail */
+.auditActionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: monospace;
+  letter-spacing: 0.02em;
+}
+
+.auditActionUpdate {
+  background: var(--security-blue-bg);
+  color: var(--security-blue);
+  border: 1px solid var(--security-blue);
+}
+
+.auditActionCreate {
+  background: rgba(120, 201, 172, 0.15);
+  color: var(--security-green);
+  border: 1px solid var(--security-green);
+}
+
+.auditActionSecurity {
+  background: rgba(237, 167, 101, 0.15);
+  color: var(--security-orange);
+  border: 1px solid var(--security-orange);
+}
+
+.auditActionDelete {
+  background: var(--critical-bg);
+  color: var(--critical-text);
+  border: 1px solid var(--critical-border);
+}
+
+

@@ -9,6 +9,8 @@ import type {
   SortState,
   TableTab,
   TransactionRisk,
+  ProjectItem,
+  AuditLogEntry,
 } from "./types";
 import { Sidebar } from "./Sidebar";
 import { ProductHeader } from "./ProductHeader";
@@ -22,12 +24,19 @@ import { AlertCaseDrawer } from "./AlertCaseDrawer";
 import { AlertsView } from "./AlertsView";
 import { CasesView } from "./CasesView";
 import { RulesView } from "./RulesView";
+import { ProjectsView } from "./ProjectsView";
+import { ReportsView } from "./ReportsView";
+import { AuditTrailView } from "./AuditTrailView";
+import { initialProjects } from "../../data/fraudguard-projects";
+import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
 import { ToastProvider } from "./ToastProvider";
 import styles from "./SecurityDashboard.module.css";
 
 interface FraudGuardDashboardProps {
   initialTransactions: TransactionRisk[];
   initialRules: RuleTemplate[];
+  initialProjects?: ProjectItem[];
+  initialAuditLogs?: AuditLogEntry[];
 }
 
 const initialFilters: FraudGuardFilters = {
@@ -40,9 +49,21 @@ const initialFilters: FraudGuardFilters = {
   range: 30,
 };
 
+const VIEW_TITLES: Record<SecondaryView, string> = {
+  "risk-overview": "Risk Overview",
+  "recent-alerts": "Recent Alerts",
+  "active-cases": "Active Cases",
+  "rule-templates": "Rule Templates",
+  projects: "Projects & API Keys",
+  reports: "Reports & AI Performance",
+  "audit-trail": "Security Audit Trail",
+};
+
 export function FraudGuardDashboard({
   initialTransactions,
   initialRules,
+  initialProjects: defaultProjects = initialProjects,
+  initialAuditLogs: defaultAuditLogs = initialAuditLogs,
 }: FraudGuardDashboardProps) {
   // Data state (mutable for case management)
   const [transactions, setTransactions] = useState(initialTransactions);
@@ -192,6 +213,12 @@ export function FraudGuardDashboard({
         );
       case "rule-templates":
         return <RulesView initialRules={initialRules} />;
+      case "projects":
+        return <ProjectsView initialProjects={defaultProjects} />;
+      case "reports":
+        return <ReportsView transactions={transactions} />;
+      case "audit-trail":
+        return <AuditTrailView initialLogs={defaultAuditLogs} />;
       case "risk-overview":
       default:
         return (
@@ -285,15 +312,7 @@ export function FraudGuardDashboard({
         />
         <div className={styles.workspace}>
           <ProductHeader
-            activeViewTitle={
-              activeNavItem === "recent-alerts"
-                ? "Recent Alerts"
-                : activeNavItem === "active-cases"
-                ? "Active Cases"
-                : activeNavItem === "rule-templates"
-                ? "Rule Templates"
-                : "Risk Overview"
-            }
+            activeViewTitle={VIEW_TITLES[activeNavItem] || "Risk Overview"}
             theme={theme}
             onToggleTheme={toggleTheme}
           />

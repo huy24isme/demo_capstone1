@@ -120,3 +120,49 @@ export type SecondaryView =
   | "projects"
   | "reports"
   | "audit-trail";
+
+/* ── Project types ── */
+
+export interface ProjectItem {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  environment: "Production" | "Staging";
+  apiKey: string;
+  webhookUrl?: string;
+  quota: {
+    used: number;
+    total: number;
+    resetDate: string;
+  };
+  status: "Active" | "Inactive";
+  createdAt: string;
+}
+
+/* ── Audit Trail types ── */
+
+export type AuditAction =
+  | "CASE_STATUS_UPDATED"
+  | "RULE_CREATED"
+  | "RULE_TOGGLED"
+  | "RULE_DELETED"
+  | "API_KEY_GENERATED"
+  | "WEBHOOK_UPDATED"
+  | "ALERT_REVIEWED"
+  | "EXPORT_GENERATED";
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actor: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  action: AuditAction;
+  target: string;
+  ipAddress: string;
+  details: string;
+}
+

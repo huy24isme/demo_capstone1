@@ -1,0 +1,68 @@
+import type { ProjectItem } from "../components/fraudguard-dashboard/types";
+
+export const initialProjects: ProjectItem[] = [
+  {
+    id: "proj-checkout",
+    name: "Checkout Gateway",
+    code: "CHECKOUT_GW",
+    description: "Cổng thanh toán trực tuyến xử lý thẻ tín dụng, thẻ nội địa và QR Pay",
+    environment: "Production",
+    apiKey: "fg_live_9a7b2c4d8e1f0a3e5c7b9d1f",
+    webhookUrl: "https://api.merchant.com/v1/fraudguard-webhook",
+    quota: {
+      used: 48520,
+      total: 100000,
+      resetDate: "2026-10-01",
+    },
+    status: "Active",
+    createdAt: "2026-06-15T08:30:00Z",
+  },
+  {
+    id: "proj-wallet",
+    name: "Mobile Wallet",
+    code: "M_WALLET",
+    description: "Ví điện tử và chuyển tiền P2P, nạp rút tiền tức thời",
+    environment: "Production",
+    apiKey: "fg_live_3c8e1f0a9b2d4e6f8a0c2e4b",
+    webhookUrl: "https://wallet-sec.payhub.vn/alerts",
+    quota: {
+      used: 31200,
+      total: 50000,
+      resetDate: "2026-10-01",
+    },
+    status: "Active",
+    createdAt: "2026-07-02T10:15:00Z",
+  },
+  {
+    id: "proj-market",
+    name: "Marketplace",
+    code: "E_COMMERCE",
+    description: "Sàn thương mại điện tử đa nhà bán lẻ, xử lý đơn hàng và hoàn tiền",
+    environment: "Production",
+    apiKey: "fg_live_7d9e1a3c5b7f9a1c3e5d7b9f",
+    webhookUrl: "https://shop.marketplace.io/security/events",
+    quota: {
+      used: 12450,
+      total: 50000,
+      resetDate: "2026-10-01",
+    },
+    status: "Active",
+    createdAt: "2026-08-10T14:20:00Z",
+  },
+  {
+    id: "proj-insurance",
+    name: "Insurance Claims",
+    code: "INS_CLAIMS",
+    description: "Hệ thống tiếp nhận hồ sơ bồi thường bảo hiểm viện phí và xe cơ giới",
+    environment: "Staging",
+    apiKey: "fg_test_1f3a5b7c9e1d3f5a7b9c1e3d",
+    webhookUrl: "https://staging-claim.insurtech.com/api/notify",
+    quota: {
+      used: 2840,
+      total: 10000,
+      resetDate: "2026-10-01",
+    },
+    status: "Active",
+    createdAt: "2026-09-01T09:00:00Z",
+  },
+];
