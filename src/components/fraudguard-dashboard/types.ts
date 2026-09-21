@@ -119,7 +119,8 @@ export type SecondaryView =
   | "rule-templates"
   | "projects"
   | "reports"
-  | "audit-trail";
+  | "audit-trail"
+  | "platform-health";
 
 /* ── Project types ── */
 
@@ -193,5 +194,45 @@ export interface RolePermissions {
   canExport: boolean;
   isReadOnly: boolean;
   isSuperAdmin: boolean;
+}
+
+/* ── Platform Health & Tenant types ── */
+
+export type ServiceStatus = "Healthy" | "Degraded" | "Offline";
+
+export interface MicroserviceHealth {
+  id: string;
+  name: string;
+  type: "AI Service" | "Rule Gateway" | "Message Queue" | "Database / Cache";
+  version: string;
+  status: ServiceStatus;
+  latencyMs: number;
+  throughput: string;
+  cpuUsage: number;
+  memoryUsage: number;
+  uptime: string;
+  details: string;
+}
+
+export interface SmeTenantItem {
+  id: string;
+  name: string;
+  code: string;
+  plan: "Free Tier" | "Growth" | "Enterprise";
+  scoringEngine: "Dynamic Rules" | "AI Scoring + Fallback";
+  totalTransactions: number;
+  quotaLimit: number;
+  quotaUsed: number;
+  status: "Active" | "Warning" | "Suspended";
+  joinedDate: string;
+  activeProjectsCount: number;
+}
+
+export interface FallbackHourlyPoint {
+  time: string;
+  totalRequests: number;
+  aiRequests: number;
+  fallbackRequests: number;
+  avgLatencyMs: number;
 }
 

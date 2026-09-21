@@ -29,6 +29,7 @@ import { ProjectsView } from "./ProjectsView";
 import { ReportsView } from "./ReportsView";
 import { AuditTrailView } from "./AuditTrailView";
 import { RoleNoticeBanner } from "./RoleNoticeBanner";
+import { PlatformHealthView } from "./PlatformHealthView";
 import { initialProjects } from "../../data/fraudguard-projects";
 import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
 import { DEMO_USERS, getRolePermissions } from "../../data/fraudguard-roles";
@@ -60,6 +61,7 @@ const VIEW_TITLES: Record<SecondaryView, string> = {
   projects: "Projects & API Keys",
   reports: "Reports & AI Performance",
   "audit-trail": "Security Audit Trail",
+  "platform-health": "Platform Health & Tenants",
 };
 
 export function FraudGuardDashboard({
@@ -80,6 +82,19 @@ export function FraudGuardDashboard({
 
   const handleSwitchUser = useCallback((user: UserProfile) => {
     setCurrentUser(user);
+    if (user.role === "Platform Admin") {
+      setActiveNavItem("platform-health");
+    } else if (user.role === "Risk Staff" || user.role === "Viewer") {
+      setActiveNavItem((curr) =>
+        curr === "projects" || curr === "rule-templates" || curr === "platform-health"
+          ? "risk-overview"
+          : curr,
+      );
+    } else if (user.role === "SME Admin") {
+      setActiveNavItem((curr) =>
+        curr === "platform-health" ? "risk-overview" : curr,
+      );
+    }
   }, []);
 
   // Filter state
@@ -234,6 +249,8 @@ export function FraudGuardDashboard({
         return <ReportsView transactions={transactions} />;
       case "audit-trail":
         return <AuditTrailView initialLogs={defaultAuditLogs} />;
+      case "platform-health":
+        return <PlatformHealthView />;
       case "risk-overview":
       default:
         return (
@@ -259,30 +276,104 @@ export function FraudGuardDashboard({
               visibleTransactions={visibleTransactions}
             />
 
-            <section className={styles.metricsGrid}>
-              <StatCard
-                label="Transactions analyzed"
-                value={metrics.analyzed}
-                description={`Trong ${filters.range} ngày gần nhất`}
-              />
-              <StatCard
-                label="High-risk transactions"
-                value={metrics.highRisk}
-                description="High hoặc Critical"
-                tone="critical"
-              />
-              <StatCard
-                label="Open alerts"
-                value={metrics.openAlerts}
-                description="Chưa chuyển thành case"
-              />
-              <StatCard
-                label="Active cases"
-                value={metrics.activeCases}
-                description="Open hoặc Reviewing"
-                tone="warning"
-              />
-            </section>
+            {currentUser.role === "Risk Staff" ? (
+              <section className={styles.metricsGrid}>
+                <StatCard
+                  label="Pending alerts"
+                  value={metrics.openAlerts}
+                  description="Cảnh báo cần thẩm định ngay"
+                  tone={metrics.openAlerts > 0 ? "critical" : undefined}
+                />
+                <StatCard
+                  label="Active cases"
+                  value={metrics.activeCases}
+                  description="Hồ sơ đang điều tra (Open/Reviewing)"
+                  tone="warning"
+                />
+                <StatCard
+                  label="Critical transactions"
+                  value={
+                    visibleTransactions.filter((t) => t.riskLevel === "Critical").length
+                  }
+                  description="Mức rủi ro nghiêm trọng"
+                  tone="critical"
+                />
+                <StatCard
+                  label="Transactions analyzed"
+                  value={metrics.analyzed}
+                  description={`Trong ${filters.range} ngày gần nhất`}
+                />
+              </section>
+            ) : currentUser.role === "Viewer" ? (
+              <section className={styles.metricsGrid}>
+                <StatCard
+                  label="Total analyzed"
+                  value={metrics.analyzed}
+                  description={`Trong ${filters.range} ngày gần nhất`}
+                />
+                <StatCard
+                  label="High-risk ratio"
+                  value={
+                    metrics.analyzed > 0
+                      ? `${Math.round((metrics.highRisk / metrics.analyzed) * 100)}%`
+                      : "0%"
+                  }
+                  description={`${metrics.highRisk} giao dịch rủi ro`}
+                  tone="critical"
+                />
+                <StatCard
+                  label="False alarm rate"
+                  value={
+                    visibleTransactions.filter((t) => t.caseStatus).length > 0
+                      ? `${Math.round(
+                          (visibleTransactions.filter((t) => t.caseStatus === "False Alarm")
+                            .length /
+                            visibleTransactions.filter((t) => t.caseStatus).length) *
+                            100,
+                        )}%`
+                      : "0%"
+                  }
+                  description="Tỷ lệ báo động nhầm sau điều tra"
+                />
+                <StatCard
+                  label="Resolved audits"
+                  value={
+                    visibleTransactions.filter(
+                      (t) =>
+                        t.caseStatus === "Resolved" ||
+                        t.caseStatus === "Confirmed Fraud",
+                    ).length
+                  }
+                  description="Hồ sơ đã có kết luận"
+                  tone="warning"
+                />
+              </section>
+            ) : (
+              <section className={styles.metricsGrid}>
+                <StatCard
+                  label="Transactions analyzed"
+                  value={metrics.analyzed}
+                  description={`Trong ${filters.range} ngày gần nhất`}
+                />
+                <StatCard
+                  label="High-risk transactions"
+                  value={metrics.highRisk}
+                  description="High hoặc Critical"
+                  tone="critical"
+                />
+                <StatCard
+                  label="Open alerts"
+                  value={metrics.openAlerts}
+                  description="Chưa chuyển thành case"
+                />
+                <StatCard
+                  label="Active cases"
+                  value={metrics.activeCases}
+                  description="Open hoặc Reviewing"
+                  tone="warning"
+                />
+              </section>
+            )}
 
             <section className={styles.chartGrid}>
               <Panel

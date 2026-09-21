@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Shield,
@@ -11,13 +12,14 @@ import {
   FileText,
   History,
   LogOut,
+  Server,
 } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 import type { SecondaryView, UserProfile } from "./types";
 
 interface NavItem {
   label: string;
-  id: SecondaryView | "projects" | "reports" | "audit-trail";
+  id: SecondaryView;
   icon: LucideIcon;
   badge?: string | number;
 }
@@ -27,30 +29,92 @@ interface NavSection {
   items: NavItem[];
 }
 
-const sections: NavSection[] = [
-  {
-    title: "MONITORING",
-    items: [
-      { id: "risk-overview", label: "Risk Overview", icon: Activity },
-      { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
-      { id: "active-cases", label: "Active Cases", icon: Briefcase },
-    ],
-  },
-  {
-    title: "CONFIGURATION",
-    items: [
-      { id: "rule-templates", label: "Rule Templates", icon: Sliders },
-      { id: "projects", label: "Projects", icon: FolderKanban },
-    ],
-  },
-  {
-    title: "ANALYTICS",
-    items: [
-      { id: "reports", label: "Reports", icon: FileText },
-      { id: "audit-trail", label: "Audit Trail", icon: History },
-    ],
-  },
-];
+function getSectionsForRole(role?: string): NavSection[] {
+  if (role === "Platform Admin") {
+    return [
+      {
+        title: "PLATFORM SYSTEM",
+        items: [
+          { id: "platform-health", label: "Platform Health & Tenants", icon: Server },
+          { id: "audit-trail", label: "Global Audit Trail", icon: History },
+        ],
+      },
+      {
+        title: "TENANT SUPPORT",
+        items: [
+          { id: "risk-overview", label: "Tenant Risk Overview", icon: Activity },
+          { id: "rule-templates", label: "Tenant Rules", icon: Sliders },
+          { id: "reports", label: "Tenant Reports", icon: FileText },
+        ],
+      },
+    ];
+  }
+
+  if (role === "Risk Staff") {
+    return [
+      {
+        title: "INVESTIGATION & OPS",
+        items: [
+          { id: "risk-overview", label: "Risk Overview", icon: Activity },
+          { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
+          { id: "active-cases", label: "Active Cases", icon: Briefcase },
+        ],
+      },
+      {
+        title: "ANALYTICS & AUDIT",
+        items: [
+          { id: "reports", label: "Reports & Performance", icon: FileText },
+          { id: "audit-trail", label: "Audit Trail", icon: History },
+        ],
+      },
+    ];
+  }
+
+  if (role === "Viewer") {
+    return [
+      {
+        title: "MONITORING (READ-ONLY)",
+        items: [
+          { id: "risk-overview", label: "Risk Overview", icon: Activity },
+          { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
+        ],
+      },
+      {
+        title: "ANALYTICS & COMPLIANCE",
+        items: [
+          { id: "reports", label: "Reports & Metrics", icon: FileText },
+          { id: "audit-trail", label: "Audit Trail", icon: History },
+        ],
+      },
+    ];
+  }
+
+  // Default: SME Admin
+  return [
+    {
+      title: "MONITORING",
+      items: [
+        { id: "risk-overview", label: "Risk Overview", icon: Activity },
+        { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
+        { id: "active-cases", label: "Active Cases", icon: Briefcase },
+      ],
+    },
+    {
+      title: "CONFIGURATION",
+      items: [
+        { id: "rule-templates", label: "Rule Templates", icon: Sliders },
+        { id: "projects", label: "Projects & API Keys", icon: FolderKanban },
+      ],
+    },
+    {
+      title: "ANALYTICS",
+      items: [
+        { id: "reports", label: "Reports & Performance", icon: FileText },
+        { id: "audit-trail", label: "Audit Trail", icon: History },
+      ],
+    },
+  ];
+}
 
 interface SidebarProps {
   activeItem: string;
@@ -59,6 +123,11 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps) {
+  const navSections = useMemo(
+    () => getSectionsForRole(currentUser?.role),
+    [currentUser?.role],
+  );
+
   return (
     <aside className={styles.sidebar} aria-label="Main navigation">
       {/* Brand Logo Header */}
@@ -68,14 +137,30 @@ export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps)
         </div>
         <div className={styles.logoText}>
           <span className={styles.logoTitle}>FraudGuard</span>
-          <span className={styles.logoSub}>SME Security</span>
+          <span className={styles.logoSub}>
+            {currentUser?.role === "Platform Admin"
+              ? "Platform Admin"
+              : currentUser?.role === "Viewer"
+              ? "Auditor View"
+              : currentUser?.role === "Risk Staff"
+              ? "Risk Operations"
+              : "SME Security"}
+          </span>
         </div>
-        <span className={styles.planBadge}>Pro</span>
+        <span className={styles.planBadge}>
+          {currentUser?.role === "Platform Admin"
+            ? "Super"
+            : currentUser?.role === "Viewer"
+            ? "Audit"
+            : currentUser?.role === "Risk Staff"
+            ? "Staff"
+            : "Pro"}
+        </span>
       </div>
 
       {/* Nav Menu */}
       <nav className={styles.sidebarNav}>
-        {sections.map((section) => (
+        {navSections.map((section) => (
           <div key={section.title} className={styles.navSection}>
             <div className={styles.sectionLabel}>{section.title}</div>
             {section.items.map((item) => {
