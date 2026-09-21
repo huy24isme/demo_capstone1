@@ -1607,4 +1607,382 @@
   border: 1px solid var(--critical-border);
 }
 
+/* ── Role Switcher & RBAC Styles ── */
+
+.roleSwitcherContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.roleTriggerBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px 0 6px;
+  border: 1px solid var(--security-border);
+  border-radius: 6px;
+  background: var(--security-panel);
+  color: var(--security-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.roleTriggerBtn:hover {
+  background: var(--security-panel-hover);
+  border-color: var(--security-border-strong);
+}
+
+.roleUserAvatar {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.roleUserMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.roleUserName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--security-text);
+  white-space: nowrap;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.roleBadgeSMEAdmin {
+  background: rgba(173, 138, 243, 0.15);
+  color: var(--security-purple);
+  border: 1px solid rgba(173, 138, 243, 0.35);
+}
+
+.roleBadgeRiskStaff {
+  background: rgba(113, 185, 244, 0.15);
+  color: var(--security-blue);
+  border: 1px solid rgba(113, 185, 244, 0.35);
+}
+
+.roleBadgeViewer {
+  background: rgba(120, 201, 172, 0.15);
+  color: var(--security-green);
+  border: 1px solid rgba(120, 201, 172, 0.35);
+}
+
+.roleBadgePlatformAdmin {
+  background: rgba(237, 167, 101, 0.15);
+  color: var(--security-orange);
+  border: 1px solid rgba(237, 167, 101, 0.35);
+}
+
+.roleDropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  width: 320px;
+  background: var(--security-panel);
+  border: 1px solid var(--security-border-strong);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.roleMenuHeader {
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--security-border);
+  margin-bottom: 4px;
+}
+
+.roleMenuTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--security-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.roleMenuItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  width: 100%;
+}
+
+.roleMenuItem:hover {
+  background: var(--security-control);
+  border-color: var(--security-border);
+}
+
+.roleMenuItemActive {
+  background: var(--security-control);
+  border-color: var(--security-blue);
+  box-shadow: inset 2px 0 var(--security-blue);
+}
+
+.roleMenuItemActive .roleItemName {
+  color: var(--security-blue);
+}
+
+.roleItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.roleItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.roleItemName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--security-text);
+}
+
+.roleItemDesc {
+  font-size: 11px;
+  color: var(--security-muted);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.roleMenuFooter {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--security-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roleMatrixLinkBtn {
+  background: transparent;
+  border: 0;
+  color: var(--security-blue);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.roleMatrixLinkBtn:hover {
+  background: var(--security-blue-bg);
+}
+
+/* ── Role Notice Banner ── */
+
+.roleNoticeBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+.roleNoticeViewer {
+  background: rgba(120, 201, 172, 0.1);
+  border: 1px solid rgba(120, 201, 172, 0.3);
+  color: var(--security-text);
+}
+
+.roleNoticeRiskStaff {
+  background: rgba(113, 185, 244, 0.1);
+  border: 1px solid rgba(113, 185, 244, 0.3);
+  color: var(--security-text);
+}
+
+.roleNoticePlatformAdmin {
+  background: rgba(237, 167, 101, 0.1);
+  border: 1px solid rgba(237, 167, 101, 0.3);
+  color: var(--security-text);
+}
+
+.roleNoticeLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.roleNoticeIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Permission Matrix Modal ── */
+
+.matrixModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.matrixModalContent {
+  width: min(880px, 100%);
+  max-height: 90vh;
+  background: var(--security-panel);
+  border: 1px solid var(--security-border-strong);
+  border-radius: 8px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.matrixModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--security-border);
+}
+
+.matrixModalHeader h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--security-text);
+}
+
+.matrixModalHeader p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--security-muted);
+}
+
+.matrixModalBody {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.matrixTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.matrixTable th,
+.matrixTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--security-border);
+  text-align: left;
+}
+
+.matrixTable th {
+  background: var(--security-header);
+  color: var(--security-text-secondary);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.matrixTable tr:hover td {
+  background: var(--security-panel-hover);
+}
+
+.matrixTable td {
+  color: var(--security-text);
+}
+
+.matrixBadgeYes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(120, 201, 172, 0.15);
+  color: var(--security-green);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.matrixBadgeNo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(237, 103, 117, 0.12);
+  color: var(--security-red);
+  font-size: 11px;
+}
+
+.matrixBadgeScope {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--security-control);
+  color: var(--security-muted);
+  font-size: 11px;
+}
+
+.actionDisabledTooltip {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+}
+
 

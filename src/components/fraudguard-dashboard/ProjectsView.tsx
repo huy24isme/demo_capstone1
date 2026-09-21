@@ -12,15 +12,17 @@ import {
   Sliders,
   Check,
 } from "lucide-react";
-import type { ProjectItem } from "./types";
+import type { ProjectItem, RolePermissions } from "./types";
 import { useToast } from "./ToastProvider";
 import styles from "./SecurityDashboard.module.css";
 
 interface ProjectsViewProps {
   initialProjects: ProjectItem[];
+  permissions?: RolePermissions;
 }
 
-export function ProjectsView({ initialProjects }: ProjectsViewProps) {
+export function ProjectsView({ initialProjects, permissions }: ProjectsViewProps) {
+  const canManage = permissions ? permissions.canManageProjects : true;
   const { toast } = useToast();
   const [projects, setProjects] = useState<ProjectItem[]>(initialProjects);
   const [filterEnv, setFilterEnv] = useState<string>("all");
@@ -159,8 +161,10 @@ export function ProjectsView({ initialProjects }: ProjectsViewProps) {
           </p>
         </div>
         <button
-          className={styles.btnPrimary}
-          onClick={() => setCreateModalOpen(true)}
+          className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+          onClick={() => canManage && setCreateModalOpen(true)}
+          disabled={!canManage}
+          title={!canManage ? "Chỉ SME Admin mới có quyền tạo dự án mới" : undefined}
           type="button"
         >
           <Plus size={15} style={{ marginRight: 6 }} />
@@ -282,11 +286,12 @@ export function ProjectsView({ initialProjects }: ProjectsViewProps) {
                     API Secret Key
                   </span>
                   <button
-                    className={styles.button}
+                    className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                     style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
-                    onClick={() => handleRegenerateKey(project)}
+                    onClick={() => canManage && handleRegenerateKey(project)}
+                    disabled={!canManage}
                     type="button"
-                    title="Sinh lại key mới"
+                    title={!canManage ? "Chỉ SME Admin mới có quyền cấp lại API Key" : "Sinh lại key mới"}
                   >
                     <RefreshCw size={11} style={{ marginRight: 4 }} />
                     Regenerate
@@ -348,10 +353,12 @@ export function ProjectsView({ initialProjects }: ProjectsViewProps) {
                     Webhook Notification
                   </span>
                   <button
-                    className={styles.button}
+                    className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                     style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
-                    onClick={() => handleOpenWebhookModal(project)}
+                    onClick={() => canManage && handleOpenWebhookModal(project)}
+                    disabled={!canManage}
                     type="button"
+                    title={!canManage ? "Chỉ SME Admin mới có quyền cấu hình Webhook" : "Cấu hình Webhook"}
                   >
                     Edit URL
                   </button>

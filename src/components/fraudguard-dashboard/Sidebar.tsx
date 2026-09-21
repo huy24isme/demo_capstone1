@@ -13,7 +13,7 @@ import {
   LogOut,
 } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
-import type { SecondaryView } from "./types";
+import type { SecondaryView, UserProfile } from "./types";
 
 interface NavItem {
   label: string;
@@ -55,9 +55,10 @@ const sections: NavSection[] = [
 interface SidebarProps {
   activeItem: string;
   onItemChange: (id: string) => void;
+  currentUser?: UserProfile;
 }
 
-export function Sidebar({ activeItem, onItemChange }: SidebarProps) {
+export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps) {
   return (
     <aside className={styles.sidebar} aria-label="Main navigation">
       {/* Brand Logo Header */}
@@ -116,12 +117,17 @@ export function Sidebar({ activeItem, onItemChange }: SidebarProps) {
         <a
           href="/login"
           className={styles.sidebarUserCard}
-          title="Tài khoản (Click để Đăng xuất / Login)"
+          title={`Tài khoản: ${currentUser ? currentUser.name : "SME Admin"} (Click để Đăng xuất / Login)`}
         >
-          <div className={styles.avatar}>A</div>
+          <div
+            className={styles.avatar}
+            style={currentUser ? { backgroundColor: currentUser.avatarBg } : undefined}
+          >
+            {currentUser ? currentUser.avatarLetter : "A"}
+          </div>
           <div className={styles.userInfo}>
-            <span className={styles.userName}>SME Admin</span>
-            <span className={styles.userRole}>Security Lead</span>
+            <span className={styles.userName}>{currentUser ? currentUser.name : "SME Admin"}</span>
+            <span className={styles.userRole}>{currentUser ? currentUser.role : "Security Lead"}</span>
           </div>
           <LogOut size={14} className={styles.logoutIcon} />
         </a>

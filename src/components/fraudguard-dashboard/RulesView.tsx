@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { ConditionGroupNode, RuleConditionNode, RuleTemplate } from "./types";
+import type { ConditionGroupNode, RolePermissions, RuleConditionNode, RuleTemplate } from "./types";
 import { RuleBuilder } from "./RuleBuilder";
 import { useToast } from "./ToastProvider";
 import styles from "./SecurityDashboard.module.css";
 
 interface RulesViewProps {
   initialRules: RuleTemplate[];
+  permissions?: RolePermissions;
 }
 
 const SEVERITY_DOT: Record<string, string> = {
@@ -51,7 +52,8 @@ function renderConditions(node: ConditionGroupNode | RuleConditionNode, depth = 
   );
 }
 
-export function RulesView({ initialRules }: RulesViewProps) {
+export function RulesView({ initialRules, permissions }: RulesViewProps) {
+  const canManage = permissions ? permissions.canManageRules : true;
   const { toast } = useToast();
   const [rules, setRules] = useState(initialRules);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -138,7 +140,13 @@ export function RulesView({ initialRules }: RulesViewProps) {
           <h1>Rule Templates</h1>
           <p>Cấu hình rule, điều kiện AND/OR, risk point và threshold</p>
         </div>
-        <button className={styles.btnPrimary} onClick={handleCreate} type="button">
+        <button
+          className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+          onClick={() => canManage && handleCreate()}
+          disabled={!canManage}
+          title={!canManage ? "Chỉ SME Admin mới có quyền tạo Rule mới" : undefined}
+          type="button"
+        >
           + Create Rule
         </button>
       </div>
@@ -252,8 +260,10 @@ export function RulesView({ initialRules }: RulesViewProps) {
                   </div>
 
                   <button
-                    className={styles.button}
-                    onClick={() => handleToggle(rule.id)}
+                    className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                    onClick={() => canManage && handleToggle(rule.id)}
+                    disabled={!canManage}
+                    title={!canManage ? "Chỉ SME Admin mới có quyền bật/tắt Rule" : undefined}
                     style={{ minWidth: 70 }}
                     type="button"
                   >
@@ -289,16 +299,30 @@ export function RulesView({ initialRules }: RulesViewProps) {
 
                   {/* Actions */}
                   <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <button className={styles.button} onClick={() => handleEdit(rule)} type="button">
+                    <button
+                      className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                      onClick={() => canManage && handleEdit(rule)}
+                      disabled={!canManage}
+                      title={!canManage ? "Yêu cầu quyền SME Admin" : undefined}
+                      type="button"
+                    >
                       Edit
                     </button>
-                    <button className={styles.button} onClick={() => handleClone(rule)} type="button">
+                    <button
+                      className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                      onClick={() => canManage && handleClone(rule)}
+                      disabled={!canManage}
+                      title={!canManage ? "Yêu cầu quyền SME Admin" : undefined}
+                      type="button"
+                    >
                       Clone
                     </button>
                     <button
-                      className={styles.button}
-                      onClick={() => handleDelete(rule.id)}
-                      style={{ color: "var(--critical-text)" }}
+                      className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                      onClick={() => canManage && handleDelete(rule.id)}
+                      disabled={!canManage}
+                      title={!canManage ? "Yêu cầu quyền SME Admin" : undefined}
+                      style={{ color: canManage ? "var(--critical-text)" : undefined }}
                       type="button"
                     >
                       Delete

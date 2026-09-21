@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CaseStatus, TransactionRisk } from "./types";
+import type { CaseStatus, RolePermissions, TransactionRisk } from "./types";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { useToast } from "./ToastProvider";
 import styles from "./SecurityDashboard.module.css";
@@ -10,6 +10,7 @@ interface CasesViewProps {
   transactions: TransactionRisk[];
   onUpdateTransaction: (updated: TransactionRisk) => void;
   onReview: (transaction: TransactionRisk) => void;
+  permissions?: RolePermissions;
 }
 
 const STATUS_COLORS: Record<CaseStatus, string> = {
@@ -22,7 +23,8 @@ const STATUS_COLORS: Record<CaseStatus, string> = {
 
 const ALL_STATUSES: CaseStatus[] = ["Open", "Reviewing", "Confirmed Fraud", "False Alarm", "Resolved"];
 
-export function CasesView({ transactions, onUpdateTransaction, onReview }: CasesViewProps) {
+export function CasesView({ transactions, onUpdateTransaction, onReview, permissions }: CasesViewProps) {
+  const canManage = permissions ? permissions.canManageCases : true;
   const { toast } = useToast();
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterProject, setFilterProject] = useState<string>("all");
@@ -135,7 +137,15 @@ export function CasesView({ transactions, onUpdateTransaction, onReview }: Cases
                   {/* Quick status update */}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {ALL_STATUSES.filter((s) => s !== tx.caseStatus).map((status) => (
-                      <button key={status} className={styles.button} style={{ fontSize: 10, padding: "4px 8px", minHeight: 26 }} onClick={() => handleStatusChange(tx, status)} type="button">
+                      <button
+                        key={status}
+                        className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                        style={{ fontSize: 10, padding: "4px 8px", minHeight: 26 }}
+                        onClick={() => canManage && handleStatusChange(tx, status)}
+                        disabled={!canManage}
+                        title={!canManage ? "Chỉ Risk Staff hoặc SME Admin mới có quyền cập nhật trạng thái" : undefined}
+                        type="button"
+                      >
                         → {status}
                       </button>
                     ))}

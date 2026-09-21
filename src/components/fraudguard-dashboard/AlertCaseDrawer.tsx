@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CaseStatus, TransactionRisk } from "./types";
+import type { CaseStatus, RolePermissions, TransactionRisk } from "./types";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
 import { useToast } from "./ToastProvider";
@@ -12,6 +12,7 @@ interface AlertCaseDrawerProps {
   open: boolean;
   onClose: () => void;
   onUpdateTransaction: (updated: TransactionRisk) => void;
+  permissions?: RolePermissions;
 }
 
 const STATUS_FLOW: CaseStatus[] = [
@@ -116,7 +117,9 @@ export function AlertCaseDrawer({
   open,
   onClose,
   onUpdateTransaction,
+  permissions,
 }: AlertCaseDrawerProps) {
+  const canManage = permissions ? permissions.canManageCases : true;
   const { toast } = useToast();
   const drawerRef = useRef<HTMLDivElement>(null);
   const [note, setNote] = useState("");
@@ -313,9 +316,10 @@ export function AlertCaseDrawer({
             <h3 className={styles.drawerSectionTitle}>Case Management</h3>
             {!transaction.caseId ? (
               <button
-                className={styles.drawerPrimaryBtn}
+                className={`${styles.drawerPrimaryBtn} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                 onClick={handleCreateCase}
-                disabled={isMutating}
+                disabled={isMutating || !canManage}
+                title={!canManage ? "Chỉ Risk Staff hoặc SME Admin mới có quyền tạo Case" : undefined}
                 type="button"
               >
                 {isMutating ? "Creating…" : "Create Case"}
@@ -331,15 +335,18 @@ export function AlertCaseDrawer({
                   <span>{transaction.caseStatus}</span>
                 </div>
                 <div className={styles.drawerRow} style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                  <span className={styles.drawerLabel}>Update Status</span>
+                  <span className={styles.drawerLabel}>
+                    Update Status {!canManage && "(Read-only)"}
+                  </span>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {STATUS_FLOW.filter((s) => s !== transaction.caseStatus).map(
                       (status) => (
                         <button
                           key={status}
-                          className={styles.button}
+                          className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                           onClick={() => handleStatusChange(status)}
-                          disabled={isMutating}
+                          disabled={isMutating || !canManage}
+                          title={!canManage ? "Chỉ Risk Staff hoặc SME Admin mới có quyền cập nhật trạng thái" : undefined}
                           type="button"
                         >
                           {status}
@@ -365,16 +372,18 @@ export function AlertCaseDrawer({
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <input
                   className={styles.searchInput}
-                  placeholder="Add a note…"
+                  placeholder={!canManage ? "Quyền hạn giới hạn: Không thể thêm ghi chú" : "Add a note…"}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
-                  style={{ flex: 1 }}
+                  onKeyDown={(e) => e.key === "Enter" && canManage && handleAddNote()}
+                  disabled={!canManage}
+                  style={{ flex: 1, opacity: !canManage ? 0.6 : 1 }}
                 />
                 <button
-                  className={styles.button}
+                  className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                   onClick={handleAddNote}
-                  disabled={!note.trim()}
+                  disabled={!note.trim() || !canManage}
+                  title={!canManage ? "Không có quyền thêm ghi chú" : undefined}
                   type="button"
                 >
                   Add

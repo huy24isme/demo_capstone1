@@ -1,18 +1,24 @@
 "use client";
 
 import { Settings, Sun, Moon } from "lucide-react";
+import type { UserProfile } from "./types";
+import { RoleSwitcher } from "./RoleSwitcher";
 import styles from "./SecurityDashboard.module.css";
 
 interface ProductHeaderProps {
   activeViewTitle?: string;
   theme?: "dark" | "light";
   onToggleTheme?: () => void;
+  currentUser?: UserProfile;
+  onSwitchUser?: (user: UserProfile) => void;
 }
 
 export function ProductHeader({
   activeViewTitle = "Risk Overview",
   theme = "dark",
   onToggleTheme,
+  currentUser,
+  onSwitchUser,
 }: ProductHeaderProps) {
   return (
     <header className={styles.productHeader}>
@@ -25,6 +31,11 @@ export function ProductHeader({
       </div>
 
       <div className={styles.headerRight}>
+        {/* Role Switcher (RBAC) */}
+        {currentUser && onSwitchUser && (
+          <RoleSwitcher currentUser={currentUser} onSwitchUser={onSwitchUser} />
+        )}
+
         {/* Theme Toggle Button */}
         {onToggleTheme && (
           <button

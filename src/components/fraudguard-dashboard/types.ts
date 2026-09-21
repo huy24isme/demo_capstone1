@@ -166,3 +166,32 @@ export interface AuditLogEntry {
   details: string;
 }
 
+/* ── RBAC types ── */
+
+export type UserRole =
+  | "Platform Admin"
+  | "SME Admin"
+  | "Risk Staff"
+  | "Viewer";
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  title: string;
+  avatarLetter: string;
+  avatarBg: string;
+  description: string;
+}
+
+export interface RolePermissions {
+  canManageProjects: boolean;
+  canManageRules: boolean;
+  canManageCases: boolean;
+  canViewAudit: boolean;
+  canExport: boolean;
+  isReadOnly: boolean;
+  isSuperAdmin: boolean;
+}
+

@@ -11,6 +11,7 @@ import type {
   TransactionRisk,
   ProjectItem,
   AuditLogEntry,
+  UserProfile,
 } from "./types";
 import { Sidebar } from "./Sidebar";
 import { ProductHeader } from "./ProductHeader";
@@ -27,8 +28,10 @@ import { RulesView } from "./RulesView";
 import { ProjectsView } from "./ProjectsView";
 import { ReportsView } from "./ReportsView";
 import { AuditTrailView } from "./AuditTrailView";
+import { RoleNoticeBanner } from "./RoleNoticeBanner";
 import { initialProjects } from "../../data/fraudguard-projects";
 import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
+import { DEMO_USERS, getRolePermissions } from "../../data/fraudguard-roles";
 import { ToastProvider } from "./ToastProvider";
 import styles from "./SecurityDashboard.module.css";
 
@@ -67,6 +70,17 @@ export function FraudGuardDashboard({
 }: FraudGuardDashboardProps) {
   // Data state (mutable for case management)
   const [transactions, setTransactions] = useState(initialTransactions);
+
+  // RBAC state (defaults to SME Admin)
+  const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_USERS[0]);
+  const permissions = useMemo(
+    () => getRolePermissions(currentUser.role),
+    [currentUser.role],
+  );
+
+  const handleSwitchUser = useCallback((user: UserProfile) => {
+    setCurrentUser(user);
+  }, []);
 
   // Filter state
   const [filters, setFilters] = useState(initialFilters);
@@ -209,12 +223,13 @@ export function FraudGuardDashboard({
             transactions={transactions}
             onUpdateTransaction={handleUpdateTransaction}
             onReview={handleReview}
+            permissions={permissions}
           />
         );
       case "rule-templates":
-        return <RulesView initialRules={initialRules} />;
+        return <RulesView initialRules={initialRules} permissions={permissions} />;
       case "projects":
-        return <ProjectsView initialProjects={defaultProjects} />;
+        return <ProjectsView initialProjects={defaultProjects} permissions={permissions} />;
       case "reports":
         return <ReportsView transactions={transactions} />;
       case "audit-trail":
@@ -309,14 +324,23 @@ export function FraudGuardDashboard({
         <Sidebar
           activeItem={activeNavItem}
           onItemChange={handleNavItemChange}
+          currentUser={currentUser}
         />
         <div className={styles.workspace}>
           <ProductHeader
             activeViewTitle={VIEW_TITLES[activeNavItem] || "Risk Overview"}
             theme={theme}
             onToggleTheme={toggleTheme}
+            currentUser={currentUser}
+            onSwitchUser={handleSwitchUser}
           />
-          <main className={styles.main}>{renderView()}</main>
+          <main className={styles.main}>
+            <RoleNoticeBanner
+              currentUser={currentUser}
+              activeNavItem={activeNavItem}
+            />
+            {renderView()}
+          </main>
         </div>
 
         <AlertCaseDrawer
@@ -324,6 +348,7 @@ export function FraudGuardDashboard({
           open={drawerOpen}
           onClose={handleCloseDrawer}
           onUpdateTransaction={handleUpdateTransaction}
+          permissions={permissions}
         />
       </div>
     </ToastProvider>
