@@ -424,6 +424,7 @@ export function FraudGuardDashboard({
             onToggleTheme={toggleTheme}
             currentUser={currentUser}
             onSwitchUser={handleSwitchUser}
+            onNavigate={setActiveNavItem}
           />
           <main className={styles.main}>
             <RoleNoticeBanner

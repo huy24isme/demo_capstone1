@@ -1,8 +1,9 @@
 "use client";
 
-import { Settings, Sun, Moon } from "lucide-react";
-import type { UserProfile } from "./types";
+import { Sun, Moon } from "lucide-react";
+import type { SecondaryView, UserProfile } from "./types";
 import { RoleSwitcher } from "./RoleSwitcher";
+import { UserProfileMenu } from "./UserProfileMenu";
 import styles from "./SecurityDashboard.module.css";
 
 interface ProductHeaderProps {
@@ -11,6 +12,7 @@ interface ProductHeaderProps {
   onToggleTheme?: () => void;
   currentUser?: UserProfile;
   onSwitchUser?: (user: UserProfile) => void;
+  onNavigate?: (view: SecondaryView) => void;
 }
 
 export function ProductHeader({
@@ -19,6 +21,7 @@ export function ProductHeader({
   onToggleTheme,
   currentUser,
   onSwitchUser,
+  onNavigate,
 }: ProductHeaderProps) {
   return (
     <header className={styles.productHeader}>
@@ -50,15 +53,8 @@ export function ProductHeader({
           </button>
         )}
 
-        <button
-          className={styles.control}
-          title="Settings"
-          aria-label="Settings"
-          type="button"
-          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, padding: 0 }}
-        >
-          <Settings size={16} />
-        </button>
+        {/* User Profile & Preferences Dropdown Menu */}
+        <UserProfileMenu currentUser={currentUser} onNavigate={onNavigate} />
       </div>
     </header>
   );
