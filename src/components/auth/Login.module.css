@@ -24,6 +24,8 @@
   color: var(--login-text);
   font-family: inherit;
   transition: background-color 0.25s ease, color 0.25s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .wrapper[data-theme="light"] {
@@ -48,20 +50,24 @@
 /* ── Split Layout ── */
 
 .leftPanel {
-  flex: 1 1 540px;
-  max-width: 640px;
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 32px 48px;
+  padding: 36px 56px;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 960px) {
   .leftPanel {
-    padding: 24px 20px;
+    flex: 1 1 100%;
+    width: 100%;
     max-width: 100%;
+    padding: 24px 20px;
   }
 }
 
@@ -442,16 +448,20 @@
 /* ── Right Panel (Hero Showcase with FraudGuard Colors) ── */
 
 .rightPanel {
-  flex: 1.2 1 600px;
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
   min-height: 100vh;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 60px 72px;
+  align-items: center;
+  padding: 60px 48px;
   background: linear-gradient(145deg, #2b1b44 0%, #1c264a 45%, #133342 100%);
   color: #ffffff;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 @media (max-width: 960px) {
@@ -477,6 +487,7 @@
 .heroContent {
   position: relative;
   z-index: 2;
+  width: 100%;
   max-width: 520px;
 }
 
