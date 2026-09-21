@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Check, ShieldAlert, ShieldCheck } from "lucide-react";
 import { PERMISSION_MATRIX_DATA } from "../../data/fraudguard-roles";
 import styles from "./SecurityDashboard.module.css";
@@ -10,7 +12,29 @@ interface PermissionMatrixModalProps {
 }
 
 export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalProps) {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+    if (open) {
+      document.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
+
+  if (!open || !mounted) return null;
 
   const renderBadge = (val: string) => {
     if (val.startsWith("Có")) {
@@ -30,7 +54,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
     return <span className={styles.matrixBadgeScope}>{val}</span>;
   };
 
-  return (
+  return createPortal(
     <div className={styles.matrixModalOverlay} onClick={onClose} role="dialog" aria-modal="true">
       <div className={styles.matrixModalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.matrixModalHeader}>
@@ -44,6 +68,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
             className={styles.button}
             onClick={onClose}
             aria-label="Close modal"
+            type="button"
             style={{ width: 32, height: 32, padding: 0, display: "grid", placeItems: "center" }}
           >
             <X size={16} />
@@ -80,6 +105,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
           </table>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
