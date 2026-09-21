@@ -155,6 +155,18 @@
   border-color: var(--login-text);
 }
 
+.mobileOnlyTopActions {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .mobileOnlyTopActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
 /* ── Center Form Content ── */
 
 .mainContent {
@@ -164,8 +176,8 @@
 }
 
 .heading {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   margin: 0 0 24px;
   color: var(--login-text);
@@ -445,7 +457,7 @@
   text-decoration: underline;
 }
 
-/* ── Right Panel (Hero Showcase with FraudGuard Colors) ── */
+/* ── Right Panel (Hero Showcase with Cloudflare-Matched Typography) ── */
 
 .rightPanel {
   flex: 0 0 50%;
@@ -470,6 +482,55 @@
   }
 }
 
+/* Cloudflare-Style Top Right Language & Sign Up Navigation */
+.rightTopBar {
+  position: absolute;
+  top: 36px;
+  right: 48px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rightLangBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+
+.rightLangBtn:hover {
+  opacity: 0.85;
+}
+
+.rightSignUpBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.rightSignUpBtn:hover {
+  background: #f3f4f6;
+}
+
 /* Grid & Geometric Background Pattern */
 .rightPanel::before {
   content: "";
@@ -488,47 +549,66 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
 }
 
-.heroBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #b9e1ff;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  margin-bottom: 24px;
+/* Eyebrow / Tagline: Clean 14.5px text like Cloudflare Connect 2026 */
+.heroEyebrow {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
 }
 
+/* Main Headline: Clean 31px semibold font matching Cloudflare's title */
 .heroTitle {
-  font-size: 38px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 31px;
+  font-weight: 600;
+  line-height: 1.25;
   letter-spacing: -0.02em;
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   color: #ffffff;
 }
 
+/* Subtitle: Clean 14.5px with 1.55 line-height */
 .heroSubtitle {
-  font-size: 15px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 32px;
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0 0 24px;
 }
 
+/* CTA Button: 14px font, compact 9px 18px padding, icon on left */
+.heroCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.heroCtaBtn:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+/* Metrics Row placed cleanly underneath */
 .heroMetricsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 36px;
-  padding: 16px 20px;
+  gap: 14px;
+  margin-top: 28px;
+  padding: 14px 18px;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(8px);
@@ -537,35 +617,14 @@
 
 .heroMetricItem strong {
   display: block;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   color: #78c9ac;
 }
 
 .heroMetricItem span {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.7);
-}
-
-.heroCtaBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #1a1b23;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-.heroCtaBtn:hover {
-  background: #f3f4f6;
-  transform: translateY(-1px);
 }
 
 /* Spinner */

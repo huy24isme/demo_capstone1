@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Building2,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import styles from "./Login.module.css";
 
@@ -158,27 +159,29 @@ export function LoginPage() {
               )}
             </button>
 
-            {/* Language Selector */}
-            <button
-              type="button"
-              className={styles.langSelectBtn}
-              onClick={toggleLang}
-              title="Đổi ngôn ngữ"
-            >
-              <Globe size={14} />
-              <span>{lang === "vi" ? "VI" : "EN"}</span>
-            </button>
+            {/* Language & Sign up for Mobile/Tablet (on Desktop, Cloudflare puts these in the right panel) */}
+            <div className={styles.mobileOnlyTopActions}>
+              <button
+                type="button"
+                className={styles.langSelectBtn}
+                onClick={toggleLang}
+                title="Đổi ngôn ngữ"
+              >
+                <Globe size={14} />
+                <span>{lang === "vi" ? "VI" : "EN"}</span>
+              </button>
 
-            <a
-              href="#signup"
-              className={styles.signUpTopBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                handleQuickFill();
-              }}
-            >
-              {lang === "vi" ? "Đăng ký" : "Sign up"}
-            </a>
+              <a
+                href="#signup"
+                className={styles.signUpTopBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleQuickFill();
+                }}
+              >
+                {lang === "vi" ? "Đăng ký" : "Sign up"}
+              </a>
+            </div>
           </div>
         </header>
 
@@ -443,16 +446,40 @@ export function LoginPage() {
         </footer>
       </div>
 
-      {/* ── Right Column (FraudGuard Cyber Security Hero Showcase) ── */}
+      {/* ── Right Column (FraudGuard Cyber Security Hero Showcase - Cloudflare Style) ── */}
       <div className={styles.rightPanel}>
+        {/* Top-right Language Selector & Sign up button (matching Cloudflare login layout) */}
+        <div className={styles.rightTopBar}>
+          <button
+            type="button"
+            className={styles.rightLangBtn}
+            onClick={toggleLang}
+            title={lang === "vi" ? "Switch to English" : "Chuyển sang Tiếng Việt"}
+          >
+            <Globe size={15} />
+            <span>{lang === "vi" ? "Tiếng Việt" : "English"}</span>
+            <ChevronDown size={14} style={{ opacity: 0.85 }} />
+          </button>
+
+          <a
+            href="#signup"
+            className={styles.rightSignUpBtn}
+            onClick={(e) => {
+              e.preventDefault();
+              handleQuickFill();
+            }}
+          >
+            {lang === "vi" ? "Đăng ký" : "Sign up"}
+          </a>
+        </div>
+
         <div className={styles.heroContent}>
-          <div className={styles.heroBadge}>
-            <Shield size={14} style={{ color: "#78c9ac" }} />
-            <span>FraudGuard Intelligence 2026</span>
+          <div className={styles.heroEyebrow}>
+            FraudGuard Connect 2026
           </div>
 
           <h2 className={styles.heroTitle}>
-            Where Enterprise & SME Fraud Defense Connects.
+            Where Enterprise &amp; SME Fraud Defense Connects.
           </h2>
 
           <p className={styles.heroSubtitle}>
@@ -460,6 +487,18 @@ export function LoginPage() {
             bất thường hành vi, Rule Engine không mã code và điều tra case theo
             chuẩn an ninh mạng quốc tế.
           </p>
+
+          <a
+            href="#register"
+            className={styles.heroCtaBtn}
+            onClick={(e) => {
+              e.preventDefault();
+              handleQuickFill();
+            }}
+          >
+            <ExternalLink size={14} />
+            <span>{lang === "vi" ? "Trải nghiệm nền tảng ngay" : "Register now"}</span>
+          </a>
 
           <div className={styles.heroMetricsGrid}>
             <div className={styles.heroMetricItem}>
@@ -475,18 +514,6 @@ export function LoginPage() {
               <span>Giao dịch an toàn / ngày</span>
             </div>
           </div>
-
-          <a
-            href="#register"
-            className={styles.heroCtaBtn}
-            onClick={(e) => {
-              e.preventDefault();
-              handleQuickFill();
-            }}
-          >
-            <span>Trải nghiệm nền tảng ngay</span>
-            <ExternalLink size={15} />
-          </a>
         </div>
       </div>
     </div>
