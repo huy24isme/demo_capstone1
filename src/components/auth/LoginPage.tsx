@@ -500,7 +500,7 @@ export function LoginPage() {
             <span>{lang === "vi" ? "Trải nghiệm nền tảng ngay" : "Register now"}</span>
           </a>
 
-          <div className={styles.heroMetricsGrid}>
+          {/* <div className={styles.heroMetricsGrid}>
             <div className={styles.heroMetricItem}>
               <strong>&lt; 15ms</strong>
               <span>Latency phản hồi API</span>
@@ -513,7 +513,7 @@ export function LoginPage() {
               <strong>1.2M+</strong>
               <span>Giao dịch an toàn / ngày</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
