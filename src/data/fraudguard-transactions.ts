@@ -17,8 +17,6 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     triggeredRules: ["velocity_check", "amount_threshold", "device_fingerprint"],
     explanation: "Abnormal surge in payment frequency with an unregistered device fingerprint and amount 5x above merchant baseline.",
     alertId: "ALT-20260917-001",
-    caseId: "CASE-2026-0891",
-    caseStatus: "Confirmed Fraud",
     processedAt: "2026-09-17T15:30:12Z",
   },
   {
@@ -36,8 +34,6 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     triggeredRules: ["velocity_check", "geo_anomaly", "unusual_hour"],
     explanation: "Scoring service timeout fallback. Triggered critical velocity and overseas geo anomaly rules during off-peak hours.",
     alertId: "ALT-20260917-002",
-    caseId: "CASE-2026-0892",
-    caseStatus: "Reviewing",
     processedAt: "2026-09-17T14:45:00Z",
   },
   {
@@ -75,8 +71,6 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     triggeredRules: ["amount_threshold", "suspicious_user_agent", "first_time_high_value"],
     explanation: "First-time medical claim submission exceeding standard automated approval threshold with automated client signature.",
     alertId: "ALT-20260917-004",
-    caseId: "CASE-2026-0894",
-    caseStatus: "Reviewing",
     processedAt: "2026-09-17T11:15:30Z",
   },
   {
@@ -167,8 +161,6 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     triggeredRules: ["amount_threshold", "device_fingerprint"],
     explanation: "Primary AI pipeline latency exceeded 250ms threshold. Fallback rule matched blacklisted device fingerprint.",
     alertId: "ALT-20260916-009",
-    caseId: "CASE-2026-0886",
-    caseStatus: "Open",
     processedAt: "2026-09-16T18:22:40Z",
   },
   {

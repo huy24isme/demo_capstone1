@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Eye } from "lucide-react";
 import type { ConditionGroupNode, RolePermissions, RuleConditionNode, RuleTemplate } from "./types";
 import { RuleBuilder } from "./RuleBuilder";
+import { RuleDetailDrawer } from "./RuleDetailDrawer";
 import { useToast } from "./ToastProvider";
 import styles from "./SecurityDashboard.module.css";
 
@@ -60,6 +62,15 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
   const [filterEnabled, setFilterEnabled] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
+  // Detail Drawer state
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [selectedRuleForDetail, setSelectedRuleForDetail] = useState<RuleTemplate | null>(null);
+
+  const handleOpenDetail = (rule: RuleTemplate) => {
+    setSelectedRuleForDetail(rule);
+    setDetailDrawerOpen(true);
+  };
+
   // Builder state
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<RuleTemplate | null>(null);
@@ -76,6 +87,11 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
       prev.map((r) =>
         r.id === ruleId ? { ...r, enabled: !r.enabled, updatedAt: new Date().toISOString() } : r,
       ),
+    );
+    setSelectedRuleForDetail((prev) =>
+      prev && prev.id === ruleId
+        ? { ...prev, enabled: !prev.enabled, updatedAt: new Date().toISOString() }
+        : prev,
     );
     const rule = rules.find((r) => r.id === ruleId);
     if (rule) {
@@ -260,6 +276,25 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
                   </div>
 
                   <button
+                    className={styles.button}
+                    onClick={() => handleOpenDetail(rule)}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "6px 12px",
+                      minHeight: 34,
+                    }}
+                    title="Xem chi tiết toàn diện của Rule"
+                    type="button"
+                  >
+                    <Eye size={14} color="var(--security-blue)" />
+                    Details
+                  </button>
+
+                  <button
                     className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                     onClick={() => canManage && handleToggle(rule.id)}
                     disabled={!canManage}
@@ -345,6 +380,26 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
         open={builderOpen}
         onClose={() => setBuilderOpen(false)}
         onSave={handleSave}
+      />
+
+      {/* Rule Detail Drawer */}
+      <RuleDetailDrawer
+        rule={selectedRuleForDetail}
+        open={detailDrawerOpen}
+        onClose={() => setDetailDrawerOpen(false)}
+        onEdit={(rule) => {
+          setDetailDrawerOpen(false);
+          handleEdit(rule);
+        }}
+        onClone={(rule) => {
+          handleClone(rule);
+        }}
+        onToggle={handleToggle}
+        onDelete={(ruleId) => {
+          handleDelete(ruleId);
+          setDetailDrawerOpen(false);
+        }}
+        permissions={permissions}
       />
     </>
   );
