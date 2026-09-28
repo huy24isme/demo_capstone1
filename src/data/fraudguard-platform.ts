@@ -87,9 +87,9 @@ export const initialSmeTenants: SmeTenantItem[] = [
     activeProjectsCount: 2,
   },
   {
-    id: "tenant-vinainsure",
-    name: "VinaInsurance Fintech",
-    code: "VINA_INSURE",
+    id: "tenant-edulearn",
+    name: "EduLearn EdTech Academy",
+    code: "EDULEARN_VN",
     plan: "Growth",
     scoringEngine: "AI Scoring + Fallback",
     totalTransactions: 228900,

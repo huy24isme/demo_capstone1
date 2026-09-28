@@ -499,21 +499,6 @@ export function LoginPage() {
             <ExternalLink size={14} />
             <span>{lang === "vi" ? "Trải nghiệm nền tảng ngay" : "Register now"}</span>
           </a>
-
-          {/* <div className={styles.heroMetricsGrid}>
-            <div className={styles.heroMetricItem}>
-              <strong>&lt; 15ms</strong>
-              <span>Latency phản hồi API</span>
-            </div>
-            <div className={styles.heroMetricItem}>
-              <strong>99.98%</strong>
-              <span>Độ chính xác AI Model</span>
-            </div>
-            <div className={styles.heroMetricItem}>
-              <strong>1.2M+</strong>
-              <span>Giao dịch an toàn / ngày</span>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>
