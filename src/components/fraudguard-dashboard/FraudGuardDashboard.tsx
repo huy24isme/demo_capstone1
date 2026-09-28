@@ -380,7 +380,9 @@ export function FraudGuardDashboard({
                 title="Risk trend"
                 description="Transaction theo mức rủi ro qua thời gian"
               >
-                <TransactionRiskTrend />
+                <TransactionRiskTrend
+                  transactions={visibleTransactions}
+                />
               </Panel>
               <Panel
                 title="Risk distribution"

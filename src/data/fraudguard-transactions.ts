@@ -34,7 +34,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     triggeredRules: ["velocity_check", "geo_anomaly", "unusual_hour"],
     explanation: "Scoring service timeout fallback. Triggered critical velocity and overseas geo anomaly rules during off-peak hours.",
     alertId: "ALT-20260917-002",
-    processedAt: "2026-09-17T14:45:00Z",
+    processedAt: "2026-09-17T02:45:00Z",
   },
   {
     id: "tx-003",
@@ -107,7 +107,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     scoringSource: "RULE",
     triggeredRules: ["unusual_hour", "velocity_check"],
     explanation: "P2P transfer executed at 3:15 AM following consecutive failed PIN attempts.",
-    processedAt: "2026-09-17T08:35:10Z",
+    processedAt: "2026-09-17T03:15:10Z",
   },
   {
     id: "tx-007",
@@ -253,7 +253,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     alertId: "ALT-20260915-014",
     caseId: "CASE-2026-0871",
     caseStatus: "Resolved",
-    processedAt: "2026-09-15T11:20:00Z",
+    processedAt: "2026-09-15T02:20:00Z",
   },
   {
     id: "tx-015",
@@ -450,6 +450,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     riskLevel: "Low",
     scoringSource: "RULE",
     triggeredRules: [],
+    explanation: "Đơn hàng thông thường có giá trị nhỏ, thỏa mãn mọi điều kiện an toàn của Rule Engine.",
     processedAt: "2026-07-20T13:25:00Z",
   },
   {
