@@ -40,13 +40,19 @@ function getRuleEvidenceDetails(transaction: TransactionRisk): RuleEvidenceDetai
       threshold: "Ngưỡng kích hoạt: > 10 giao dịch/1h",
       riskPoints: 30,
     }),
-    amount_threshold: (tx) => ({
-      code: "amount_threshold",
-      name: "Amount Threshold (Vượt hạn mức giá trị)",
-      observed: `${tx.amount != null ? tx.amount.toLocaleString() : "45,000,000"} ${tx.currency || "VND"}`,
-      threshold: `Ngưỡng tối đa cho phép: > 20,000,000 ${tx.currency || "VND"}`,
-      riskPoints: 25,
-    }),
+    amount_threshold: (tx) => {
+      const isRefund = tx.transactionType === "refund";
+      const isSub = tx.transactionType === "subscription";
+      const thresholdVal = isRefund ? 10000000 : isSub ? 2000000 : 20000000;
+      const typeLabel = isRefund ? "hoàn tiền" : isSub ? "gói định kỳ" : "giao dịch";
+      return {
+        code: "amount_threshold",
+        name: "Amount Threshold (Vượt hạn mức giá trị)",
+        observed: `${tx.amount != null ? tx.amount.toLocaleString() : "45,000,000"} ${tx.currency || "VND"}`,
+        threshold: `Ngưỡng tối đa ${typeLabel}: > ${thresholdVal.toLocaleString()} ${tx.currency || "VND"}`,
+        riskPoints: 25,
+      };
+    },
     geo_anomaly: (tx) => ({
       code: "geo_anomaly",
       name: "Geo Anomaly (Vị trí bất thường)",
