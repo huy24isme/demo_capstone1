@@ -13,6 +13,7 @@ interface AlertCaseDrawerProps {
   onClose: () => void;
   onUpdateTransaction: (updated: TransactionRisk) => void;
   permissions?: RolePermissions;
+  threshold?: number;
 }
 
 const STATUS_FLOW: CaseStatus[] = [
@@ -124,6 +125,7 @@ export function AlertCaseDrawer({
   onClose,
   onUpdateTransaction,
   permissions,
+  threshold = 75,
 }: AlertCaseDrawerProps) {
   const canManage = permissions ? permissions.canManageCases : true;
   const { toast } = useToast();
@@ -251,25 +253,31 @@ export function AlertCaseDrawer({
 
           {/* Risk scoring */}
           <div className={styles.drawerSection}>
-            <h3 className={styles.drawerSectionTitle}>Risk Assessment</h3>
+            <h3 className={styles.drawerSectionTitle}>Risk Assessment (Đánh giá nhị phân)</h3>
             <div className={styles.drawerRow}>
-              <span className={styles.drawerLabel}>Risk Level</span>
-              <RiskLevelBadge riskLevel={transaction.riskLevel} />
+              <span className={styles.drawerLabel}>Đánh giá hệ thống</span>
+              <RiskLevelBadge
+                riskLevel={transaction.riskLevel}
+                score={transaction.riskScore}
+                threshold={threshold}
+              />
             </div>
             <div className={styles.drawerRow}>
-              <span className={styles.drawerLabel}>Score</span>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>
+              <span className={styles.drawerLabel}>Risk Score (Ngưỡng τ = {threshold})</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: transaction.riskScore >= threshold ? "var(--security-red)" : "var(--security-green)" }}>
                 {transaction.riskScore}/100
               </span>
             </div>
             <div className={styles.drawerRow}>
-              <span className={styles.drawerLabel}>Source</span>
+              <span className={styles.drawerLabel}>Nguồn tính điểm</span>
               <ScoringSourceBadge source={transaction.scoringSource} />
             </div>
             {transaction.confidence != null && (
               <div className={styles.drawerRow}>
-                <span className={styles.drawerLabel}>Confidence</span>
-                <span>{(transaction.confidence * 100).toFixed(0)}%</span>
+                <span className={styles.drawerLabel}>Độ tin cậy mô hình (Confidence)</span>
+                <span style={{ fontWeight: 600, color: "var(--security-blue)" }}>
+                  {(transaction.confidence * 100).toFixed(0)}%
+                </span>
               </div>
             )}
           </div>

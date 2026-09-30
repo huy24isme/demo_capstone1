@@ -584,6 +584,99 @@
   color: var(--low-text);
 }
 
+/* Binary Anomaly Badges */
+.anomalyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--critical-border);
+  background: var(--critical-bg);
+  color: var(--critical-text);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.normalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #3f665a;
+  background: #1e3a2f;
+  color: #8cd5bc;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.dotAnomaly {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--security-red);
+  box-shadow: 0 0 6px rgba(237, 103, 117, 0.7);
+  flex-shrink: 0;
+}
+
+.dotNormal {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--security-green);
+  flex-shrink: 0;
+}
+
+/* Tenant Risk Threshold Slider in Toolbar */
+.thresholdControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--security-control);
+  border: 1px solid var(--security-border-strong);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--security-text);
+}
+
+.thresholdSlider {
+  appearance: none;
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: #3b3f4d;
+  outline: none;
+  cursor: pointer;
+}
+
+.thresholdSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--security-orange);
+  cursor: pointer;
+  border: 2px solid #fff;
+  transition: transform 0.1s ease;
+}
+
+.thresholdSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.thresholdValueBadge {
+  font-weight: 700;
+  color: var(--security-orange);
+  min-width: 18px;
+  font-size: 12px;
+}
+
 /* Scoring source badges */
 .scoringBadge {
   display: inline-flex;

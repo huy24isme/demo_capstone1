@@ -121,6 +121,9 @@ export function FraudGuardDashboard({
     pageSize: 10,
   });
 
+  // Dynamic Tenant Risk Threshold (τ_k) for Binary Anomaly (TAR-TAD-R Module M8)
+  const [tenantThreshold, setTenantThreshold] = useState<number>(75);
+
   // Drawer state
   const [selectedTransaction, setSelectedTransaction] =
     useState<TransactionRisk | null>(null);
@@ -146,37 +149,49 @@ export function FraudGuardDashboard({
         .join(" ")
         .toLowerCase();
 
+      const matchesRisk =
+        filters.riskLevel === "all" ||
+        (filters.riskLevel === "Anomaly"
+          ? transaction.riskScore >= tenantThreshold
+          : filters.riskLevel === "Normal"
+            ? transaction.riskScore < tenantThreshold
+            : transaction.riskLevel === filters.riskLevel);
+
       return (
         (!deferredQuery || searchTarget.includes(deferredQuery)) &&
         (filters.projectId === "all" ||
           transaction.projectId === filters.projectId) &&
         (filters.transactionType === "all" ||
           transaction.transactionType === filters.transactionType) &&
-        (filters.riskLevel === "all" ||
-          transaction.riskLevel === filters.riskLevel) &&
+        matchesRisk &&
         (filters.scoringSource === "all" ||
           transaction.scoringSource === filters.scoringSource) &&
         (filters.caseStatus === "all" ||
           transaction.caseStatus === filters.caseStatus)
       );
     });
-  }, [deferredQuery, filters, transactions]);
+  }, [deferredQuery, filters, transactions, tenantThreshold]);
 
   // KPIs from filtered data
   const metrics = useMemo(() => {
+    const anomalies = visibleTransactions.filter(
+      (transaction) => transaction.riskScore >= tenantThreshold,
+    );
+
     return {
       analyzed: visibleTransactions.length,
-      highRisk: visibleTransactions.filter(
-        (t) => t.riskLevel === "High" || t.riskLevel === "Critical",
-      ).length,
+      highRisk: anomalies.length,
+      normals: visibleTransactions.length - anomalies.length,
       openAlerts: visibleTransactions.filter(
-        (t) => t.alertId && !t.caseId,
+        (transaction) => transaction.alertId && !transaction.caseId,
       ).length,
       activeCases: visibleTransactions.filter(
-        (t) => t.caseStatus === "Open" || t.caseStatus === "Reviewing",
+        (transaction) =>
+          transaction.caseStatus === "Open" ||
+          transaction.caseStatus === "Reviewing",
       ).length,
     };
-  }, [visibleTransactions]);
+  }, [visibleTransactions, tenantThreshold]);
 
   // Dynamic project/type options
   const projects = useMemo(() => {
@@ -274,6 +289,8 @@ export function FraudGuardDashboard({
               transactionTypes={transactionTypes}
               onChange={handleFiltersChange}
               visibleTransactions={visibleTransactions}
+              threshold={tenantThreshold}
+              onThresholdChange={setTenantThreshold}
             />
 
             {currentUser.role === "Risk Staff" ? (
@@ -291,17 +308,15 @@ export function FraudGuardDashboard({
                   tone="warning"
                 />
                 <StatCard
-                  label="Critical transactions"
-                  value={
-                    visibleTransactions.filter((t) => t.riskLevel === "Critical").length
-                  }
-                  description="Mức rủi ro nghiêm trọng"
+                  label="Bất thường (Anomaly)"
+                  value={metrics.highRisk}
+                  description={`Score ≥ ${tenantThreshold} (Đỏ)`}
                   tone="critical"
                 />
                 <StatCard
-                  label="Transactions analyzed"
-                  value={metrics.analyzed}
-                  description={`Trong ${filters.range} ngày gần nhất`}
+                  label="Giao dịch an toàn (Normal)"
+                  value={metrics.normals}
+                  description={`Score < ${tenantThreshold} (Xanh)`}
                 />
               </section>
             ) : currentUser.role === "Viewer" ? (
@@ -312,13 +327,13 @@ export function FraudGuardDashboard({
                   description={`Trong ${filters.range} ngày gần nhất`}
                 />
                 <StatCard
-                  label="High-risk ratio"
+                  label="Anomaly ratio"
                   value={
                     metrics.analyzed > 0
                       ? `${Math.round((metrics.highRisk / metrics.analyzed) * 100)}%`
                       : "0%"
                   }
-                  description={`${metrics.highRisk} giao dịch rủi ro`}
+                  description={`${metrics.highRisk} giao dịch bất thường`}
                   tone="critical"
                 />
                 <StatCard
@@ -356,15 +371,15 @@ export function FraudGuardDashboard({
                   description={`Trong ${filters.range} ngày gần nhất`}
                 />
                 <StatCard
-                  label="High-risk transactions"
+                  label="Bất thường (Anomaly)"
                   value={metrics.highRisk}
-                  description="High hoặc Critical"
+                  description={`Score ≥ ${tenantThreshold} (Vượt ngưỡng)`}
                   tone="critical"
                 />
                 <StatCard
-                  label="Open alerts"
-                  value={metrics.openAlerts}
-                  description="Chưa chuyển thành case"
+                  label="Bình thường (Normal)"
+                  value={metrics.normals}
+                  description={`Score < ${tenantThreshold} (An toàn)`}
                 />
                 <StatCard
                   label="Active cases"
@@ -378,18 +393,20 @@ export function FraudGuardDashboard({
             <section className={styles.chartGrid}>
               <Panel
                 title="Risk trend"
-                description="Transaction theo mức rủi ro qua thời gian"
+                description={`Xu hướng Bất thường (Đỏ) vs Bình thường (Xanh) theo thời gian`}
               >
                 <TransactionRiskTrend
                   transactions={visibleTransactions}
+                  threshold={tenantThreshold}
                 />
               </Panel>
               <Panel
                 title="Risk distribution"
-                description="Phân bố theo risk level"
+                description={`Tỷ lệ phân bố theo ngưỡng nhị phân (τ = ${tenantThreshold})`}
               >
                 <RiskDistributionChart
                   transactions={visibleTransactions}
+                  threshold={tenantThreshold}
                 />
               </Panel>
             </section>
@@ -405,6 +422,7 @@ export function FraudGuardDashboard({
               pagination={pagination}
               onPaginationChange={setPagination}
               onReview={handleReview}
+              threshold={tenantThreshold}
             />
           </>
         );
@@ -443,6 +461,7 @@ export function FraudGuardDashboard({
           onClose={handleCloseDrawer}
           onUpdateTransaction={handleUpdateTransaction}
           permissions={permissions}
+          threshold={tenantThreshold}
         />
       </div>
     </ToastProvider>

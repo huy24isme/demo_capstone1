@@ -34,13 +34,16 @@ interface TransactionRiskTableProps {
   pagination: PaginationState;
   onPaginationChange: (pagination: PaginationState) => void;
   onReview: (transaction: TransactionRisk) => void;
+  threshold?: number;
 }
 
 const RISK_ORDER: Record<RiskLevel, number> = {
-  Critical: 0,
-  High: 1,
-  Medium: 2,
-  Low: 3,
+  Anomaly: 0,
+  Critical: 1,
+  High: 2,
+  Medium: 3,
+  Low: 4,
+  Normal: 5,
 };
 
 function sortTransactions(
@@ -121,6 +124,7 @@ export function TransactionRiskTable({
   pagination,
   onPaginationChange,
   onReview,
+  threshold = 75,
 }: TransactionRiskTableProps) {
   const patch = (next: Partial<FraudGuardFilters>) =>
     onFiltersChange((current) => ({ ...current, ...next }));
@@ -212,7 +216,7 @@ export function TransactionRiskTable({
 
           <select
             className={styles.control}
-            aria-label="Risk level"
+            aria-label="Phân loại rủi ro"
             value={filters.riskLevel}
             onChange={(event) =>
               patch({
@@ -221,11 +225,9 @@ export function TransactionRiskTable({
               })
             }
           >
-            <option value="all">All risk levels</option>
-            <option value="Critical">Critical</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
+            <option value="all">Tất cả giao dịch</option>
+            <option value="Anomaly">🔴 Bất thường (Anomaly)</option>
+            <option value="Normal">🟢 Bình thường (Normal)</option>
           </select>
         </div>
       </div>
@@ -235,7 +237,7 @@ export function TransactionRiskTable({
           <thead>
             <tr>
               <SortHeader
-                label="Risk"
+                label="Đánh giá"
                 field="riskLevel"
                 sort={sort}
                 onSort={onSortChange}
@@ -274,7 +276,11 @@ export function TransactionRiskTable({
               pageData.map((transaction) => (
                 <tr key={transaction.id}>
                   <td>
-                    <RiskLevelBadge riskLevel={transaction.riskLevel} />
+                    <RiskLevelBadge
+                      riskLevel={transaction.riskLevel}
+                      score={transaction.riskScore}
+                      threshold={threshold}
+                    />
                   </td>
                   <td>
                     <span className={styles.findingName}>

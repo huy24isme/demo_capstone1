@@ -1,4 +1,5 @@
-export type RiskLevel = "Critical" | "High" | "Medium" | "Low";
+export type AnomalyStatus = "Anomaly" | "Normal";
+export type RiskLevel = "Anomaly" | "Normal" | "Critical" | "High" | "Medium" | "Low";
 export type ScoringSource = "AI" | "RULE" | "RULE_FALLBACK";
 export type CaseStatus =
   | "Open"
@@ -32,7 +33,7 @@ export interface FraudGuardFilters {
   query: string;
   projectId: "all" | string;
   transactionType: "all" | string;
-  riskLevel: "all" | RiskLevel;
+  riskLevel: "all" | "Anomaly" | "Normal" | RiskLevel;
   scoringSource: "all" | ScoringSource;
   caseStatus: "all" | CaseStatus;
   range: 7 | 30 | 90;

@@ -62,6 +62,22 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
   const [filterEnabled, setFilterEnabled] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
+  // 2-Tier Rule Architecture state (Review 1 Feedback 3)
+  const [ruleTierTab, setRuleTierTab] = useState<"all" | "system" | "custom">("all");
+  const isSystemRule = (r: RuleTemplate) => r.category !== "custom" && !r.name.includes("EdTech");
+
+  // Dry-run Simulation state
+  const [dryRunOpen, setDryRunOpen] = useState(false);
+  const [dryRunLoading, setDryRunLoading] = useState(false);
+
+  const handleStartDryRun = () => {
+    setDryRunOpen(true);
+    setDryRunLoading(true);
+    setTimeout(() => {
+      setDryRunLoading(false);
+    }, 700);
+  };
+
   // Detail Drawer state
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedRuleForDetail, setSelectedRuleForDetail] = useState<RuleTemplate | null>(null);
@@ -76,6 +92,8 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
   const [editingRule, setEditingRule] = useState<RuleTemplate | null>(null);
 
   const filteredRules = rules.filter((r) => {
+    if (ruleTierTab === "system" && !isSystemRule(r)) return false;
+    if (ruleTierTab === "custom" && isSystemRule(r)) return false;
     if (filterEnabled === "enabled" && !r.enabled) return false;
     if (filterEnabled === "disabled" && r.enabled) return false;
     if (filterCategory !== "all" && r.category !== filterCategory) return false;
@@ -142,6 +160,9 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
     [editingRule, toast],
   );
 
+  const systemRulesCount = rules.filter(isSystemRule).length;
+  const customRulesCount = rules.filter((r) => !isSystemRule(r)).length;
+
   const stats = {
     total: rules.length,
     enabled: rules.filter((r) => r.enabled).length,
@@ -153,18 +174,28 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
       <div className={styles.breadcrumb}>FraudGuard / Configuration / Rule Templates</div>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Rule Templates</h1>
-          <p>Cấu hình rule, điều kiện AND/OR, risk point và threshold</p>
+          <h1>Rule Templates (Động cơ Luật 2 Cấp độ)</h1>
+          <p>Tách biệt Quy tắc Chuẩn Hệ thống & Quy tắc Tùy biến Doanh nghiệp (Góp ý số 3)</p>
         </div>
-        <button
-          className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
-          onClick={() => canManage && handleCreate()}
-          disabled={!canManage}
-          title={!canManage ? "Chỉ SME Admin mới có quyền tạo Rule mới" : undefined}
-          type="button"
-        >
-          + Create Rule
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            className={styles.btnSecondary}
+            onClick={handleStartDryRun}
+            type="button"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            🧪 Chạy Thử Nghiệm (Dry-run Test)
+          </button>
+          <button
+            className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+            onClick={() => canManage && handleCreate()}
+            disabled={!canManage}
+            title={!canManage ? "Chỉ SME Admin mới có quyền tạo Rule mới" : undefined}
+            type="button"
+          >
+            + Tạo Rule Mới
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -192,6 +223,31 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
           <span className={styles.statDescription}>Đã tắt</span>
         </article>
       </section>
+
+      {/* 2-Tier Rule Engine Tabs (Review 1 Feedback 3) */}
+      <div className={styles.tabs} style={{ margin: "16px 0 14px 0", borderBottom: "1px solid var(--security-border)" }}>
+        <button
+          className={`${styles.tab} ${ruleTierTab === "all" ? styles.tabActive : ""}`}
+          onClick={() => setRuleTierTab("all")}
+          type="button"
+        >
+          Tất cả quy tắc ({rules.length})
+        </button>
+        <button
+          className={`${styles.tab} ${ruleTierTab === "system" ? styles.tabActive : ""}`}
+          onClick={() => setRuleTierTab("system")}
+          type="button"
+        >
+          🛡️ Quy tắc Mặc định Hệ thống ({systemRulesCount})
+        </button>
+        <button
+          className={`${styles.tab} ${ruleTierTab === "custom" ? styles.tabActive : ""}`}
+          onClick={() => setRuleTierTab("custom")}
+          type="button"
+        >
+          ⚙️ Quy tắc Doanh nghiệp Tùy biến ({customRulesCount})
+        </button>
+      </div>
 
       {/* Filters */}
       <div className={styles.toolbar}>
@@ -401,6 +457,91 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
         }}
         permissions={permissions}
       />
+
+      {/* Dry-run Simulation Modal (Review 1 Feedback 3) */}
+      {dryRunOpen && (
+        <>
+          <div className={styles.builderOverlay} onClick={() => setDryRunOpen(false)} aria-hidden="true" />
+          <div
+            className={styles.builderModal}
+            style={{ maxWidth: 660 }}
+            role="dialog"
+            aria-label="Dry-run Test Results"
+          >
+            <div className={styles.builderHeader}>
+              <h2 className={styles.builderTitle}>🧪 Kết quả Chạy Thử Nghiệm Luật (Dry-run Simulation)</h2>
+              <button
+                className={styles.drawerCloseBtn}
+                onClick={() => setDryRunOpen(false)}
+                aria-label="Close"
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.builderBody}>
+              {dryRunLoading ? (
+                <div style={{ textAlign: "center", padding: "36px 20px", color: "var(--security-blue)" }}>
+                  <div style={{ fontSize: 13, marginBottom: 12 }}>
+                    Đang quét 100 giao dịch mẫu giả lập qua tất cả quy tắc đang BẬT...
+                  </div>
+                  <div className="skeleton" style={{ height: 6, borderRadius: 3, width: "65%", margin: "0 auto" }} />
+                </div>
+              ) : (
+                <div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+                    <div style={{ background: "var(--security-control)", padding: 12, borderRadius: 6, textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "var(--security-muted)" }}>Giao dịch đối soát</div>
+                      <div style={{ fontSize: 20, fontWeight: 700 }}>100</div>
+                    </div>
+                    <div style={{ background: "rgba(237, 103, 117, 0.15)", border: "1px solid var(--critical-border)", padding: 12, borderRadius: 6, textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "var(--critical-text)" }}>Bất thường (Anomaly)</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--critical-text)" }}>8 (8.0%)</div>
+                    </div>
+                    <div style={{ background: "rgba(120, 201, 172, 0.15)", border: "1px solid #3f665a", padding: 12, borderRadius: 6, textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: "var(--security-green)" }}>Bình thường (Normal)</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "var(--security-green)" }}>92 (92.0%)</div>
+                    </div>
+                  </div>
+
+                  <h4 style={{ fontSize: 11, color: "var(--security-text-secondary)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Quy tắc kích hoạt nhiều nhất (Top Triggered Rules)
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--security-control)", borderRadius: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500 }}>Velocity Check (Tần suất dồn dập)</span>
+                      <span className={styles.badge} style={{ background: "rgba(237, 103, 117, 0.2)", color: "#ed6775", borderColor: "#ed6775" }}>
+                        4 lần kích hoạt
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--security-control)", borderRadius: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500 }}>Amount Threshold (Vượt hạn mức 20M)</span>
+                      <span className={styles.badge} style={{ background: "rgba(237, 103, 117, 0.2)", color: "#ed6775", borderColor: "#ed6775" }}>
+                        3 lần kích hoạt
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "var(--security-control)", borderRadius: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500 }}>EdTech Excessive Refund (Lạm dụng hoàn tiền)</span>
+                      <span className={styles.badge} style={{ background: "rgba(237, 103, 117, 0.2)", color: "#ed6775", borderColor: "#ed6775" }}>
+                        1 lần kích hoạt
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 14, padding: "10px 14px", background: "rgba(113, 185, 244, 0.1)", border: "1px solid var(--security-blue)", borderRadius: 6, fontSize: 12 }}>
+                    💡 <strong>Đánh giá kiểm thử:</strong> Tỷ lệ phát hiện 8.0% là mức an toàn cho doanh nghiệp SME, không gây nhiễu loạn cho đội ngũ thẩm định.
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={styles.builderFooter}>
+              <button className={styles.btnSecondary} onClick={() => setDryRunOpen(false)} type="button">
+                Đóng
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

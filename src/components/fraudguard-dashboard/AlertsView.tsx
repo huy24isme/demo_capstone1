@@ -31,7 +31,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
 
   const stats = useMemo(() => ({
     total: alerts.length,
-    critical: alerts.filter((t) => t.riskLevel === "Critical").length,
+    critical: alerts.filter((t) => t.riskScore >= 75).length,
     withoutCase: alerts.filter((t) => !t.caseId).length,
   }), [alerts]);
 
@@ -53,9 +53,9 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
           <span className={styles.statDescription}>Trong khoảng thời gian đã chọn</span>
         </article>
         <article className={`${styles.statCard} ${styles.statCritical}`}>
-          <div className={styles.statLabel}>Critical alerts</div>
+          <div className={styles.statLabel}>Bất thường nghiêm trọng</div>
           <strong className={styles.statValue}>{stats.critical}</strong>
-          <span className={styles.statDescription}>Cần xử lý ngay</span>
+          <span className={styles.statDescription}>Score &ge; 75 (Đỏ)</span>
         </article>
         <article className={`${styles.statCard} ${styles.statWarning}`}>
           <div className={styles.statLabel}>Without case</div>
@@ -68,10 +68,9 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
       <div className={styles.toolbar}>
         <div className={styles.toolbarGroup}>
           <select className={styles.control} aria-label="Risk level" value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)}>
-            <option value="all">All risk levels</option>
-            <option value="Critical">Critical</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
+            <option value="all">Tất cả cảnh báo</option>
+            <option value="Critical">🔴 Bất thường (Anomaly)</option>
+            <option value="Medium">🟢 Bình thường / Đang theo dõi</option>
           </select>
           <select className={styles.control} aria-label="Project" value={filterProject} onChange={(e) => setFilterProject(e.target.value)}>
             <option value="all">All projects</option>
