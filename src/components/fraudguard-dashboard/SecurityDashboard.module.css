@@ -19,19 +19,53 @@
   background: var(--security-panel);
   padding: 16px 12px 14px;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 20;
-  transition: background-color 0.2s ease, border-color 0.2s ease, width 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--security-border);
+  transition: padding 0.2s ease, gap 0.2s ease;
 }
 
 .sidebarLogo {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px 6px 16px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--security-border);
+  min-width: 0;
+  flex: 1;
   color: var(--security-text);
   text-decoration: none;
+}
+
+.sidebarCollapseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: 1px solid var(--security-border-strong);
+  border-radius: 5px;
+  background: var(--security-control);
+  color: var(--security-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.sidebarCollapseBtn:hover {
+  background: var(--security-control-hover);
+  color: var(--security-text);
+  border-color: var(--security-blue);
 }
 
 .logoIcon {
@@ -255,6 +289,111 @@
   color: var(--security-red);
 }
 
+/* ── Collapsed Sidebar State ── */
+.sidebarCollapsed {
+  width: 68px !important;
+  padding: 14px 8px !important;
+}
+
+.sidebarCollapsed .sidebarHeader {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 12px;
+}
+
+.sidebarCollapsed .sidebarLogo {
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.sidebarCollapsed .logoText,
+.sidebarCollapsed .planBadge {
+  display: none !important;
+}
+
+.sidebarCollapsed .sidebarCollapseBtn {
+  width: 32px;
+  height: 26px;
+}
+
+.sidebarCollapsed .navSection {
+  margin-bottom: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--security-border);
+}
+
+.sidebarCollapsed .navSection:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.sidebarCollapsed .sectionLabel {
+  display: none !important;
+}
+
+.sidebarCollapsed .secondaryNavButton {
+  justify-content: center;
+  padding: 10px 0;
+  position: relative;
+  border-radius: 6px;
+}
+
+.sidebarCollapsed .secondaryNavButtonActive {
+  box-shadow: none;
+}
+
+.sidebarCollapsed .navItemIcon {
+  margin: 0;
+}
+
+.sidebarCollapsed .navItemText {
+  display: none !important;
+}
+
+.sidebarCollapsed .navItemBadge {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  padding: 0 4px;
+  font-size: 8px;
+  line-height: 1.2;
+}
+
+.sidebarCollapsed .systemStatus {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.sidebarCollapsed .statusItem {
+  justify-content: center;
+}
+
+.sidebarCollapsed .statusItem span:not(.statusDot) {
+  display: none !important;
+}
+
+.sidebarCollapsed .statusSub {
+  display: none !important;
+}
+
+.sidebarCollapsed .sidebarUserCard {
+  justify-content: center;
+  padding: 6px 0;
+  background: transparent;
+}
+
+.sidebarCollapsed .sidebarUserCard:hover {
+  background: var(--security-control);
+}
+
+.sidebarCollapsed .userInfo,
+.sidebarCollapsed .logoutIcon {
+  display: none !important;
+}
+
 /* Main workspace */
 .workspace {
   flex: 1;
@@ -280,7 +419,28 @@
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
+}
+
+.sidebarHeaderToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--security-border-strong);
+  border-radius: 5px;
+  background: var(--security-control);
+  color: var(--security-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sidebarHeaderToggleBtn:hover {
+  background: var(--security-control-hover);
+  color: var(--security-text);
+  border-color: var(--security-blue);
 }
 
 .headerBreadcrumb {

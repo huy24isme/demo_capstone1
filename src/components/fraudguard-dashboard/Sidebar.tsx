@@ -13,6 +13,8 @@ import {
   History,
   LogOut,
   Server,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 import type { SecondaryView, UserProfile } from "./types";
@@ -120,42 +122,67 @@ interface SidebarProps {
   activeItem: string;
   onItemChange: (id: string) => void;
   currentUser?: UserProfile;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps) {
+export function Sidebar({
+  activeItem,
+  onItemChange,
+  currentUser,
+  isCollapsed = false,
+  onToggleCollapse,
+}: SidebarProps) {
   const navSections = useMemo(
     () => getSectionsForRole(currentUser?.role),
     [currentUser?.role],
   );
 
   return (
-    <aside className={styles.sidebar} aria-label="Main navigation">
-      {/* Brand Logo Header */}
-      <div className={styles.sidebarLogo}>
-        <div className={styles.logoIcon}>
-          <Shield size={20} />
-        </div>
-        <div className={styles.logoText}>
-          <span className={styles.logoTitle}>FraudGuard</span>
-          <span className={styles.logoSub}>
+    <aside
+      className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : ""}`}
+      aria-label="Main navigation"
+    >
+      {/* Brand Logo & Collapse Header */}
+      <div className={styles.sidebarHeader}>
+        <div className={styles.sidebarLogo} title="FraudGuard Platform">
+          <div className={styles.logoIcon}>
+            <Shield size={20} />
+          </div>
+          <div className={styles.logoText}>
+            <span className={styles.logoTitle}>FraudGuard</span>
+            <span className={styles.logoSub}>
+              {currentUser?.role === "Platform Admin"
+                ? "Platform Admin"
+                : currentUser?.role === "Viewer"
+                ? "Auditor View"
+                : currentUser?.role === "Risk Staff"
+                ? "Risk Operations"
+                : "SME Security"}
+            </span>
+          </div>
+          <span className={styles.planBadge}>
             {currentUser?.role === "Platform Admin"
-              ? "Platform Admin"
+              ? "Super"
               : currentUser?.role === "Viewer"
-              ? "Auditor View"
+              ? "Audit"
               : currentUser?.role === "Risk Staff"
-              ? "Risk Operations"
-              : "SME Security"}
+              ? "Staff"
+              : "Pro"}
           </span>
         </div>
-        <span className={styles.planBadge}>
-          {currentUser?.role === "Platform Admin"
-            ? "Super"
-            : currentUser?.role === "Viewer"
-            ? "Audit"
-            : currentUser?.role === "Risk Staff"
-            ? "Staff"
-            : "Pro"}
-        </span>
+
+        {onToggleCollapse && (
+          <button
+            className={styles.sidebarCollapseBtn}
+            onClick={onToggleCollapse}
+            title={isCollapsed ? "Mở rộng sidebar (Ctrl+B)" : "Thu gọn sidebar (Ctrl+B)"}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            type="button"
+          >
+            {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+          </button>
+        )}
       </div>
 
       {/* Nav Menu */}
@@ -173,6 +200,8 @@ export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps)
                     isActive ? styles.secondaryNavButtonActive : ""
                   }`}
                   onClick={() => onItemChange(item.id)}
+                  title={item.label}
+                  aria-label={item.label}
                   type="button"
                 >
                   <span className={styles.navItemIcon}>
@@ -191,7 +220,10 @@ export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps)
 
       {/* Bottom Health & User Profile */}
       <div className={styles.sidebarBottom}>
-        <div className={styles.systemStatus}>
+        <div
+          className={styles.systemStatus}
+          title="Tất cả hệ thống hoạt động bình thường - AI & Rule Engine: Online"
+        >
           <div className={styles.statusItem}>
             <span className={styles.statusDot} />
             <span>Systems operational</span>
@@ -202,7 +234,7 @@ export function Sidebar({ activeItem, onItemChange, currentUser }: SidebarProps)
         <a
           href="/login"
           className={styles.sidebarUserCard}
-          title={`Tài khoản: ${currentUser ? currentUser.name : "SME Admin"} (Click để Đăng xuất / Login)`}
+          title={`Tài khoản: ${currentUser ? currentUser.name : "SME Admin"} (${currentUser ? currentUser.role : "Security Lead"}) - Click để Đăng xuất / Login`}
         >
           <div
             className={styles.avatar}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import type {
   FraudGuardFilters,
   PaginationState,
@@ -103,6 +103,44 @@ export function FraudGuardDashboard({
 
   // Navigation state
   const [activeNavItem, setActiveNavItem] = useState<SecondaryView>("risk-overview");
+
+  // Collapsible Sidebar state (persisted to localStorage)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("fg_sidebar_collapsed");
+      if (saved !== null) {
+        setIsSidebarCollapsed(saved === "true");
+      }
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
+  }, []);
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("fg_sidebar_collapsed", String(next));
+      } catch {
+        // Ignore
+      }
+      return next;
+    });
+  }, []);
+
+  // Shortcut Ctrl+B / Cmd+B to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleToggleSidebar]);
 
   // Global Theme state (dark / light)
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -434,6 +472,8 @@ export function FraudGuardDashboard({
           activeItem={activeNavItem}
           onItemChange={handleNavItemChange}
           currentUser={currentUser}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
         />
         <div className={styles.workspace}>
           <ProductHeader
@@ -443,6 +483,8 @@ export function FraudGuardDashboard({
             currentUser={currentUser}
             onSwitchUser={handleSwitchUser}
             onNavigate={setActiveNavItem}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onToggleSidebar={handleToggleSidebar}
           />
           <main className={styles.main}>
             <RoleNoticeBanner

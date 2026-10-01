@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, PanelLeftOpen, PanelLeftClose } from "lucide-react";
 import type { SecondaryView, UserProfile } from "./types";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { UserProfileMenu } from "./UserProfileMenu";
@@ -13,6 +13,8 @@ interface ProductHeaderProps {
   currentUser?: UserProfile;
   onSwitchUser?: (user: UserProfile) => void;
   onNavigate?: (view: SecondaryView) => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export function ProductHeader({
@@ -22,10 +24,23 @@ export function ProductHeader({
   currentUser,
   onSwitchUser,
   onNavigate,
+  isSidebarCollapsed = false,
+  onToggleSidebar,
 }: ProductHeaderProps) {
   return (
     <header className={styles.productHeader}>
       <div className={styles.headerLeft}>
+        {onToggleSidebar && (
+          <button
+            className={styles.sidebarHeaderToggleBtn}
+            onClick={onToggleSidebar}
+            title={isSidebarCollapsed ? "Mở rộng sidebar (Ctrl+B)" : "Thu gọn sidebar (Ctrl+B)"}
+            aria-label="Toggle sidebar"
+            type="button"
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+        )}
         <div className={styles.headerBreadcrumb}>
           <span className={styles.breadcrumbMuted}>FraudGuard</span>
           <span className={styles.breadcrumbDivider}>/</span>
