@@ -289,8 +289,6 @@ export function FraudGuardDashboard({
               transactionTypes={transactionTypes}
               onChange={handleFiltersChange}
               visibleTransactions={visibleTransactions}
-              threshold={tenantThreshold}
-              onThresholdChange={setTenantThreshold}
             />
 
             {currentUser.role === "Risk Staff" ? (

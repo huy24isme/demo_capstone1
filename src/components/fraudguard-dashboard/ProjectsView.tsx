@@ -394,6 +394,24 @@ export function ProjectsView({ initialProjects, permissions }: ProjectsViewProps
                   />
                 </div>
               </div>
+
+              {/* Risk Policy Decision Threshold (TAR-TAD-R Module M8) */}
+              <div style={{ padding: "9px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 4, border: "1px solid var(--security-border)", marginTop: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Sliders size={13} style={{ color: "var(--security-orange)" }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--security-text-secondary)" }}>
+                      Ngưỡng Kích Hoạt Bất Thường (&tau;)
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--security-orange)" }}>
+                    75 / 100
+                  </span>
+                </div>
+                <div style={{ fontSize: 10, color: "var(--security-muted)", marginTop: 4 }}>
+                  Chính sách rủi ro Tenant: Giao dịch có điểm rủi ro tổng hợp &ge; 75 sẽ tự động kích hoạt cảnh báo đỏ.
+                </div>
+              </div>
             </article>
           );
         })}

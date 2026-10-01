@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type Dispatch, type SetStateAction } from "react";
-import { Download, SlidersHorizontal, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
 import type { FraudGuardFilters, TransactionRisk } from "./types";
 import { exportTransactionsCSV, downloadCSVTemplate } from "@/lib/export-csv";
 import { DataIngestionModal } from "./DataIngestionModal";
@@ -13,8 +13,6 @@ interface ToolbarProps {
   transactionTypes: string[];
   onChange: Dispatch<SetStateAction<FraudGuardFilters>>;
   visibleTransactions: TransactionRisk[];
-  threshold?: number;
-  onThresholdChange?: (val: number) => void;
 }
 
 const initialFilters: FraudGuardFilters = {
@@ -44,8 +42,6 @@ export function DashboardToolbar({
   transactionTypes,
   onChange,
   visibleTransactions,
-  threshold = 75,
-  onThresholdChange,
 }: ToolbarProps) {
   const [ingestionModalOpen, setIngestionModalOpen] = useState(false);
 
@@ -100,27 +96,6 @@ export function DashboardToolbar({
             <option value="RULE">Rule Engine (Free)</option>
             <option value="RULE_FALLBACK">Rule Fallback</option>
           </select>
-
-          {/* Tenant-Adaptive Risk Threshold Slider (M8 & Binary Anomaly) */}
-          {onThresholdChange && (
-            <div
-              className={styles.thresholdControl}
-              title="Ngưỡng rủi ro Tenant (τ): Điểm >= ngưỡng sẽ đánh dấu BẤT THƯỜNG (Đỏ), dưới ngưỡng là BÌNH THƯỜNG (Xanh)"
-            >
-              <SlidersHorizontal size={14} style={{ color: "var(--security-orange)" }} />
-              <span style={{ fontSize: 11, color: "var(--security-muted)" }}>Ngưỡng (τ):</span>
-              <input
-                type="range"
-                min="50"
-                max="90"
-                step="1"
-                value={threshold}
-                onChange={(e) => onThresholdChange(Number(e.target.value))}
-                className={styles.thresholdSlider}
-              />
-              <span className={styles.thresholdValueBadge}>{threshold}</span>
-            </div>
-          )}
 
           {hasActiveFilters(filters) && (
             <button
