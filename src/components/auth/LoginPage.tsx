@@ -57,7 +57,7 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isSSOMode, setIsSSOMode] = useState(false);
+  const [isGoogleMode, setIsGoogleMode] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const toggleTheme = () => {
@@ -87,7 +87,7 @@ export function LoginPage() {
       return;
     }
 
-    if (!isSSOMode && !password) {
+    if (!isGoogleMode && !password) {
       setErrorMsg(
         lang === "vi" ? "Vui lòng nhập mật khẩu." : "Please enter your password."
       );
@@ -167,10 +167,10 @@ export function LoginPage() {
         {/* Center Main Form */}
         <main className={styles.mainContent}>
           <h1 className={styles.heading}>
-            {isSSOMode
+            {isGoogleMode
               ? lang === "vi"
-                ? "Đăng nhập Single Sign-On"
-                : "Sign in with SSO"
+                ? "Đăng nhập với Google"
+                : "Sign in with Google"
               : lang === "vi"
               ? "Sign in to FraudGuard"
               : "Sign in to FraudGuard"}
@@ -183,33 +183,21 @@ export function LoginPage() {
             </div>
           )}
 
-          {!isSSOMode ? (
+          {!isGoogleMode ? (
             <>
-              {/* 3-Button Social Row (Google, Apple, GitHub) */}
-              <div className={styles.socialRow}>
-                <button
-                  type="button"
-                  className={styles.socialBtn}
-                  onClick={handleQuickFill}
-                  title="Sign in with Google"
-                >
-                  <GoogleIcon />
-                  <span>Google</span>
-                </button>
-              </div>
 
-              {/* Continue with SSO Button */}
+              {/* Continue with Google Button */}
               <button
                 type="button"
                 className={styles.ssoBtn}
                 onClick={() => {
-                  setIsSSOMode(true);
+                  setIsGoogleMode(true);
                   setErrorMsg("");
                 }}
               >
-                <Lock size={15} style={{ color: "var(--login-accent)" }} />
+                <GoogleIcon />
                 <span>
-                  {lang === "vi" ? "Continue with SSO" : "Continue with SSO"}
+                  {lang === "vi" ? "Continue with Google" : "Continue with Google"}
                 </span>
               </button>
 
@@ -226,9 +214,9 @@ export function LoginPage() {
           <form onSubmit={handleLogin} className={styles.form}>
             <div className={styles.formGroup}>
               <label className={styles.label} htmlFor="login-email">
-                {isSSOMode
+                {isGoogleMode 
                   ? lang === "vi"
-                    ? "Email công ty / Corporate Domain"
+                    ? "Email"
                     : "Corporate email or domain"
                   : "Email"}
               </label>
@@ -238,8 +226,8 @@ export function LoginPage() {
                   type="email"
                   className={styles.input}
                   placeholder={
-                    isSSOMode
-                      ? "name@yourcompany.com"
+                    isGoogleMode
+                      ? "name1@gmail.com"
                       : "name@company.com"
                   }
                   value={email}
@@ -250,7 +238,7 @@ export function LoginPage() {
               </div>
             </div>
 
-            {!isSSOMode && (
+            {!isGoogleMode && (
               <div className={styles.formGroup}>
                 <div className={styles.labelRow}>
                   <label className={styles.label} htmlFor="login-password">
@@ -311,10 +299,10 @@ export function LoginPage() {
                 </>
               ) : (
                 <span>
-                  {isSSOMode
+                  {isGoogleMode
                     ? lang === "vi"
-                      ? "Tiếp tục với SSO"
-                      : "Continue with SSO"
+                      ? "Tiếp tục với Google"
+                      : "Continue with Google"
                     : lang === "vi"
                     ? "Sign in"
                     : "Sign in"}
@@ -322,13 +310,13 @@ export function LoginPage() {
               )}
             </button>
 
-            {isSSOMode && (
+            {isGoogleMode && (
               <button
                 type="button"
                 className={styles.ssoBtn}
                 style={{ marginTop: 6 }}
                 onClick={() => {
-                  setIsSSOMode(false);
+                  setIsGoogleMode(false);
                   setErrorMsg("");
                 }}
               >
