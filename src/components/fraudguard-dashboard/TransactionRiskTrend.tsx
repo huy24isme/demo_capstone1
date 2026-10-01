@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -14,6 +14,8 @@ import {
 import type { TransactionRisk } from "./types";
 import styles from "./SecurityDashboard.module.css";
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 interface TransactionRiskTrendProps {
   transactions?: TransactionRisk[];
   threshold?: number;
@@ -23,6 +25,12 @@ export function TransactionRiskTrend({
   transactions,
   threshold = 75,
 }: TransactionRiskTrendProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const trendData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
@@ -33,7 +41,7 @@ export function TransactionRiskTrend({
       (a, b) => new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
     );
 
-    // Aggregate by date (e.g. "Sep 12", "Sep 13")
+    // Aggregate by date (deterministic UTC to avoid SSR timezone hydration mismatch)
     const dateMap = new Map<
       string,
       { date: string; anomaly: number; normal: number; total: number }
@@ -41,7 +49,7 @@ export function TransactionRiskTrend({
 
     sorted.forEach((t) => {
       const d = new Date(t.processedAt);
-      const label = d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+      const label = `${MONTHS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, "0")}`;
       if (!dateMap.has(label)) {
         dateMap.set(label, { date: label, anomaly: 0, normal: 0, total: 0 });
       }
@@ -56,6 +64,10 @@ export function TransactionRiskTrend({
 
     return Array.from(dateMap.values());
   }, [transactions, threshold]);
+
+  if (!mounted) {
+    return <div className={styles.chartArea} />;
+  }
 
   if (trendData.length === 0) {
     return (

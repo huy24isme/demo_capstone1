@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -34,9 +34,14 @@ import styles from "./SecurityDashboard.module.css";
 
 export function PlatformHealthView() {
   const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
   const [services, setServices] = useState<MicroserviceHealth[]>(initialMicroservices);
   const [tenants] = useState<SmeTenantItem[]>(initialSmeTenants);
   const [isPinging, setIsPinging] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handlePing = (service: MicroserviceHealth) => {
     setIsPinging((prev) => ({ ...prev, [service.id]: true }));
@@ -220,48 +225,50 @@ export function PlatformHealthView() {
         </div>
 
         <div className={styles.chartArea} style={{ height: 260 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={fallbackHourlyTrend}>
-              <defs>
-                <linearGradient id="aiGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ad8af3" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#ad8af3" stopOpacity={0.0} />
-                </linearGradient>
-                <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#eda765" stopOpacity={0.5} />
-                  <stop offset="95%" stopColor="#eda765" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#35363e" />
-              <XAxis dataKey="time" stroke="#777b8b" fontSize={11} />
-              <YAxis stroke="#777b8b" fontSize={11} />
-              <Tooltip
-                contentStyle={{
-                  background: "var(--security-panel)",
-                  borderColor: "var(--security-border)",
-                  borderRadius: 6,
-                  color: "var(--security-text)",
-                  fontSize: 12,
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="aiRequests"
-                name="AI Scoring (Requests)"
-                stroke="#ad8af3"
-                fillOpacity={1}
-                fill="url(#aiGrad)"
-              />
-              <Area
-                type="monotone"
-                dataKey="fallbackRequests"
-                name="Rule Fallback (Requests)"
-                stroke="#eda765"
-                fillOpacity={1}
-                fill="url(#fbGrad)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {mounted ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={fallbackHourlyTrend}>
+                <defs>
+                  <linearGradient id="aiGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ad8af3" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#ad8af3" stopOpacity={0.0} />
+                  </linearGradient>
+                  <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#eda765" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="#eda765" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#35363e" />
+                <XAxis dataKey="time" stroke="#777b8b" fontSize={11} />
+                <YAxis stroke="#777b8b" fontSize={11} />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--security-panel)",
+                    borderColor: "var(--security-border)",
+                    borderRadius: 6,
+                    color: "var(--security-text)",
+                    fontSize: 12,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="aiRequests"
+                  name="AI Scoring (Requests)"
+                  stroke="#ad8af3"
+                  fillOpacity={1}
+                  fill="url(#aiGrad)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="fallbackRequests"
+                  name="Rule Fallback (Requests)"
+                  stroke="#eda765"
+                  fillOpacity={1}
+                  fill="url(#fbGrad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : null}
         </div>
       </section>
 

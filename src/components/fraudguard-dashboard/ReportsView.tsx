@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -25,8 +25,13 @@ interface ReportsViewProps {
 
 export function ReportsView({ transactions }: ReportsViewProps) {
   const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
   const [range, setRange] = useState<number>(30);
   const [filterProject, setFilterProject] = useState<string>("all");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const projects = useMemo(() => {
     const map = new Map<string, string>();
@@ -270,33 +275,35 @@ export function ReportsView({ transactions }: ReportsViewProps) {
             </div>
           </div>
           <div className={styles.chartArea} style={{ height: 260 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={conclusionData}>
-                <CartesianGrid
-                  stroke="var(--security-border)"
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  dataKey="name"
-                  stroke="var(--security-muted)"
-                  fontSize={11}
-                />
-                <YAxis stroke="var(--security-muted)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--security-panel)",
-                    border: "1px solid var(--security-border)",
-                    borderRadius: 4,
-                    color: "var(--security-text)",
-                  }}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {conclusionData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={conclusionData}>
+                  <CartesianGrid
+                    stroke="var(--security-border)"
+                    strokeDasharray="3 3"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    stroke="var(--security-muted)"
+                    fontSize={11}
+                  />
+                  <YAxis stroke="var(--security-muted)" fontSize={11} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--security-panel)",
+                      border: "1px solid var(--security-border)",
+                      borderRadius: 4,
+                      color: "var(--security-text)",
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {conclusionData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : null}
           </div>
         </div>
 
@@ -309,33 +316,35 @@ export function ReportsView({ transactions }: ReportsViewProps) {
             </div>
           </div>
           <div className={styles.chartArea} style={{ height: 260 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={scoringData}>
-                <CartesianGrid
-                  stroke="var(--security-border)"
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  dataKey="name"
-                  stroke="var(--security-muted)"
-                  fontSize={11}
-                />
-                <YAxis stroke="var(--security-muted)" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--security-panel)",
-                    border: "1px solid var(--security-border)",
-                    borderRadius: 4,
-                    color: "var(--security-text)",
-                  }}
-                />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {scoringData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={scoringData}>
+                  <CartesianGrid
+                    stroke="var(--security-border)"
+                    strokeDasharray="3 3"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    stroke="var(--security-muted)"
+                    fontSize={11}
+                  />
+                  <YAxis stroke="var(--security-muted)" fontSize={11} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--security-panel)",
+                      border: "1px solid var(--security-border)",
+                      borderRadius: 4,
+                      color: "var(--security-text)",
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {scoringData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : null}
           </div>
         </div>
       </section>

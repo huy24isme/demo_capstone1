@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -27,6 +28,12 @@ export function RiskDistributionChart({
   transactions,
   threshold = 75,
 }: RiskDistributionChartProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const anomalies = transactions.filter((t) => t.riskScore >= threshold).length;
   const normals = transactions.length - anomalies;
 
@@ -42,6 +49,10 @@ export function RiskDistributionChart({
       percentage: transactions.length > 0 ? ((anomalies / transactions.length) * 100).toFixed(1) : "0",
     },
   ];
+
+  if (!mounted) {
+    return <div className={styles.chartArea} />;
+  }
 
   return (
     <div className={styles.chartArea}>
