@@ -297,9 +297,21 @@ export function FraudGuardDashboard({
       case "rule-templates":
         return <RulesView initialRules={initialRules} permissions={permissions} />;
       case "projects":
-        return <ProjectsView initialProjects={defaultProjects} permissions={permissions} />;
+        return (
+          <ProjectsView
+            initialProjects={defaultProjects}
+            permissions={permissions}
+            threshold={tenantThreshold}
+            onThresholdChange={setTenantThreshold}
+          />
+        );
       case "reports":
-        return <ReportsView transactions={transactions} />;
+        return (
+          <ReportsView
+            transactions={transactions}
+            threshold={tenantThreshold}
+          />
+        );
       case "audit-trail":
         return <AuditTrailView initialLogs={defaultAuditLogs} />;
       case "platform-health":

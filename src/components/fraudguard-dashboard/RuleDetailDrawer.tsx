@@ -161,8 +161,7 @@ export function RuleDetailDrawer({
               r.toLowerCase().includes(cat) ||
               rule.name.toLowerCase().includes(r.replace(/_/g, " ")),
           ) ||
-          (rule.severity === "critical" && t.riskLevel === "Critical") ||
-          (rule.severity === "high" && t.riskLevel === "High"),
+          (t.riskLevel === "Anomaly" && (rule.severity === "critical" || rule.severity === "high")),
       )
       .slice(0, 3);
   }, [rule]);
@@ -467,7 +466,7 @@ export function RuleDetailDrawer({
                       <span
                         style={{
                           fontWeight: 700,
-                          color: tx.riskLevel === "Critical" ? "var(--critical-text)" : "var(--high-text)",
+                          color: tx.riskLevel === "Anomaly" ? "var(--critical-text)" : "var(--security-green)",
                         }}
                       >
                         Score: {tx.riskScore}/100

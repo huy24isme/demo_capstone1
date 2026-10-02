@@ -17,9 +17,7 @@ export function RiskLevelBadge({
   // 2. Score >= threshold (default 75)
   const isAnomaly =
     riskLevel === "Anomaly" ||
-    riskLevel === "Critical" ||
-    riskLevel === "High" ||
-    (score !== undefined ? score >= threshold : riskLevel !== "Normal" && riskLevel !== "Low" && riskLevel !== "Medium");
+    (score !== undefined ? score >= threshold : riskLevel !== "Normal");
 
   if (isAnomaly) {
     return (

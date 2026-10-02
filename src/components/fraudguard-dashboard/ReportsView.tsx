@@ -21,9 +21,10 @@ import styles from "./SecurityDashboard.module.css";
 
 interface ReportsViewProps {
   transactions: TransactionRisk[];
+  threshold?: number;
 }
 
-export function ReportsView({ transactions }: ReportsViewProps) {
+export function ReportsView({ transactions, threshold = 75 }: ReportsViewProps) {
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [range, setRange] = useState<number>(30);
@@ -56,7 +57,9 @@ export function ReportsView({ transactions }: ReportsViewProps) {
   const metrics = useMemo(() => {
     const total = filtered.length;
     const highRisk = filtered.filter(
-      (t) => t.riskLevel === "High" || t.riskLevel === "Critical",
+      (t) =>
+        t.riskLevel === "Anomaly" ||
+        t.riskScore >= threshold,
     ).length;
     const confirmed = filtered.filter((t) => t.caseStatus === "Confirmed Fraud").length;
     const falseAlarms = filtered.filter((t) => t.caseStatus === "False Alarm").length;
@@ -75,7 +78,7 @@ export function ReportsView({ transactions }: ReportsViewProps) {
       aiCoverage: total > 0 ? ((aiCount / total) * 100).toFixed(1) : "0",
       fallbackRate: total > 0 ? ((fallbackCount / total) * 100).toFixed(1) : "0",
     };
-  }, [filtered]);
+  }, [filtered, threshold]);
 
   // Data for Case Conclusion Breakdown
   const conclusionData = useMemo(() => {
@@ -129,7 +132,9 @@ export function ReportsView({ transactions }: ReportsViewProps) {
     return projects.map((p) => {
       const pTxns = filtered.filter((t) => t.projectId === p.id);
       const highCount = pTxns.filter(
-        (t) => t.riskLevel === "High" || t.riskLevel === "Critical",
+        (t) =>
+          t.riskLevel === "Anomaly" ||
+          t.riskScore >= threshold,
       ).length;
       const fraudCount = pTxns.filter((t) => t.caseStatus === "Confirmed Fraud").length;
       return {
@@ -139,7 +144,7 @@ export function ReportsView({ transactions }: ReportsViewProps) {
         confirmed: fraudCount,
       };
     });
-  }, [projects, filtered]);
+  }, [projects, filtered, threshold]);
 
   const handleExportSummaryCSV = () => {
     const headers = [
@@ -237,10 +242,10 @@ export function ReportsView({ transactions }: ReportsViewProps) {
           </span>
         </article>
         <article className={`${styles.statCard} ${styles.statCritical}`}>
-          <div className={styles.statLabel}>Fraud Risk Rate</div>
+          <div className={styles.statLabel}>Tỷ lệ Bất thường (Anomaly Rate)</div>
           <strong className={styles.statValue}>{metrics.fraudRate}%</strong>
           <span className={styles.statDescription}>
-            {metrics.highRisk} giao dịch rủi ro cao
+            {metrics.highRisk} giao dịch bất thường (Score &ge; {threshold})
           </span>
         </article>
         <article className={`${styles.statCard} ${styles.statWarning}`}>
@@ -366,7 +371,7 @@ export function ReportsView({ transactions }: ReportsViewProps) {
               <tr>
                 <th>Project Name</th>
                 <th>Total Analyzed</th>
-                <th>High Risk Volume</th>
+                <th>Bất thường (Anomaly)</th>
                 <th>Confirmed Fraud</th>
                 <th>Risk Rate (%)</th>
               </tr>

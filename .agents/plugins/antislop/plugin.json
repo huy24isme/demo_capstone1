@@ -1,0 +1,10 @@
+﻿{
+  "name": "antislop",
+  "displayName": "Anti Slop",
+  "description": "A rulebook that stops an AI coding agent shipping generic UI, filler copy, and AI-shaped code. A filter, not a style guide.",
+  "suggestedPrompts": [
+    "Audit this UI for generic AI slop",
+    "Review copy and remove AI filler words",
+    "Clean up AI-generated code comments"
+  ]
+}

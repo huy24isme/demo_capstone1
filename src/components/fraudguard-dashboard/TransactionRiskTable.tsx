@@ -39,11 +39,7 @@ interface TransactionRiskTableProps {
 
 const RISK_ORDER: Record<RiskLevel, number> = {
   Anomaly: 0,
-  Critical: 1,
-  High: 2,
-  Medium: 3,
-  Low: 4,
-  Normal: 5,
+  Normal: 1,
 };
 
 function sortTransactions(

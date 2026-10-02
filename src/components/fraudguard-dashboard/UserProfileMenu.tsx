@@ -166,7 +166,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                 </div>
                 <div className={styles.userPrefContent}>
                   <div className={styles.userPrefLabel}>Âm thanh cảnh báo gian lận</div>
-                  <div className={styles.userPrefSub}>Báo chuông khi có giao dịch Critical</div>
+                  <div className={styles.userPrefSub}>Báo chuông khi có giao dịch Bất thường (Anomaly)</div>
                 </div>
                 <button
                   type="button"

@@ -19,9 +19,16 @@ import styles from "./SecurityDashboard.module.css";
 interface ProjectsViewProps {
   initialProjects: ProjectItem[];
   permissions?: RolePermissions;
+  threshold?: number;
+  onThresholdChange?: (newThreshold: number) => void;
 }
 
-export function ProjectsView({ initialProjects, permissions }: ProjectsViewProps) {
+export function ProjectsView({
+  initialProjects,
+  permissions,
+  threshold = 75,
+  onThresholdChange,
+}: ProjectsViewProps) {
   const canManage = permissions ? permissions.canManageProjects : true;
   const { toast } = useToast();
   const [projects, setProjects] = useState<ProjectItem[]>(initialProjects);
@@ -405,11 +412,32 @@ export function ProjectsView({ initialProjects, permissions }: ProjectsViewProps
                     </span>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--security-orange)" }}>
-                    75 / 100
+                    {threshold} / 100
                   </span>
                 </div>
+                {canManage && onThresholdChange && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                    <input
+                      type="range"
+                      min={50}
+                      max={95}
+                      step={5}
+                      value={threshold}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        onThresholdChange(val);
+                        toast("info", `Đã cập nhật ngưỡng phát hiện rủi ro dự án: τ = ${val}`);
+                      }}
+                      style={{ flex: 1, accentColor: "var(--security-orange)", height: 4, cursor: "pointer" }}
+                      aria-label="Điều chỉnh ngưỡng rủi ro dự án"
+                    />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--security-text-secondary)", minWidth: 42, textAlign: "right" }}>
+                      &tau; = {threshold}
+                    </span>
+                  </div>
+                )}
                 <div style={{ fontSize: 10, color: "var(--security-muted)", marginTop: 4 }}>
-                  Chính sách rủi ro Tenant: Giao dịch có điểm rủi ro tổng hợp &ge; 75 sẽ tự động kích hoạt cảnh báo đỏ.
+                  Chính sách rủi ro Tenant: Giao dịch có điểm rủi ro tổng hợp &ge; {threshold} sẽ tự động kích hoạt cảnh báo đỏ.
                 </div>
               </div>
             </article>
