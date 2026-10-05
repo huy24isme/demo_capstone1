@@ -43,14 +43,18 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
+      case "Platform Admin":
+        return styles.roleBadgePlatformAdmin;
       case "SME Admin":
         return styles.roleBadgeSMEAdmin;
+      case "Operation":
+        return styles.roleBadgeOperation;
+      case "Investigator":
+        return styles.roleBadgeInvestigator;
       case "Risk Staff":
         return styles.roleBadgeRiskStaff;
       case "Viewer":
         return styles.roleBadgeViewer;
-      case "Platform Admin":
-        return styles.roleBadgePlatformAdmin;
       default:
         return "";
     }

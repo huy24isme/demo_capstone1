@@ -37,7 +37,6 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
 
   return (
     <>
-      <div className={styles.breadcrumb}>FraudGuard / Monitoring / Recent Alerts</div>
       <div className={styles.pageHeading}>
         <div>
           <h1>Recent Alerts</h1>

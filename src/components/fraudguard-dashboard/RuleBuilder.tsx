@@ -7,7 +7,7 @@ import type {
   LogicGroup,
   RuleCategory,
   RuleConditionNode,
-  RuleSeverity,
+  RuleLifecycleStatus,
   RuleTemplate,
 } from "./types";
 import styles from "./SecurityDashboard.module.css";
@@ -212,11 +212,12 @@ const CATEGORIES: { value: RuleCategory; label: string }[] = [
   { value: "custom", label: "Custom (Tùy chỉnh)" },
 ];
 
-const SEVERITIES: { value: RuleSeverity; label: string }[] = [
-  { value: "critical", label: "Critical" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
+const LIFECYCLE_STATUSES: { value: RuleLifecycleStatus; label: string }[] = [
+  { value: "Draft", label: "Draft (Bản nháp)" },
+  { value: "Testing", label: "Testing (Kiểm thử Sandbox)" },
+  { value: "Validated", label: "Validated (Đã thẩm định)" },
+  { value: "Published", label: "Published (Đang hoạt động)" },
+  { value: "Deprecated", label: "Deprecated (Ngừng sử dụng)" },
 ];
 
 /* ── Helpers ── */
@@ -275,7 +276,8 @@ function emptyRule(category: RuleCategory = "geo"): Omit<RuleTemplate, "id" | "c
     name: "",
     description: "",
     category,
-    severity: "medium",
+    version: "v1.0",
+    status: "Draft",
     conditionGroup: emptyGroupForCategory(category),
     riskPoints,
     multiplier,
@@ -505,7 +507,8 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
         name: rule.name,
         description: rule.description,
         category: rule.category,
-        severity: rule.severity,
+        version: rule.version || "v1.0",
+        status: rule.status || "Draft",
         conditionGroup: rule.conditionGroup,
         riskPoints: rp,
         multiplier: mult,
@@ -592,9 +595,9 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
         </div>
 
         <div className={styles.builderBody}>
-          {/* Category + Severity on top so Category drives the template */}
+          {/* Category, Version, and Lifecycle Status */}
           <div className={styles.formRow}>
-            <div className={styles.formGroup}>
+            <div className={styles.formGroup} style={{ flex: 1.2 }}>
               <label className={styles.formLabel}>Category (Phân loại)</label>
               <select
                 className={styles.formInput}
@@ -608,14 +611,23 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
                 ))}
               </select>
             </div>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Severity (Mức độ)</label>
+            <div className={styles.formGroup} style={{ flex: 0.8 }}>
+              <label className={styles.formLabel}>Version</label>
+              <input
+                className={styles.formInput}
+                value={form.version}
+                onChange={(e) => patch("version", e.target.value)}
+                placeholder="v1.0"
+              />
+            </div>
+            <div className={styles.formGroup} style={{ flex: 1 }}>
+              <label className={styles.formLabel}>Lifecycle Status</label>
               <select
                 className={styles.formInput}
-                value={form.severity}
-                onChange={(e) => patch("severity", e.target.value as RuleSeverity)}
+                value={form.status}
+                onChange={(e) => patch("status", e.target.value as RuleLifecycleStatus)}
               >
-                {SEVERITIES.map((s) => (
+                {LIFECYCLE_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>

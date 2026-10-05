@@ -15,6 +15,8 @@ import {
   Server,
   ChevronLeft,
   ChevronRight,
+  TestTube2,
+  CheckCircle2,
 } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 import type { SecondaryView, UserProfile } from "./types";
@@ -38,28 +40,28 @@ function getSectionsForRole(role?: string): NavSection[] {
         title: "PLATFORM SYSTEM",
         items: [
           { id: "platform-health", label: "Platform Health & Tenants", icon: Server },
+          { id: "onboarding", label: "Onboarding & Handover", icon: FolderKanban },
           { id: "audit-trail", label: "Global Audit Trail", icon: History },
         ],
       },
       {
-        title: "TENANT SUPPORT",
+        title: "RULE LIFECYCLE & SANDBOX",
         items: [
-          { id: "risk-overview", label: "Tenant Risk Overview", icon: Activity },
-          { id: "rule-templates", label: "Tenant Rules", icon: Sliders },
-          { id: "reports", label: "Tenant Reports", icon: FileText },
+          { id: "rule-testing", label: "Rule Testing Sandbox", icon: TestTube2 },
+          { id: "rule-templates", label: "Published Rules", icon: Sliders },
         ],
       },
     ];
   }
 
-  if (role === "Risk Staff") {
+  if (role === "Operation") {
     return [
       {
-        title: "INVESTIGATION & OPS",
+        title: "OPERATION QUEUE",
         items: [
-          { id: "risk-overview", label: "Risk Overview", icon: Activity },
-          { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
-          { id: "active-cases", label: "Active Cases", icon: Briefcase },
+          { id: "risk-overview", label: "Risk Dashboard", icon: Activity },
+          { id: "recent-alerts", label: "Alert Queue", icon: AlertTriangle },
+          { id: "active-cases", label: "Case Queue", icon: Briefcase },
         ],
       },
       {
@@ -72,6 +74,18 @@ function getSectionsForRole(role?: string): NavSection[] {
     ];
   }
 
+  if (role === "Investigator") {
+    return [
+      {
+        title: "INVESTIGATION PORTAL",
+        items: [
+          { id: "active-cases", label: "My Cases (Hồ sơ được giao)", icon: Briefcase },
+          { id: "reports", label: "Investigation History", icon: FileText },
+        ],
+      },
+    ];
+  }
+
   if (role === "Viewer") {
     return [
       {
@@ -79,6 +93,7 @@ function getSectionsForRole(role?: string): NavSection[] {
         items: [
           { id: "risk-overview", label: "Risk Overview", icon: Activity },
           { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
+          { id: "active-cases", label: "Active Cases", icon: Briefcase },
         ],
       },
       {
@@ -96,7 +111,7 @@ function getSectionsForRole(role?: string): NavSection[] {
     {
       title: "MONITORING",
       items: [
-        { id: "risk-overview", label: "Risk Overview", icon: Activity },
+        { id: "risk-overview", label: "Executive Overview", icon: Activity },
         { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
         { id: "active-cases", label: "Active Cases", icon: Briefcase },
       ],
@@ -105,11 +120,11 @@ function getSectionsForRole(role?: string): NavSection[] {
       title: "CONFIGURATION",
       items: [
         { id: "rule-templates", label: "Rule Templates", icon: Sliders },
-        { id: "projects", label: "Projects & API Keys", icon: FolderKanban },
+        { id: "projects", label: "Projects & Integrations", icon: FolderKanban },
       ],
     },
     {
-      title: "ANALYTICS",
+      title: "ANALYTICS & COMPLIANCE",
       items: [
         { id: "reports", label: "Reports & Performance", icon: FileText },
         { id: "audit-trail", label: "Audit Trail", icon: History },
@@ -156,9 +171,11 @@ export function Sidebar({
                 ? "Platform Admin"
                 : currentUser?.role === "Viewer"
                 ? "Auditor View"
-                : currentUser?.role === "Risk Staff"
-                ? "Risk Operations"
-                : "SME Security"}
+                : currentUser?.role === "Operation"
+                ? "Operations Lead"
+                : currentUser?.role === "Investigator"
+                ? "Field Investigator"
+                : "SME Admin"}
             </span>
           </div>
           <span className={styles.planBadge}>
@@ -166,9 +183,11 @@ export function Sidebar({
               ? "Super"
               : currentUser?.role === "Viewer"
               ? "Audit"
-              : currentUser?.role === "Risk Staff"
-              ? "Staff"
-              : "Pro"}
+              : currentUser?.role === "Operation"
+              ? "Ops"
+              : currentUser?.role === "Investigator"
+              ? "Field"
+              : "SME"}
           </span>
         </div>
 

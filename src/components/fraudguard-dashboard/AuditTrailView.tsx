@@ -131,10 +131,6 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
 
   return (
     <>
-      <div className={styles.breadcrumb}>
-        FraudGuard / Analytics / Security Audit Trail
-      </div>
-
       <div className={styles.pageHeading}>
         <div>
           <h1>Security Audit Trail</h1>

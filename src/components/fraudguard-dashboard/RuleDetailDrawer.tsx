@@ -36,11 +36,12 @@ interface RuleDetailDrawerProps {
   permissions?: RolePermissions;
 }
 
-const SEVERITY_COLOR: Record<string, { bg: string; text: string; dot: string }> = {
-  critical: { bg: "var(--critical-bg)", text: "var(--critical-text)", dot: styles.severityCritical },
-  high: { bg: "var(--high-bg)", text: "var(--high-text)", dot: styles.severityHigh },
-  medium: { bg: "var(--medium-bg)", text: "var(--medium-text)", dot: styles.severityMedium },
-  low: { bg: "rgba(120, 201, 172, 0.15)", text: "var(--security-green)", dot: styles.severityLow },
+const STATUS_STYLE: Record<string, { bg: string; text: string; border: string }> = {
+  Published: { bg: "rgba(120, 201, 172, 0.15)", text: "var(--security-green)", border: "#3f665a" },
+  Validated: { bg: "rgba(113, 185, 244, 0.15)", text: "var(--security-blue)", border: "#2d5a7b" },
+  Testing: { bg: "rgba(237, 167, 101, 0.15)", text: "var(--security-orange)", border: "#715139" },
+  Draft: { bg: "rgba(173, 138, 243, 0.15)", text: "var(--security-purple)", border: "#5c4778" },
+  Deprecated: { bg: "rgba(151, 153, 167, 0.15)", text: "var(--security-muted)", border: "#454752" },
 };
 
 function renderConditionHierarchy(
@@ -161,14 +162,14 @@ export function RuleDetailDrawer({
               r.toLowerCase().includes(cat) ||
               rule.name.toLowerCase().includes(r.replace(/_/g, " ")),
           ) ||
-          (t.riskLevel === "Anomaly" && (rule.severity === "critical" || rule.severity === "high")),
+          (t.riskLevel === "Anomaly" && rule.riskPoints >= 30),
       )
       .slice(0, 3);
   }, [rule]);
 
   if (!open || !rule) return null;
 
-  const sevStyle = SEVERITY_COLOR[rule.severity] || SEVERITY_COLOR.medium;
+  const statusStyle = STATUS_STYLE[rule.status || "Published"] || STATUS_STYLE.Published;
 
   return (
     <>
@@ -189,10 +190,10 @@ export function RuleDetailDrawer({
                 width: 32,
                 height: 32,
                 borderRadius: 6,
-                background: sevStyle.bg,
+                background: statusStyle.bg,
                 display: "grid",
                 placeItems: "center",
-                color: sevStyle.text,
+                color: statusStyle.text,
               }}
             >
               <Sliders size={18} />
@@ -202,7 +203,7 @@ export function RuleDetailDrawer({
                 Rule Specification Detail
               </h2>
               <span style={{ fontSize: 11, color: "var(--security-muted)" }}>
-                ID: {rule.id}
+                ID: {rule.id} · Ver: {rule.version || "v1.0"}
               </span>
             </div>
           </div>
@@ -222,25 +223,37 @@ export function RuleDetailDrawer({
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <span className={`${styles.severityDot} ${sevStyle.dot}`} />
                   <span style={{ fontSize: 16, fontWeight: 700, color: "var(--security-text)" }}>
                     {rule.name}
                   </span>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                   <span className={styles.categoryBadge} style={{ fontSize: 10 }}>
-                    CATEGORY: {rule.category}
+                    CATEGORY: {rule.category.toUpperCase()}
                   </span>
                   <span
                     className={styles.badge}
                     style={{
-                      background: sevStyle.bg,
-                      color: sevStyle.text,
+                      background: "rgba(113, 185, 244, 0.15)",
+                      color: "var(--security-blue)",
+                      borderColor: "#2d5a7b",
                       fontSize: 10,
                       fontWeight: 700,
                     }}
                   >
-                    {rule.severity.toUpperCase()}
+                    VER: {rule.version || "v1.0"}
+                  </span>
+                  <span
+                    className={styles.badge}
+                    style={{
+                      background: statusStyle.bg,
+                      color: statusStyle.text,
+                      borderColor: statusStyle.border,
+                      fontSize: 10,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {(rule.status || "Published").toUpperCase()}
                   </span>
                   <span
                     className={`${styles.badge} ${rule.enabled ? styles.low : styles.medium}`}

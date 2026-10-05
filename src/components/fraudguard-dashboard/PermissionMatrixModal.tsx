@@ -79,11 +79,12 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
           <table className={styles.matrixTable}>
             <thead>
               <tr>
-                <th style={{ width: "35%" }}>Quyền hạn / Nghiệp vụ</th>
-                <th style={{ width: "16%" }}>Platform Admin</th>
-                <th style={{ width: "16%" }}>SME Admin</th>
-                <th style={{ width: "16%" }}>Risk Staff</th>
-                <th style={{ width: "17%" }}>Viewer/Auditor</th>
+                <th style={{ width: "30%" }}>Quyền hạn / Nghiệp vụ</th>
+                <th style={{ width: "14%" }}>Platform Admin</th>
+                <th style={{ width: "14%" }}>SME Admin</th>
+                <th style={{ width: "14%" }}>Operation</th>
+                <th style={{ width: "14%" }}>Investigator</th>
+                <th style={{ width: "14%" }}>Viewer</th>
               </tr>
             </thead>
             <tbody>
@@ -97,7 +98,8 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
                   </td>
                   <td>{renderBadge(item.platformAdmin)}</td>
                   <td>{renderBadge(item.smeAdmin)}</td>
-                  <td>{renderBadge(item.riskStaff)}</td>
+                  <td>{renderBadge(item.operation)}</td>
+                  <td>{renderBadge(item.investigator)}</td>
                   <td>{renderBadge(item.viewer)}</td>
                 </tr>
               ))}

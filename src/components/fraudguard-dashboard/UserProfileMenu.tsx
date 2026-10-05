@@ -90,14 +90,16 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
 
   const roleBadgeClass = () => {
     switch (currentUser?.role) {
-      case "SME Admin":
-        return styles.roleBadgeSMEAdmin;
-      case "Risk Staff":
-        return styles.roleBadgeRiskStaff;
-      case "Viewer":
-        return styles.roleBadgeViewer;
       case "Platform Admin":
         return styles.roleBadgePlatformAdmin;
+      case "SME Admin":
+        return styles.roleBadgeSMEAdmin;
+      case "Operation":
+        return styles.roleBadgeOperation;
+      case "Investigator":
+        return styles.roleBadgeInvestigator;
+      case "Viewer":
+        return styles.roleBadgeViewer;
       default:
         return "";
     }
@@ -218,7 +220,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
             <div className={styles.userDropdownSection}>
               <div className={styles.userDropdownSectionTitle}>Lối tắt quản trị</div>
 
-              {onNavigate && currentUser?.role !== "Viewer" && currentUser?.role !== "Risk Staff" && (
+              {onNavigate && (currentUser?.role === "SME Admin" || currentUser?.role === "Platform Admin") && (
                 <button
                   type="button"
                   className={styles.userDropdownLinkBtn}

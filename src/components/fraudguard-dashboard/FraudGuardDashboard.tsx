@@ -34,6 +34,8 @@ import { initialProjects } from "../../data/fraudguard-projects";
 import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
 import { DEMO_USERS, getRolePermissions } from "../../data/fraudguard-roles";
 import { ToastProvider } from "./ToastProvider";
+import { OnboardingView } from "./OnboardingView";
+import { RuleTestingView } from "./RuleTestingView";
 import styles from "./SecurityDashboard.module.css";
 
 interface FraudGuardDashboardProps {
@@ -56,10 +58,13 @@ const initialFilters: FraudGuardFilters = {
 const VIEW_TITLES: Record<SecondaryView, string> = {
   "risk-overview": "Risk Overview",
   "recent-alerts": "Recent Alerts",
-  "active-cases": "Active Cases",
+  "active-cases": "Case Queue",
+  "my-cases": "My Cases (Hồ sơ được giao)",
   "rule-templates": "Rule Templates",
-  projects: "Projects & API Keys",
-  reports: "Reports & AI Performance",
+  "rule-testing": "Rule Testing Sandbox",
+  onboarding: "Enterprise Onboarding & Handover",
+  projects: "Projects & Integrations",
+  reports: "Reports & Performance",
   "audit-trail": "Security Audit Trail",
   "platform-health": "Platform Health & Tenants",
 };
@@ -72,9 +77,10 @@ export function FraudGuardDashboard({
 }: FraudGuardDashboardProps) {
   // Data state (mutable for case management)
   const [transactions, setTransactions] = useState(initialTransactions);
+  const [rules, setRules] = useState(initialRules);
 
-  // RBAC state (defaults to SME Admin)
-  const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_USERS[0]);
+  // RBAC state (defaults to SME Admin: DEMO_USERS[1])
+  const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_USERS[1]);
   const permissions = useMemo(
     () => getRolePermissions(currentUser.role),
     [currentUser.role],
@@ -84,16 +90,14 @@ export function FraudGuardDashboard({
     setCurrentUser(user);
     if (user.role === "Platform Admin") {
       setActiveNavItem("platform-health");
-    } else if (user.role === "Risk Staff" || user.role === "Viewer") {
-      setActiveNavItem((curr) =>
-        curr === "projects" || curr === "rule-templates" || curr === "platform-health"
-          ? "risk-overview"
-          : curr,
-      );
+    } else if (user.role === "Investigator") {
+      setActiveNavItem("active-cases");
+    } else if (user.role === "Operation") {
+      setActiveNavItem("active-cases");
+    } else if (user.role === "Viewer") {
+      setActiveNavItem("risk-overview");
     } else if (user.role === "SME Admin") {
-      setActiveNavItem((curr) =>
-        curr === "platform-health" ? "risk-overview" : curr,
-      );
+      setActiveNavItem("risk-overview");
     }
   }, []);
 
@@ -143,9 +147,9 @@ export function FraudGuardDashboard({
   }, [handleToggleSidebar]);
 
   // Global Theme state (dark / light)
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   }, []);
 
   // Table state
@@ -226,7 +230,9 @@ export function FraudGuardDashboard({
       activeCases: visibleTransactions.filter(
         (transaction) =>
           transaction.caseStatus === "Open" ||
-          transaction.caseStatus === "Reviewing",
+          transaction.caseStatus === "Assigned" ||
+          transaction.caseStatus === "Investigating" ||
+          transaction.caseStatus === "Reported",
       ).length,
     };
   }, [visibleTransactions, tenantThreshold]);
@@ -278,6 +284,17 @@ export function FraudGuardDashboard({
   /* ── Render active view ── */
   const renderView = () => {
     switch (activeNavItem) {
+      case "onboarding":
+        return <OnboardingView onActivateWorkspace={() => setActiveNavItem("projects")} />;
+      case "rule-testing":
+        return (
+          <RuleTestingView
+            rules={rules}
+            onPublishRule={(publishedRule) => {
+              setRules((prev) => [publishedRule, ...prev.filter((r) => r.id !== publishedRule.id)]);
+            }}
+          />
+        );
       case "recent-alerts":
         return (
           <AlertsView
@@ -286,16 +303,26 @@ export function FraudGuardDashboard({
           />
         );
       case "active-cases":
+      case "my-cases":
         return (
           <CasesView
             transactions={transactions}
             onUpdateTransaction={handleUpdateTransaction}
             onReview={handleReview}
             permissions={permissions}
+            currentRole={currentUser.role}
+            currentUserName={currentUser.name}
+            threshold={tenantThreshold}
           />
         );
       case "rule-templates":
-        return <RulesView initialRules={initialRules} permissions={permissions} />;
+        return (
+          <RulesView
+            initialRules={rules}
+            permissions={permissions}
+            onNavigateToTesting={() => setActiveNavItem("rule-testing")}
+          />
+        );
       case "projects":
         return (
           <ProjectsView
@@ -310,6 +337,9 @@ export function FraudGuardDashboard({
           <ReportsView
             transactions={transactions}
             threshold={tenantThreshold}
+            currentUser={currentUser}
+            permissions={permissions}
+            onReview={handleReview}
           />
         );
       case "audit-trail":
@@ -320,10 +350,6 @@ export function FraudGuardDashboard({
       default:
         return (
           <>
-            <div className={styles.breadcrumb}>
-              FraudGuard / Monitoring / Risk overview
-            </div>
-
             <div className={styles.pageHeading}>
               <div>
                 <h1>Transaction risk overview</h1>
@@ -341,7 +367,7 @@ export function FraudGuardDashboard({
               visibleTransactions={visibleTransactions}
             />
 
-            {currentUser.role === "Risk Staff" ? (
+            {currentUser.role === "Operation" || currentUser.role === "Investigator" ? (
               <section className={styles.metricsGrid}>
                 <StatCard
                   label="Pending alerts"
@@ -352,7 +378,7 @@ export function FraudGuardDashboard({
                 <StatCard
                   label="Active cases"
                   value={metrics.activeCases}
-                  description="Hồ sơ đang điều tra (Open/Reviewing)"
+                  description="Hồ sơ đang xử lý trong luồng"
                   tone="warning"
                 />
                 <StatCard
@@ -432,7 +458,7 @@ export function FraudGuardDashboard({
                 <StatCard
                   label="Active cases"
                   value={metrics.activeCases}
-                  description="Open hoặc Reviewing"
+                  description="Đang xử lý trong luồng"
                   tone="warning"
                 />
               </section>
@@ -477,6 +503,15 @@ export function FraudGuardDashboard({
     }
   };
 
+  const currentViewTitle = useMemo(() => {
+    if (currentUser.role === "Investigator") {
+      if (activeNavItem === "reports") return "Investigation History (Lịch sử thụ lý)";
+      if (activeNavItem === "active-cases" || activeNavItem === "my-cases")
+        return "My Cases (Hồ sơ được giao)";
+    }
+    return VIEW_TITLES[activeNavItem] || "Risk Overview";
+  }, [currentUser.role, activeNavItem]);
+
   return (
     <ToastProvider>
       <div className={styles.root} data-theme={theme}>
@@ -489,7 +524,7 @@ export function FraudGuardDashboard({
         />
         <div className={styles.workspace}>
           <ProductHeader
-            activeViewTitle={VIEW_TITLES[activeNavItem] || "Risk Overview"}
+            activeViewTitle={currentViewTitle}
             theme={theme}
             onToggleTheme={toggleTheme}
             currentUser={currentUser}
@@ -513,6 +548,8 @@ export function FraudGuardDashboard({
           onClose={handleCloseDrawer}
           onUpdateTransaction={handleUpdateTransaction}
           permissions={permissions}
+          currentRole={currentUser.role}
+          currentUserName={currentUser.name}
           threshold={tenantThreshold}
         />
       </div>

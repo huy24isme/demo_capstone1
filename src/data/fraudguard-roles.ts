@@ -2,24 +2,44 @@ import type { RolePermissions, UserProfile, UserRole } from "../components/fraud
 
 export const DEMO_USERS: UserProfile[] = [
   {
+    id: "usr-platform-admin",
+    name: "Lê Hoàng Phúc",
+    email: "phuc.lh@fraudguard.io",
+    role: "Platform Admin",
+    title: "Platform Superadmin",
+    avatarLetter: "P",
+    avatarBg: "#d97706", // Amber
+    description: "Quản trị viên nền tảng SaaS: Tiếp nhận đặc tả doanh nghiệp, onboarding khách hàng, cấu hình & kiểm thử rule sandbox trước khi bàn giao.",
+  },
+  {
     id: "usr-sme-admin",
     name: "Trần Mai Anh",
-    email: "anh.tm@fraudguard.sme",
+    email: "anh.tm@abcfashion.vn",
     role: "SME Admin",
     title: "Security & Risk Lead",
     avatarLetter: "A",
     avatarBg: "#7c3aed", // Purple
-    description: "Quản trị viên doanh nghiệp: Toàn quyền cấu hình Rules, Projects, API Keys, Webhooks và phân bổ hạn ngạch.",
+    description: "Quản trị viên doanh nghiệp (ABC Fashion): Giám sát tổng quan, quản lý thành viên & phân quyền, cấu hình API Key và xem báo cáo điều hành.",
   },
   {
-    id: "usr-risk-staff",
-    name: "Nguyễn Văn Hùng",
-    email: "hung.nv@fraudguard.sme",
-    role: "Risk Staff",
-    title: "Fraud Operations Specialist",
-    avatarLetter: "H",
+    id: "usr-operation",
+    name: "Đặng Tuấn Kiệt",
+    email: "kiet.dt@abcfashion.vn",
+    role: "Operation",
+    title: "Risk Operations Team Leader",
+    avatarLetter: "K",
     avatarBg: "#2563eb", // Blue
-    description: "Chuyên viên điều tra: Thẩm định cảnh báo rủi ro, tạo & cập nhật Case, ghi chú điều tra. Không có quyền sửa Rules hoặc API Keys.",
+    description: "Trưởng nhóm vận hành: Quản lý hàng đợi cảnh báo, phân công case cho điều tra viên, duyệt báo cáo điều tra và đưa ra quyết định xử lý cuối cùng.",
+  },
+  {
+    id: "usr-investigator",
+    name: "Nguyễn Văn An",
+    email: "an.nv@abcfashion.vn",
+    role: "Investigator",
+    title: "Fraud Field Investigator",
+    avatarLetter: "N",
+    avatarBg: "#0284c7", // Sky blue
+    description: "Điều tra viên hiện trường: Tiếp nhận case được giao (My Cases), xác minh chứng cứ đơn COD, ghi chú và gửi báo cáo kết luận về cho Operation.",
   },
   {
     id: "usr-viewer",
@@ -28,18 +48,8 @@ export const DEMO_USERS: UserProfile[] = [
     role: "Viewer",
     title: "External Auditor / Executive",
     avatarLetter: "Q",
-    avatarBg: "#059669", // Green
-    description: "Kiểm toán viên độc lập / Ban giám đốc: Chế độ Read-only. Chỉ xem danh sách giao dịch, báo cáo, nhật ký kiểm toán và xuất CSV.",
-  },
-  {
-    id: "usr-platform-admin",
-    name: "Lê Hoàng Phúc",
-    email: "phuc.lh@fraudguard.io",
-    role: "Platform Admin",
-    title: "Platform Superadmin",
-    avatarLetter: "P",
-    avatarBg: "#d97706", // Amber
-    description: "Quản trị viên nền tảng SaaS: Toàn quyền hệ thống, hỗ trợ kỹ thuật các tenant, giám sát Platform Health và Global Audit.",
+    avatarBg: "#059669", // Emerald green
+    description: "Kiểm toán viên / Ban lãnh đạo: Chế độ chỉ đọc (Read-only). Xem danh sách giao dịch, báo cáo, và xuất dữ liệu mà không có quyền thay đổi.",
   },
 ];
 
@@ -50,30 +60,56 @@ export function getRolePermissions(role: UserRole): RolePermissions {
         canManageProjects: true,
         canManageRules: true,
         canManageCases: true,
+        canInvestigateCases: true,
+        canViewAllCases: true,
         canViewAudit: true,
         canExport: true,
         isReadOnly: false,
         isSuperAdmin: true,
+        canAccessRuleTesting: true,
+        canAccessOnboarding: true,
       };
     case "SME Admin":
       return {
         canManageProjects: true,
         canManageRules: true,
         canManageCases: true,
+        canInvestigateCases: false,
+        canViewAllCases: true,
         canViewAudit: true,
         canExport: true,
         isReadOnly: false,
         isSuperAdmin: false,
+        canAccessRuleTesting: false,
+        canAccessOnboarding: false,
       };
-    case "Risk Staff":
+    case "Operation":
       return {
         canManageProjects: false,
         canManageRules: false,
-        canManageCases: true,
+        canManageCases: true, // Assign, review reports, close/confirm
+        canInvestigateCases: true,
+        canViewAllCases: true,
         canViewAudit: true,
         canExport: true,
         isReadOnly: false,
         isSuperAdmin: false,
+        canAccessRuleTesting: false,
+        canAccessOnboarding: false,
+      };
+    case "Investigator":
+      return {
+        canManageProjects: false,
+        canManageRules: false,
+        canManageCases: false, // Cannot assign or close case
+        canInvestigateCases: true, // Can submit investigation notes & report
+        canViewAllCases: false, // Only "My Cases"
+        canViewAudit: false,
+        canExport: false,
+        isReadOnly: false,
+        isSuperAdmin: false,
+        canAccessRuleTesting: false,
+        canAccessOnboarding: false,
       };
     case "Viewer":
     default:
@@ -81,10 +117,14 @@ export function getRolePermissions(role: UserRole): RolePermissions {
         canManageProjects: false,
         canManageRules: false,
         canManageCases: false,
+        canInvestigateCases: false,
+        canViewAllCases: true,
         canViewAudit: true,
         canExport: true,
         isReadOnly: true,
         isSuperAdmin: false,
+        canAccessRuleTesting: false,
+        canAccessOnboarding: false,
       };
   }
 }
@@ -94,81 +134,109 @@ export interface PermissionMatrixItem {
   category: string;
   platformAdmin: string;
   smeAdmin: string;
-  riskStaff: string;
+  operation: string;
+  investigator: string;
   viewer: string;
 }
 
 export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
   {
-    capability: "Xem Dashboard & KPIs phân tích rủi ro",
-    category: "Monitoring",
-    platformAdmin: "Theo support scope",
-    smeAdmin: "Có",
-    riskStaff: "Có",
-    viewer: "Có",
-  },
-  {
-    capability: "Xem danh sách giao dịch, Risk Score & AI Explanation",
-    category: "Monitoring",
-    platformAdmin: "Theo support scope",
-    smeAdmin: "Có",
-    riskStaff: "Có",
-    viewer: "Có",
-  },
-  {
-    capability: "Tạo & Cập nhật trạng thái Case, thêm ghi chú",
-    category: "Case Management",
-    platformAdmin: "Theo support scope",
-    smeAdmin: "Theo quyền",
-    riskStaff: "Có (Toàn quyền)",
-    viewer: "Không (Read-only)",
-  },
-  {
-    capability: "Tạo, chỉnh sửa, bật/tắt & xóa Rule Templates",
-    category: "Rule Engine",
-    platformAdmin: "Cấu hình ban đầu",
-    smeAdmin: "Có (Toàn quyền)",
-    riskStaff: "Không (Chỉ xem)",
-    viewer: "Không (Chỉ xem)",
-  },
-  {
-    capability: "Quản trị Project, tạo/regenerate/revoke API Key",
-    category: "Integration",
-    platformAdmin: "Theo support scope",
-    smeAdmin: "Có (Toàn quyền)",
-    riskStaff: "Không",
+    capability: "Onboarding doanh nghiệp & thiết lập Schema ban đầu",
+    category: "Onboarding",
+    platformAdmin: "Có (Toàn quyền)",
+    smeAdmin: "Gửi đặc tả",
+    operation: "Không",
+    investigator: "Không",
     viewer: "Không",
   },
   {
-    capability: "Cấu hình Webhook nhận sự kiện gian lận",
-    category: "Integration",
-    platformAdmin: "Hỗ trợ",
-    smeAdmin: "Có",
-    riskStaff: "Không",
+    capability: "Kiểm thử Sandbox & Quản lý Version Rule (v1, v2...)",
+    category: "Rule Lifecycle",
+    platformAdmin: "Có (Môi trường test riêng)",
+    smeAdmin: "Gửi Change Request",
+    operation: "Không",
+    investigator: "Không",
     viewer: "Không",
   },
   {
-    capability: "Xem báo cáo hiệu suất & Xuất dữ liệu CSV",
-    category: "Reporting",
-    platformAdmin: "Toàn hệ thống",
-    smeAdmin: "Trong tenant",
-    riskStaff: "Trong tenant",
+    capability: "Xem Dashboard tổng quan & Phân tích rủi ro",
+    category: "Monitoring",
+    platformAdmin: "Theo support scope",
+    smeAdmin: "Toàn doanh nghiệp",
+    operation: "Toàn doanh nghiệp",
+    investigator: "Chỉ theo dõi ca trực",
     viewer: "Có (Read-only)",
   },
   {
-    capability: "Xem Security Audit Trail (Nhật ký kiểm toán)",
-    category: "Audit & Compliance",
-    platformAdmin: "Toàn hệ thống",
-    smeAdmin: "Trong tenant",
-    riskStaff: "Theo quyền",
-    viewer: "Read-only",
+    capability: "Xem danh sách giao dịch & AI Scoring Explanation",
+    category: "Monitoring",
+    platformAdmin: "Theo support scope",
+    smeAdmin: "Có",
+    operation: "Có",
+    investigator: "Theo ca trực / case",
+    viewer: "Có (Read-only)",
   },
   {
-    capability: "Quản lý Quota, Subscription Plan & Platform Health",
-    category: "Platform Administration",
-    platformAdmin: "Có (Toàn quyền)",
-    smeAdmin: "Chỉ xem usage",
-    riskStaff: "Không",
+    capability: "Phân công Case cho Điều tra viên (Assign Case)",
+    category: "Case Management",
+    platformAdmin: "Không can thiệp prod",
+    smeAdmin: "Có quyền",
+    operation: "Có (Trách nhiệm chính)",
+    investigator: "Không",
     viewer: "Không",
+  },
+  {
+    capability: "Xem Hàng đợi Case (Case Queue)",
+    category: "Case Management",
+    platformAdmin: "Theo support scope",
+    smeAdmin: "Toàn bộ",
+    operation: "Toàn bộ (Mọi trạng thái)",
+    investigator: "Chỉ 'My Cases' được giao",
+    viewer: "Toàn bộ (Read-only)",
+  },
+  {
+    capability: "Thêm ghi chú điều tra & Gửi báo cáo kết luận (Submit Report)",
+    category: "Investigation",
+    platformAdmin: "Không can thiệp prod",
+    smeAdmin: "Có quyền",
+    operation: "Có quyền",
+    investigator: "Có (Nhiệm vụ chính)",
+    viewer: "Không (Read-only)",
+  },
+  {
+    capability: "Đưa ra quyết định cuối cùng (Confirm Fraud / False Alarm / Resolve)",
+    category: "Case Decision",
+    platformAdmin: "Không can thiệp prod",
+    smeAdmin: "Có quyền",
+    operation: "Có (Duyệt báo cáo)",
+    investigator: "Không có quyền đóng",
+    viewer: "Không",
+  },
+  {
+    capability: "Quản trị Project, thành viên & API Keys doanh nghiệp",
+    category: "Administration",
+    platformAdmin: "Setup ban đầu",
+    smeAdmin: "Có (Toàn quyền)",
+    operation: "Không",
+    investigator: "Không",
+    viewer: "Không",
+  },
+  {
+    capability: "Xem Báo cáo phân tích & Xuất dữ liệu CSV",
+    category: "Reporting",
+    platformAdmin: "Toàn hệ thống",
+    smeAdmin: "Toàn doanh nghiệp",
+    operation: "Toàn doanh nghiệp",
+    investigator: "Không",
+    viewer: "Có (Read-only)",
+  },
+  {
+    capability: "Xem Security Audit Trail (Nhật ký tuân thủ)",
+    category: "Audit & Compliance",
+    platformAdmin: "Toàn hệ thống",
+    smeAdmin: "Trong doanh nghiệp",
+    operation: "Trong doanh nghiệp",
+    investigator: "Không",
+    viewer: "Read-only",
   },
 ];

@@ -156,10 +156,6 @@ export function ProjectsView({
 
   return (
     <>
-      <div className={styles.breadcrumb}>
-        FraudGuard / Configuration / Projects & API Keys
-      </div>
-
       <div className={styles.pageHeading}>
         <div>
           <h1>Projects & API Keys</h1>

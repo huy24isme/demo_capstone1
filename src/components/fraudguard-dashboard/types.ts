@@ -3,10 +3,35 @@ export type RiskLevel = "Anomaly" | "Normal";
 export type ScoringSource = "AI" | "RULE" | "RULE_FALLBACK";
 export type CaseStatus =
   | "Open"
-  | "Reviewing"
+  | "Assigned"
+  | "Investigating"
+  | "Reported"
   | "Confirmed Fraud"
   | "False Alarm"
   | "Resolved";
+
+export type InvestigationFinding = "Suspicious" | "Legitimate" | "Need More Info";
+
+export interface InvestigationReport {
+  finding: InvestigationFinding;
+  notes: string;
+  evidenceNotes?: string;
+  submittedAt: string;
+  submittedBy: string;
+}
+
+export interface CaseNote {
+  text: string;
+  time: string;
+  author: string;
+}
+
+export interface CaseDecision {
+  status: CaseStatus;
+  decidedBy: string;
+  decidedAt: string;
+  directive?: string;
+}
 
 export interface TransactionRisk {
   id: string;
@@ -17,6 +42,8 @@ export interface TransactionRisk {
   entityReference: string;
   amount?: number;
   currency?: string;
+  channel?: string;
+  deviceId?: string;
   riskScore: number;
   riskLevel: RiskLevel;
   confidence?: number;
@@ -26,6 +53,11 @@ export interface TransactionRisk {
   alertId?: string;
   caseId?: string;
   caseStatus?: CaseStatus;
+  assignedInvestigator?: string;
+  assignedAt?: string;
+  investigationReport?: InvestigationReport;
+  investigationNotes?: CaseNote[];
+  caseDecision?: CaseDecision;
   processedAt: string;
 }
 
@@ -75,7 +107,7 @@ export interface ToastMessage {
 export type ConditionOperator = ">" | ">=" | "<" | "<=" | "==" | "!=" | "in" | "not_in" | "between";
 export type LogicGroup = "AND" | "OR";
 export type RuleCategory = "velocity" | "amount" | "identity" | "behavior" | "geo" | "device" | "custom";
-export type RuleSeverity = "critical" | "high" | "medium" | "low";
+export type RuleLifecycleStatus = "Draft" | "Testing" | "Validated" | "Published" | "Deprecated";
 
 export interface RuleConditionNode {
   type: "condition";
@@ -97,7 +129,8 @@ export interface RuleTemplate {
   name: string;
   description: string;
   category: RuleCategory;
-  severity: RuleSeverity;
+  version: string;
+  status: RuleLifecycleStatus;
   conditionGroup: ConditionGroupNode;
   riskPoints: number;
   multiplier?: number;
@@ -109,6 +142,7 @@ export interface RuleTemplate {
   };
   createdAt: string;
   updatedAt: string;
+  publishedAt?: string;
 }
 
 /* ── View types ── */
@@ -117,7 +151,10 @@ export type SecondaryView =
   | "risk-overview"
   | "recent-alerts"
   | "active-cases"
+  | "my-cases"
   | "rule-templates"
+  | "rule-testing"
+  | "onboarding"
   | "projects"
   | "reports"
   | "audit-trail"
@@ -173,7 +210,8 @@ export interface AuditLogEntry {
 export type UserRole =
   | "Platform Admin"
   | "SME Admin"
-  | "Risk Staff"
+  | "Operation"
+  | "Investigator"
   | "Viewer";
 
 export interface UserProfile {
@@ -190,11 +228,15 @@ export interface UserProfile {
 export interface RolePermissions {
   canManageProjects: boolean;
   canManageRules: boolean;
-  canManageCases: boolean;
+  canManageCases: boolean; // Phân công, phê duyệt kết quả điều tra, đóng/xác nhận case
+  canInvestigateCases: boolean; // Thêm ghi chú điều tra, đề xuất kết quả, nộp báo cáo
+  canViewAllCases: boolean; // Xem toàn bộ hàng đợi case (Operation, SME Admin, Viewer, Platform Admin)
   canViewAudit: boolean;
   canExport: boolean;
   isReadOnly: boolean;
   isSuperAdmin: boolean;
+  canAccessRuleTesting: boolean;
+  canAccessOnboarding: boolean;
 }
 
 /* ── Platform Health & Tenant types ── */

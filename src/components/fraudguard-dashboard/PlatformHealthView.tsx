@@ -68,10 +68,6 @@ export function PlatformHealthView() {
 
   return (
     <>
-      <div className={styles.breadcrumb}>
-        FraudGuard / Platform System / Platform Health & Tenants
-      </div>
-
       <div className={styles.pageHeading}>
         <div>
           <h1>Platform Health & Tenants Monitoring</h1>

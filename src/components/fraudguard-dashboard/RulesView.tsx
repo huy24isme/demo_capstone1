@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Eye } from "lucide-react";
 import type { ConditionGroupNode, RolePermissions, RuleConditionNode, RuleTemplate } from "./types";
 import { RuleBuilder } from "./RuleBuilder";
@@ -11,14 +11,8 @@ import styles from "./SecurityDashboard.module.css";
 interface RulesViewProps {
   initialRules: RuleTemplate[];
   permissions?: RolePermissions;
+  onNavigateToTesting?: () => void;
 }
-
-const SEVERITY_DOT: Record<string, string> = {
-  critical: styles.severityCritical,
-  high: styles.severityHigh,
-  medium: styles.severityMedium,
-  low: styles.severityLow,
-};
 
 function renderConditions(node: ConditionGroupNode | RuleConditionNode, depth = 0): React.ReactNode {
   if (node.type === "condition") {
@@ -64,7 +58,12 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
 
   // 2-Tier Rule Architecture state (Review 1 Feedback 3)
   const [ruleTierTab, setRuleTierTab] = useState<"all" | "system" | "custom">("all");
-  const isSystemRule = (r: RuleTemplate) => r.category !== "custom" && !r.name.includes("EdTech");
+  const isSystemRule = (r: RuleTemplate) => r.category !== "custom";
+
+  // Sync state if parent initialRules updates
+  useEffect(() => {
+    setRules(initialRules);
+  }, [initialRules]);
 
   // Dry-run Simulation state
   const [dryRunOpen, setDryRunOpen] = useState(false);
@@ -77,6 +76,16 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
       setDryRunLoading(false);
     }, 700);
   };
+
+  // Escape key handler for dry-run modal
+  useEffect(() => {
+    if (!dryRunOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDryRunOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [dryRunOpen]);
 
   // Detail Drawer state
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
@@ -171,11 +180,12 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
 
   return (
     <>
-      <div className={styles.breadcrumb}>FraudGuard / Configuration / Rule Templates</div>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Rule Templates (Động cơ Luật 2 Cấp độ)</h1>
-          <p>Tách biệt Quy tắc Chuẩn Hệ thống & Quy tắc Tùy biến Doanh nghiệp (Góp ý số 3)</p>
+          <h1>Rule Templates (Động cơ Luật Phát hiện Rủi ro)</h1>
+          <p>
+            Cấu hình, tinh chỉnh ngưỡng điểm phạt và quản lý quy tắc chuẩn hệ thống kết hợp quy tắc tùy biến doanh nghiệp.
+          </p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button
@@ -297,10 +307,17 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
                   onClick={() => setExpandedId(isExpanded ? null : rule.id)}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span className={`${styles.severityDot} ${SEVERITY_DOT[rule.severity]}`} />
+                    <span className={styles.ruleTag} style={{ color: "var(--security-blue)", borderColor: "#2d5a7b" }}>
+                      {rule.version || "v1.0"}
+                    </span>
                     <span style={{ fontSize: 14, fontWeight: 600, color: "var(--security-text)" }}>
                       {rule.name}
                     </span>
+                    {rule.status && rule.status !== "Published" && (
+                      <span className={styles.badge} style={{ background: "rgba(237, 167, 101, 0.15)", color: "var(--security-orange)", borderColor: "#715139", fontSize: 9 }}>
+                        {rule.status.toUpperCase()}
+                      </span>
+                    )}
                     <span className={`${styles.badge} ${rule.enabled ? styles.low : styles.medium}`} style={{ fontSize: 9 }}>
                       {rule.enabled ? "ENABLED" : "DISABLED"}
                     </span>
@@ -458,15 +475,21 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
         permissions={permissions}
       />
 
-      {/* Dry-run Simulation Modal (Review 1 Feedback 3) */}
+      {/* Dry-run Simulation Modal */}
       {dryRunOpen && (
-        <>
-          <div className={styles.builderOverlay} onClick={() => setDryRunOpen(false)} aria-hidden="true" />
+        <div
+          className={styles.builderOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDryRunOpen(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Dry-run Test Results"
+        >
           <div
             className={styles.builderModal}
             style={{ maxWidth: 660 }}
-            role="dialog"
-            aria-label="Dry-run Test Results"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.builderHeader}>
               <h2 className={styles.builderTitle}>🧪 Kết quả Chạy Thử Nghiệm Luật (Dry-run Simulation)</h2>
@@ -540,7 +563,7 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );

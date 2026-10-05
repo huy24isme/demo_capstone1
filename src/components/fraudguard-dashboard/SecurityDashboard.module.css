@@ -1336,21 +1336,36 @@
 .builderOverlay {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 50;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
   padding: 24px;
 }
 
 .builderModal {
+  position: relative;
+  z-index: 51;
   width: min(720px, 100%);
   max-height: 85vh;
   overflow-y: auto;
   border: 1px solid var(--security-border);
   border-radius: 8px;
   background: var(--security-panel);
-  animation: slideIn 200ms ease-out;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+  animation: modalScaleIn 200ms ease-out;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .builderHeader {
@@ -1930,10 +1945,17 @@
   border: 1px solid rgba(173, 138, 243, 0.35);
 }
 
-.roleBadgeRiskStaff {
-  background: rgba(113, 185, 244, 0.15);
-  color: var(--security-blue);
-  border: 1px solid rgba(113, 185, 244, 0.35);
+.roleBadgeRiskStaff,
+.roleBadgeOperation {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+}
+
+.roleBadgeInvestigator {
+  background: rgba(2, 132, 199, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(2, 132, 199, 0.35);
 }
 
 .roleBadgeViewer {
@@ -2762,6 +2784,242 @@
 .userLogoutBtn:hover {
   background: rgba(237, 103, 117, 0.2);
   border-color: var(--security-red);
+}
+
+/* Workflow Stepper in Drawer */
+.stepperContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--security-border);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.stepperItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.stepperDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--security-control);
+  color: var(--security-muted);
+  border: 1px solid var(--security-border-strong);
+  flex-shrink: 0;
+}
+
+.stepperDotActive {
+  background: var(--security-blue);
+  color: #fff;
+  border-color: var(--security-blue);
+  box-shadow: 0 0 8px rgba(113, 185, 244, 0.4);
+}
+
+.stepperDotCompleted {
+  background: rgba(120, 201, 172, 0.2);
+  color: var(--security-green);
+  border-color: var(--security-green);
+}
+
+.stepperLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--security-muted);
+  white-space: nowrap;
+}
+
+.stepperLabelActive {
+  color: var(--security-text);
+  font-weight: 600;
+}
+
+.stepperLine {
+  flex: 1;
+  min-width: 14px;
+  height: 1px;
+  background: var(--security-border);
+  margin: 0 6px;
+}
+
+.stepperLineCompleted {
+  background: var(--security-green);
+}
+
+/* Dossier Card (Read-only review for Operation) */
+.dossierCard {
+  border: 1px solid #383d4c;
+  background: color-mix(in srgb, var(--security-panel) 90%, black);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.dossierHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--security-border);
+}
+
+.dossierAuthorInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dossierAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(113, 185, 244, 0.2);
+  color: var(--security-blue);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dossierAuthorName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--security-text);
+}
+
+.dossierTime {
+  font-size: 10px;
+  color: var(--security-subtle);
+}
+
+.dossierEvidenceBox {
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--security-orange);
+  margin-bottom: 10px;
+}
+
+.dossierEvidenceLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--security-orange);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.dossierEvidenceText {
+  font-size: 12px;
+  color: var(--security-text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.dossierNotesBox {
+  font-size: 12px;
+  color: var(--security-text-secondary);
+  line-height: 1.5;
+  margin: 8px 0;
+}
+
+/* Operation Final Decision Deck */
+.operationDecisionCard {
+  border: 1px solid #483d66;
+  background: rgba(173, 138, 243, 0.04);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 14px;
+}
+
+.operationDecisionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.operationDecisionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--security-purple);
+  margin: 0;
+}
+
+.decisionDirectiveInput {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--security-border-strong);
+  border-radius: 4px;
+  background: var(--security-control);
+  color: var(--security-text);
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.decisionDirectiveInput:focus {
+  border-color: var(--security-purple);
+  outline: none;
+}
+
+.decisionActionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.decisionBtnFraud {
+  background: var(--critical-bg) !important;
+  color: var(--critical-text) !important;
+  border-color: var(--critical-border) !important;
+  font-weight: 600;
+}
+
+.decisionBtnFalseAlarm {
+  background: rgba(120, 201, 172, 0.15) !important;
+  color: var(--security-green) !important;
+  border-color: #3f665a !important;
+  font-weight: 600;
+}
+
+.decisionBtnReinvestigate {
+  background: rgba(237, 167, 101, 0.15) !important;
+  color: var(--security-orange) !important;
+  border-color: #715139 !important;
+  font-weight: 600;
+}
+
+.decisionBtnResolve {
+  background: rgba(113, 185, 244, 0.15) !important;
+  color: var(--security-blue) !important;
+  border-color: #2d5a7b !important;
+  font-weight: 600;
+}
+
+/* Closed Case Record Card */
+.closedVerdictCard {
+  border: 1px solid var(--security-border-strong);
+  border-radius: 6px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  margin-top: 14px;
 }
 
 
