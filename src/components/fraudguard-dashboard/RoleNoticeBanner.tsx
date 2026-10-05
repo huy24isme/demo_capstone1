@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, ShieldAlert, Zap, Info, UserCheck } from "lucide-react";
+import { Eye, Zap, Info, UserCheck } from "lucide-react";
 import type { SecondaryView, UserProfile } from "./types";
 import styles from "./SecurityDashboard.module.css";
 

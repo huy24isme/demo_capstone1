@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  User,
   Volume2,
   VolumeX,
   RefreshCw,
@@ -13,8 +12,6 @@ import {
   LogOut,
   ChevronDown,
   ShieldCheck,
-  Check,
-  Sliders,
 } from "lucide-react";
 import type { SecondaryView, UserProfile } from "./types";
 import { PermissionMatrixModal } from "./PermissionMatrixModal";

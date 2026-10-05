@@ -3,24 +3,17 @@
 import { useEffect, useMemo, useRef } from "react";
 import {
   Sliders,
-  CheckCircle2,
-  XCircle,
   Copy,
   Edit3,
   Trash2,
   TrendingUp,
   Activity,
-  Layers,
-  ArrowRight,
-  ShieldAlert,
-  Calendar,
 } from "lucide-react";
 import type {
   ConditionGroupNode,
   RolePermissions,
   RuleConditionNode,
   RuleTemplate,
-  TransactionRisk,
 } from "./types";
 import { fraudGuardTransactions } from "@/data/fraudguard-transactions";
 import styles from "./SecurityDashboard.module.css";

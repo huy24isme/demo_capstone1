@@ -1,19 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  Cpu,
-  Database,
-  Layers,
-  Radio,
-  RefreshCw,
-  Server,
-  Shield,
-  Zap,
-} from "lucide-react";
+import { RefreshCw, Zap } from "lucide-react";
 import {
   Area,
   AreaChart,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Check, Shield, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, Check, FileSpreadsheet } from "lucide-react";
 import type { UserProfile } from "./types";
 import { DEMO_USERS } from "../../data/fraudguard-roles";
 import { PermissionMatrixModal } from "./PermissionMatrixModal";

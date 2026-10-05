@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   TestTube2,
-  CheckCircle2,
 } from "lucide-react";
 import styles from "./SecurityDashboard.module.css";
 import type { SecondaryView, UserProfile } from "./types";

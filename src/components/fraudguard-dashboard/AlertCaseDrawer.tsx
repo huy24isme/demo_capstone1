@@ -18,22 +18,14 @@ import styles from "./SecurityDashboard.module.css";
 import {
   CheckCircle2,
   AlertOctagon,
-  HelpCircle,
   UserCheck,
-  ShieldAlert,
-  ArrowRight,
-  FileCheck2,
   Clock,
   RotateCcw,
   Check,
   Send,
   Play,
-  Eye,
-  Info,
   ShieldCheck,
-  Lock,
   User,
-  FileText,
 } from "lucide-react";
 
 interface AlertCaseDrawerProps {

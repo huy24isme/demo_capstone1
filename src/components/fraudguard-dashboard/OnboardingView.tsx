@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import styles from "./SecurityDashboard.module.css";
-import { CheckCircle2, ChevronRight, Clock, ShieldCheck, Building2, Key, FileText, ArrowRight, Lock } from "lucide-react";
+import { ShieldCheck, Building2, Key, Lock } from "lucide-react";
 import { useToast } from "./ToastProvider";
 
 interface OnboardingViewProps {

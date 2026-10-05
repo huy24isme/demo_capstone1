@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -9,13 +9,9 @@ import {
   Sun,
   Moon,
   Globe,
-  Lock,
-  ArrowRight,
   ExternalLink,
   Sparkles,
   AlertCircle,
-  Building2,
-  CheckCircle2,
   ChevronDown,
 } from "lucide-react";
 import styles from "./Login.module.css";

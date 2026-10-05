@@ -11,17 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  Download,
-  FileText,
-  ShieldCheck,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Eye,
-  AlertTriangle,
-  UserCheck,
-} from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import type {
   CaseStatus,
   InvestigationFinding,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { RuleLifecycleStatus, RuleTemplate } from "./types";
 import styles from "./SecurityDashboard.module.css";
-import { Play, Check, ShieldCheck, History, Sliders, ArrowUpRight, AlertTriangle, Layers } from "lucide-react";
+import { Play, Check, Sliders } from "lucide-react";
 import { useToast } from "./ToastProvider";
 
 interface RuleTestingViewProps {

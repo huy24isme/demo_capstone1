@@ -1,15 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  History,
-  Shield,
-  Filter,
-  Search,
-  User,
-  Clock,
-  Terminal,
-} from "lucide-react";
 import type { AuditAction, AuditLogEntry } from "./types";
 import styles from "./SecurityDashboard.module.css";
 

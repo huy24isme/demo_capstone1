@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Upload, CheckCircle2, ShieldAlert, FileText, X } from "lucide-react";
+import { Download, Upload, CheckCircle2, FileText, X } from "lucide-react";
 import { downloadCSVTemplate } from "@/lib/export-csv";
 import styles from "./SecurityDashboard.module.css";
 

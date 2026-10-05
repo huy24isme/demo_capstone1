@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Check, ShieldAlert, ShieldCheck } from "lucide-react";
+import { X, Check, ShieldAlert } from "lucide-react";
 import { PERMISSION_MATRIX_DATA } from "../../data/fraudguard-roles";
 import styles from "./SecurityDashboard.module.css";
 

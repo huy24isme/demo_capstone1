@@ -17,12 +17,9 @@ import {
   FileCheck2,
   AlertTriangle,
   ShieldCheck,
-  CheckCircle2,
   Play,
-  ArrowRight,
   Eye,
   Send,
-  SlidersHorizontal,
 } from "lucide-react";
 
 interface CasesViewProps {
