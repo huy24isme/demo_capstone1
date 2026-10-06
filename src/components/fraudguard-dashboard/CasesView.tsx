@@ -792,7 +792,7 @@ export function CasesView({
             onClick={() => setOpTab("all")}
             type="button"
           >
-            Tất cả hàng đợi ({allCases.length})
+            Tất cả ({allCases.length})
           </button>
           <button
             className={`${styles.tab} ${opTab === "unassigned" ? styles.tabActive : ""}`}
@@ -806,14 +806,14 @@ export function CasesView({
             onClick={() => setOpTab("in-field")}
             type="button"
           >
-            Đang xử lý hiện trường ({operationStats.inField})
+            Đang xử lý ({operationStats.inField})
           </button>
           <button
             className={`${styles.tab} ${opTab === "reported" ? styles.tabActive : ""}`}
             onClick={() => setOpTab("reported")}
             type="button"
           >
-            Báo cáo chờ duyệt ({operationStats.reported})
+            Chờ duyệt ({operationStats.reported})
           </button>
           <button
             className={`${styles.tab} ${opTab === "completed" ? styles.tabActive : ""}`}

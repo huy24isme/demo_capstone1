@@ -530,8 +530,6 @@ export function FraudGuardDashboard({
             currentUser={currentUser}
             onSwitchUser={handleSwitchUser}
             onNavigate={setActiveNavItem}
-            isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={handleToggleSidebar}
           />
           <main className={styles.main}>
             <RoleNoticeBanner
