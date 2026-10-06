@@ -21,6 +21,7 @@ import {
   Eye,
   Send,
 } from "lucide-react";
+import { AVAILABLE_INVESTIGATORS } from "./AlertCaseDrawer";
 
 interface CasesViewProps {
   transactions: TransactionRisk[];
@@ -621,7 +622,7 @@ export function CasesView({
                         flexDirection: "column",
                         gap: 8,
                         flexShrink: 0,
-                        minWidth: 150,
+                        width: 165,
                       }}
                     >
                       {isAssigned && (
@@ -631,7 +632,9 @@ export function CasesView({
                           type="button"
                           style={{
                             fontSize: 12,
-                            padding: "7px 12px",
+                            height: 32,
+                            minHeight: 32,
+                            padding: "6px 12px",
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -650,7 +653,9 @@ export function CasesView({
                           type="button"
                           style={{
                             fontSize: 12,
-                            padding: "7px 12px",
+                            height: 32,
+                            minHeight: 32,
+                            padding: "6px 12px",
                             background: "var(--security-purple)",
                             display: "inline-flex",
                             alignItems: "center",
@@ -670,6 +675,9 @@ export function CasesView({
                           type="button"
                           style={{
                             fontSize: 12,
+                            height: 32,
+                            minHeight: 32,
+                            padding: "6px 12px",
                             borderColor: "#8c7b00",
                             color: "#ffd700",
                             display: "inline-flex",
@@ -687,7 +695,15 @@ export function CasesView({
                         className={styles.button}
                         onClick={() => onReview(tx)}
                         type="button"
-                        style={{ fontSize: 11, padding: "5px 10px" }}
+                        style={{
+                          fontSize: 12,
+                          height: 32,
+                          minHeight: 32,
+                          padding: "6px 12px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
                         Chi tiết Hồ sơ
                       </button>
@@ -1009,26 +1025,46 @@ export function CasesView({
                       flexDirection: "column",
                       gap: 8,
                       flexShrink: 0,
-                      minWidth: 140,
+                      width: 165,
                     }}
                   >
                     {isUnassigned && (
-                      <button
-                        className={styles.btnPrimary}
-                        onClick={() => handleQuickAssign(tx, "Nguyễn Văn An")}
-                        type="button"
+                      <select
+                        className={styles.control}
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleQuickAssign(tx, e.target.value);
+                          }
+                        }}
+                        aria-label="Phân công điều tra viên"
                         style={{
-                          fontSize: 11,
-                          padding: "6px 12px",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 5,
+                          fontSize: 12,
+                          height: 32,
+                          minHeight: 32,
+                          padding: "0 8px",
+                          borderRadius: 4,
+                          background: "var(--security-control)",
+                          color: "var(--security-blue)",
+                          border: "1px solid var(--security-blue)",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          width: "100%",
                         }}
                       >
-                        <UserCheck size={13} />
-                        Gán cho Nguyễn Văn An
-                      </button>
+                        <option value="" disabled style={{ background: "var(--security-panel)", color: "var(--security-muted)" }}>
+                          Gán điều tra viên…
+                        </option>
+                        {AVAILABLE_INVESTIGATORS.map((inv) => (
+                          <option
+                            key={inv}
+                            value={inv}
+                            style={{ background: "var(--security-panel)", color: "var(--security-text)" }}
+                          >
+                            {inv}
+                          </option>
+                        ))}
+                      </select>
                     )}
 
                     {isReported && (
@@ -1041,14 +1077,16 @@ export function CasesView({
                           color: "#1f2025",
                           fontWeight: 700,
                           fontSize: 12,
-                          padding: "7px 12px",
+                          height: 32,
+                          minHeight: 32,
+                          padding: "6px 12px",
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
                           gap: 6,
                         }}
                       >
-                        <ShieldCheck size={14} />
+                        <ShieldCheck size={13} />
                         Phê duyệt Báo cáo
                       </button>
                     )}
@@ -1057,7 +1095,15 @@ export function CasesView({
                       className={styles.button}
                       onClick={() => onReview(tx)}
                       type="button"
-                      style={{ fontSize: 11, padding: "5px 10px" }}
+                      style={{
+                        fontSize: 12,
+                        height: 32,
+                        minHeight: 32,
+                        padding: "6px 12px",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
                     >
                       Chi tiết Case
                     </button>

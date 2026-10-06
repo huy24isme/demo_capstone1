@@ -39,7 +39,7 @@ interface AlertCaseDrawerProps {
   threshold?: number;
 }
 
-const AVAILABLE_INVESTIGATORS = [
+export const AVAILABLE_INVESTIGATORS = [
   "Nguyễn Văn An",
   "Lê Quốc Bảo",
   "Trần Thu Hà",
