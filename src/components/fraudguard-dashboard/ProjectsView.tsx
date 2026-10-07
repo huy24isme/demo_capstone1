@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Key,
   Plus,
   RefreshCw,
   Sliders,
@@ -14,6 +13,7 @@ import {
 } from "lucide-react";
 import type { ProjectItem, RolePermissions } from "./types";
 import { useToast } from "./ToastProvider";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface ProjectsViewProps {
@@ -29,6 +29,8 @@ export function ProjectsView({
   threshold = 75,
   onThresholdChange,
 }: ProjectsViewProps) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const canManage = permissions ? permissions.canManageProjects : true;
   const { toast } = useToast();
   const [projects, setProjects] = useState<ProjectItem[]>(initialProjects);
@@ -82,7 +84,12 @@ export function ProjectsView({
   const handleCopyKey = (key: string, id: string) => {
     navigator.clipboard.writeText(key);
     setCopiedId(id);
-    toast("success", "Đã sao chép API Key vào bộ nhớ tạm");
+    toast(
+      "success",
+      language === "vi"
+        ? "Đã sao chép API Key vào bộ nhớ tạm"
+        : "API Key copied to clipboard",
+    );
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -97,7 +104,12 @@ export function ProjectsView({
     setProjects((prev) =>
       prev.map((p) => (p.id === project.id ? { ...p, apiKey: newKey } : p)),
     );
-    toast("info", `Đã tạo lại API Key mới cho dự án "${project.name}"`);
+    toast(
+      "info",
+      language === "vi"
+        ? `Đã tạo lại API Key mới cho dự án "${project.name}"`
+        : `New API Key generated for "${project.name}"`,
+    );
   };
 
   const handleOpenWebhookModal = (project: ProjectItem) => {
@@ -114,13 +126,23 @@ export function ProjectsView({
           : p,
       ),
     );
-    toast("success", `Đã cập nhật Webhook cho "${editingWebhookProject.name}"`);
+    toast(
+      "success",
+      language === "vi"
+        ? `Đã cập nhật Webhook cho "${editingWebhookProject.name}"`
+        : `Webhook updated for "${editingWebhookProject.name}"`,
+    );
     setEditingWebhookProject(null);
   };
 
   const handleCreateProject = () => {
     if (!newProjectName.trim() || !newProjectCode.trim()) {
-      toast("error", "Vui lòng nhập đầy đủ tên và mã dự án");
+      toast(
+        "error",
+        language === "vi"
+          ? "Vui lòng nhập đầy đủ tên và mã dự án"
+          : "Please enter both project name and code",
+      );
       return;
     }
     const prefix = newProjectEnv === "Production" ? "fg_live_" : "fg_test_";
@@ -134,7 +156,11 @@ export function ProjectsView({
       id: `proj-${Date.now()}`,
       name: newProjectName.trim(),
       code: newProjectCode.trim().toUpperCase(),
-      description: newProjectDesc.trim() || "Dự án mới tích hợp FraudGuard",
+      description:
+        newProjectDesc.trim() ||
+        (language === "vi"
+          ? "Dự án mới tích hợp FraudGuard"
+          : "New FraudGuard integration project"),
       environment: newProjectEnv,
       apiKey: newKey,
       quota: {
@@ -147,7 +173,12 @@ export function ProjectsView({
     };
 
     setProjects((prev) => [...prev, newProject]);
-    toast("success", `Đã tạo dự án mới: "${newProject.name}"`);
+    toast(
+      "success",
+      language === "vi"
+        ? `Đã tạo dự án mới: "${newProject.name}"`
+        : `Created new project: "${newProject.name}"`,
+    );
     setCreateModalOpen(false);
     setNewProjectName("");
     setNewProjectCode("");
@@ -158,41 +189,43 @@ export function ProjectsView({
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Projects & API Keys</h1>
-          <p>
-            Quản lý các nguồn dữ liệu tích hợp, khóa xác thực API và Webhook cảnh báo.
-          </p>
+          <h1>{t.projectsView.title}</h1>
+          <p>{t.projectsView.subtitle}</p>
         </div>
         <button
           className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
           onClick={() => canManage && setCreateModalOpen(true)}
           disabled={!canManage}
-          title={!canManage ? "Chỉ SME Admin mới có quyền tạo dự án mới" : undefined}
+          title={!canManage ? "SME Admin permission required" : undefined}
           type="button"
         >
           <Plus size={15} style={{ marginRight: 6 }} />
-          New Project
+          {t.projectsView.btnCreate}
         </button>
       </div>
 
       {/* KPI Stats */}
       <section className={styles.metricsGrid} style={{ marginTop: 24 }}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Total Projects</div>
+          <div className={styles.statLabel}>{t.projectsView.kpis.total}</div>
           <strong className={styles.statValue}>{stats.total}</strong>
           <span className={styles.statDescription}>
-            {stats.prod} Production · {stats.staging} Staging
+            {t.projectsView.kpis.totalDesc
+              .replace("{prod}", String(stats.prod))
+              .replace("{staging}", String(stats.staging))}
           </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>API Calls This Month</div>
+          <div className={styles.statLabel}>{t.projectsView.kpis.calls}</div>
           <strong className={styles.statValue}>
-            {stats.totalCalls.toLocaleString("en")}
+            {stats.totalCalls.toLocaleString(dateLocale)}
           </strong>
-          <span className={styles.statDescription}>Trên toàn bộ các dự án</span>
+          <span className={styles.statDescription}>
+            {t.projectsView.kpis.callsDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Overall Quota Usage</div>
+          <div className={styles.statLabel}>{t.projectsView.kpis.quota}</div>
           <strong
             className={styles.statValue}
             style={{
@@ -204,17 +237,21 @@ export function ProjectsView({
           >
             {stats.quotaPercent}%
           </strong>
-          <span className={styles.statDescription}>Tự động reset ngày 01 hàng tháng</span>
+          <span className={styles.statDescription}>
+            {t.projectsView.kpis.quotaDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Active Status</div>
+          <div className={styles.statLabel}>{t.projectsView.kpis.status}</div>
           <strong
             className={styles.statValue}
             style={{ color: "var(--security-green)" }}
           >
             100%
           </strong>
-          <span className={styles.statDescription}>Tất cả API keys hợp lệ</span>
+          <span className={styles.statDescription}>
+            {t.projectsView.kpis.statusDesc}
+          </span>
         </article>
       </section>
 
@@ -224,221 +261,287 @@ export function ProjectsView({
           <input
             className={styles.searchInput}
             type="search"
-            placeholder="Tìm theo tên hoặc mã dự án..."
+            placeholder={t.projectsView.searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <select
             className={styles.control}
-            aria-label="Môi trường"
+            aria-label="Environment"
             value={filterEnv}
             onChange={(e) => setFilterEnv(e.target.value)}
           >
-            <option value="all">Tất cả môi trường</option>
-            <option value="Production">Production</option>
-            <option value="Staging">Staging</option>
+            <option value="all">{t.projectsView.filterAllEnv}</option>
+            <option value="Production">{t.projectsView.filterProd}</option>
+            <option value="Staging">{t.projectsView.filterStaging}</option>
           </select>
         </div>
       </div>
 
       {/* Project Cards Grid */}
       <div className={styles.projectGrid}>
-        {filteredProjects.map((project) => {
-          const isRevealed = showKey[project.id];
-          const quotaRate = Math.round(
-            (project.quota.used / project.quota.total) * 100,
-          );
-          return (
-            <article key={project.id} className={styles.projectCard}>
-              {/* Header */}
-              <div className={styles.projectCardHeader}>
+        {filteredProjects.length === 0 ? (
+          <div className={styles.muted} style={{ padding: "20px 0" }}>
+            {t.projectsView.emptyMessage}
+          </div>
+        ) : (
+          filteredProjects.map((project) => {
+            const isRevealed = showKey[project.id];
+            const quotaRate = Math.round(
+              (project.quota.used / project.quota.total) * 100,
+            );
+            return (
+              <article key={project.id} className={styles.projectCard}>
+                {/* Header */}
+                <div className={styles.projectCardHeader}>
+                  <div>
+                    <h3 className={styles.projectCardTitle}>{project.name}</h3>
+                    <p className={styles.projectCardDesc}>{project.description}</p>
+                  </div>
+                  <span
+                    className={`${styles.projectEnvBadge} ${
+                      project.environment === "Production"
+                        ? styles.envProd
+                        : styles.envStaging
+                    }`}
+                  >
+                    {project.environment}
+                  </span>
+                </div>
+
+                {/* API Key Box */}
                 <div>
-                  <h3 className={styles.projectCardTitle}>{project.name}</h3>
-                  <p className={styles.projectCardDesc}>{project.description}</p>
-                </div>
-                <span
-                  className={`${styles.projectEnvBadge} ${
-                    project.environment === "Production"
-                      ? styles.envProd
-                      : styles.envStaging
-                  }`}
-                >
-                  {project.environment}
-                </span>
-              </div>
-
-              {/* API Key Box */}
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 6,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: "var(--security-text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    API Secret Key
-                  </span>
-                  <button
-                    className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
-                    style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
-                    onClick={() => canManage && handleRegenerateKey(project)}
-                    disabled={!canManage}
-                    type="button"
-                    title={!canManage ? "Chỉ SME Admin mới có quyền cấp lại API Key" : "Sinh lại key mới"}
-                  >
-                    <RefreshCw size={11} style={{ marginRight: 4 }} />
-                    Regenerate
-                  </button>
-                </div>
-
-                <div className={styles.apiKeyBox}>
-                  <span className={styles.apiKeyCode}>
-                    {isRevealed
-                      ? project.apiKey
-                      : project.apiKey.slice(0, 10) + "••••••••••••••••••"}
-                  </span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <button
-                      className={styles.button}
-                      style={{ minHeight: 26, padding: "4px 8px" }}
-                      onClick={() => toggleShowKey(project.id)}
-                      type="button"
-                      title={isRevealed ? "Ẩn key" : "Hiện key"}
-                    >
-                      {isRevealed ? <EyeOff size={13} /> : <Eye size={13} />}
-                    </button>
-                    <button
-                      className={styles.button}
-                      style={{ minHeight: 26, padding: "4px 8px" }}
-                      onClick={() => handleCopyKey(project.apiKey, project.id)}
-                      type="button"
-                      title="Sao chép"
-                    >
-                      {copiedId === project.id ? (
-                        <Check size={13} color="var(--security-green)" />
-                      ) : (
-                        <Copy size={13} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Webhook Endpoint */}
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 6,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: "var(--security-text-secondary)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    Webhook Notification
-                  </span>
-                  <button
-                    className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
-                    style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
-                    onClick={() => canManage && handleOpenWebhookModal(project)}
-                    disabled={!canManage}
-                    type="button"
-                    title={!canManage ? "Chỉ SME Admin mới có quyền cấu hình Webhook" : "Cấu hình Webhook"}
-                  >
-                    Edit URL
-                  </button>
-                </div>
-
-                <div className={styles.webhookRow}>
-                  <Globe size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
-                  <span className={styles.webhookUrl}>
-                    {project.webhookUrl || "Chưa cấu hình webhook"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Monthly Quota Bar */}
-              <div className={styles.quotaSection}>
-                <div className={styles.quotaHeader}>
-                  <span>Hạn mức tháng (Quota)</span>
-                  <span>
-                    {project.quota.used.toLocaleString("en")} /{" "}
-                    {project.quota.total.toLocaleString("en")} ({quotaRate}%)
-                  </span>
-                </div>
-                <div className={styles.quotaBar}>
                   <div
-                    className={styles.quotaFill}
                     style={{
-                      width: `${Math.min(quotaRate, 100)}%`,
-                      background:
-                        quotaRate > 80
-                          ? "var(--security-orange)"
-                          : "var(--security-blue)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 6,
                     }}
-                  />
-                </div>
-              </div>
-
-              {/* Risk Policy Decision Threshold (TAR-TAD-R Module M8) */}
-              <div style={{ padding: "9px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 4, border: "1px solid var(--security-border)", marginTop: 6 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Sliders size={13} style={{ color: "var(--security-orange)" }} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--security-text-secondary)" }}>
-                      Ngưỡng Kích Hoạt Bất Thường (&tau;)
-                    </span>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--security-orange)" }}>
-                    {threshold} / 100
-                  </span>
-                </div>
-                {canManage && onThresholdChange && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                    <input
-                      type="range"
-                      min={50}
-                      max={95}
-                      step={5}
-                      value={threshold}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        onThresholdChange(val);
-                        toast("info", `Đã cập nhật ngưỡng phát hiện rủi ro dự án: τ = ${val}`);
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--security-text-secondary)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
                       }}
-                      style={{ flex: 1, accentColor: "var(--security-orange)", height: 4, cursor: "pointer" }}
-                      aria-label="Điều chỉnh ngưỡng rủi ro dự án"
-                    />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--security-text-secondary)", minWidth: 42, textAlign: "right" }}>
-                      &tau; = {threshold}
+                    >
+                      {t.projectsView.card.apiKey}
+                    </span>
+                    <button
+                      className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                      style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
+                      onClick={() => canManage && handleRegenerateKey(project)}
+                      disabled={!canManage}
+                      type="button"
+                      title={t.projectsView.card.btnRegenerate}
+                    >
+                      <RefreshCw size={11} style={{ marginRight: 4 }} />
+                      {t.projectsView.card.btnRegenerate}
+                    </button>
+                  </div>
+
+                  <div className={styles.apiKeyBox}>
+                    <span className={styles.apiKeyCode}>
+                      {isRevealed
+                        ? project.apiKey
+                        : project.apiKey.slice(0, 10) + "••••••••••••••••••"}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <button
+                        className={styles.button}
+                        style={{ minHeight: 26, padding: "4px 8px" }}
+                        onClick={() => toggleShowKey(project.id)}
+                        type="button"
+                        title={isRevealed ? "Hide" : "Show"}
+                      >
+                        {isRevealed ? <EyeOff size={13} /> : <Eye size={13} />}
+                      </button>
+                      <button
+                        className={styles.button}
+                        style={{ minHeight: 26, padding: "4px 8px" }}
+                        onClick={() => handleCopyKey(project.apiKey, project.id)}
+                        type="button"
+                        title={t.projectsView.card.btnCopy}
+                      >
+                        {copiedId === project.id ? (
+                          <Check size={13} color="var(--security-green)" />
+                        ) : (
+                          <Copy size={13} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Webhook Endpoint */}
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--security-text-secondary)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {t.projectsView.card.webhook}
+                    </span>
+                    <button
+                      className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
+                      style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
+                      onClick={() => canManage && handleOpenWebhookModal(project)}
+                      disabled={!canManage}
+                      type="button"
+                      title={t.projectsView.card.btnConfigWebhook}
+                    >
+                      {t.projectsView.card.btnConfigWebhook}
+                    </button>
+                  </div>
+
+                  <div className={styles.webhookRow}>
+                    <Globe size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
+                    <span className={styles.webhookUrl}>
+                      {project.webhookUrl || t.projectsView.card.notConfigured}
                     </span>
                   </div>
-                )}
-                <div style={{ fontSize: 10, color: "var(--security-muted)", marginTop: 4 }}>
-                  Chính sách rủi ro Tenant: Giao dịch có điểm rủi ro tổng hợp &ge; {threshold} sẽ tự động kích hoạt cảnh báo đỏ.
                 </div>
-              </div>
-            </article>
-          );
-        })}
+
+                {/* Monthly Quota Bar */}
+                <div className={styles.quotaSection}>
+                  <div className={styles.quotaHeader}>
+                    <span>{t.projectsView.card.quota}</span>
+                    <span>
+                      {project.quota.used.toLocaleString(dateLocale)} /{" "}
+                      {project.quota.total.toLocaleString(dateLocale)} ({quotaRate}%)
+                    </span>
+                  </div>
+                  <div className={styles.quotaBar}>
+                    <div
+                      className={styles.quotaFill}
+                      style={{
+                        width: `${Math.min(quotaRate, 100)}%`,
+                        background:
+                          quotaRate > 80
+                            ? "var(--security-orange)"
+                            : "var(--security-blue)",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Risk Policy Decision Threshold */}
+                <div
+                  style={{
+                    padding: "9px 12px",
+                    background: "rgba(255,255,255,0.02)",
+                    borderRadius: 4,
+                    border: "1px solid var(--security-border)",
+                    marginTop: 6,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Sliders size={13} style={{ color: "var(--security-orange)" }} />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "var(--security-text-secondary)",
+                        }}
+                      >
+                        {t.projectsView.card.thresholdLabel}
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--security-orange)",
+                      }}
+                    >
+                      {threshold} / 100
+                    </span>
+                  </div>
+                  {canManage && onThresholdChange && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginTop: 8,
+                      }}
+                    >
+                      <input
+                        type="range"
+                        min={50}
+                        max={95}
+                        step={5}
+                        value={threshold}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          onThresholdChange(val);
+                          toast(
+                            "info",
+                            language === "vi"
+                              ? `Đã cập nhật ngưỡng phát hiện rủi ro dự án: τ = ${val}`
+                              : `Updated project detection threshold: τ = ${val}`,
+                          );
+                        }}
+                        style={{
+                          flex: 1,
+                          accentColor: "var(--security-orange)",
+                          height: 4,
+                          cursor: "pointer",
+                        }}
+                        aria-label="Adjust project threshold"
+                      />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "var(--security-text-secondary)",
+                          minWidth: 42,
+                          textAlign: "right",
+                        }}
+                      >
+                        &tau; = {threshold}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: "var(--security-muted)",
+                      marginTop: 4,
+                    }}
+                  >
+                    {t.projectsView.card.thresholdDesc.replace(
+                      "{threshold}",
+                      String(threshold),
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
       </div>
 
       {/* Edit Webhook Modal */}
@@ -454,7 +557,10 @@ export function ProjectsView({
           >
             <div className={styles.builderHeader}>
               <h2 className={styles.builderTitle}>
-                Cấu hình Webhook — {editingWebhookProject.name}
+                {t.projectsView.modalWebhook.title.replace(
+                  "{name}",
+                  editingWebhookProject.name,
+                )}
               </h2>
               <button
                 className={styles.drawerCloseBtn}
@@ -473,10 +579,12 @@ export function ProjectsView({
                   marginBottom: 14,
                 }}
               >
-                Khi có giao dịch rủi ro vượt ngưỡng Critical, FraudGuard sẽ gửi HTTP POST payload tới URL này.
+                {t.projectsView.modalWebhook.desc}
               </p>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Webhook Endpoint URL</label>
+                <label className={styles.formLabel}>
+                  {t.projectsView.modalWebhook.urlLabel}
+                </label>
                 <input
                   className={styles.formInput}
                   type="url"
@@ -492,14 +600,14 @@ export function ProjectsView({
                 onClick={() => setEditingWebhookProject(null)}
                 type="button"
               >
-                Hủy
+                {t.projectsView.modalWebhook.btnCancel}
               </button>
               <button
                 className={styles.btnPrimary}
                 onClick={handleSaveWebhook}
                 type="button"
               >
-                Lưu Webhook
+                {t.projectsView.modalWebhook.btnSave}
               </button>
             </div>
           </div>
@@ -518,7 +626,9 @@ export function ProjectsView({
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.builderHeader}>
-              <h2 className={styles.builderTitle}>Tạo Dự Án Mới</h2>
+              <h2 className={styles.builderTitle}>
+                {t.projectsView.modalCreate.title}
+              </h2>
               <button
                 className={styles.drawerCloseBtn}
                 onClick={() => setCreateModalOpen(false)}
@@ -529,28 +639,34 @@ export function ProjectsView({
             </div>
             <div className={styles.builderBody}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Tên dự án *</label>
+                <label className={styles.formLabel}>
+                  {t.projectsView.modalCreate.nameLabel}
+                </label>
                 <input
                   className={styles.formInput}
                   type="text"
-                  placeholder="Ví dụ: B2B Payment Portal"
+                  placeholder={t.projectsView.modalCreate.namePlaceholder}
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                 />
               </div>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Mã định danh (Code) *</label>
+                  <label className={styles.formLabel}>
+                    {t.projectsView.modalCreate.codeLabel}
+                  </label>
                   <input
                     className={styles.formInput}
                     type="text"
-                    placeholder="B2B_PORTAL"
+                    placeholder={t.projectsView.modalCreate.codePlaceholder}
                     value={newProjectCode}
                     onChange={(e) => setNewProjectCode(e.target.value)}
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Môi trường</label>
+                  <label className={styles.formLabel}>
+                    {t.projectsView.modalCreate.envLabel}
+                  </label>
                   <select
                     className={styles.formInput}
                     value={newProjectEnv}
@@ -564,10 +680,12 @@ export function ProjectsView({
                 </div>
               </div>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Mô tả mục đích dự án</label>
+                <label className={styles.formLabel}>
+                  {t.projectsView.modalCreate.descLabel}
+                </label>
                 <textarea
                   className={styles.formTextarea}
-                  placeholder="Mô tả các loại giao dịch và luồng thanh toán..."
+                  placeholder={t.projectsView.modalCreate.descPlaceholder}
                   value={newProjectDesc}
                   onChange={(e) => setNewProjectDesc(e.target.value)}
                 />
@@ -579,14 +697,14 @@ export function ProjectsView({
                 onClick={() => setCreateModalOpen(false)}
                 type="button"
               >
-                Hủy
+                {t.projectsView.modalCreate.btnCancel}
               </button>
               <button
                 className={styles.btnPrimary}
                 onClick={handleCreateProject}
                 type="button"
               >
-                Tạo Dự Án
+                {t.projectsView.modalCreate.btnSubmit}
               </button>
             </div>
           </div>

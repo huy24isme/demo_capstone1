@@ -10,6 +10,7 @@ import type {
   RuleLifecycleStatus,
   RuleTemplate,
 } from "./types";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 /* ── Field definitions with Category mapping & smart defaults ── */
@@ -262,16 +263,7 @@ function emptyGroupForCategory(category: RuleCategory): ConditionGroupNode {
   };
 }
 
-const MULTIPLIER_OPTIONS = [
-  { value: 1, label: "1x - Kích hoạt ngay lần đầu vi phạm" },
-  { value: 2, label: "2x - Cần tích lũy / tái phạm 2 lần" },
-  { value: 3, label: "3x - Cần tích lũy / tái phạm 3 lần (3-Strike)" },
-  { value: 4, label: "4x - Tích lũy cấp độ nghiêm trọng cao" },
-];
-
-function emptyRule(category: RuleCategory = "geo"): Omit<RuleTemplate, "id" | "createdAt" | "updatedAt"> {
-  const riskPoints = 25;
-  const multiplier = 1;
+function emptyRule(category: RuleCategory = "velocity"): Omit<RuleTemplate, "id" | "createdAt" | "updatedAt"> {
   return {
     name: "",
     description: "",
@@ -279,15 +271,30 @@ function emptyRule(category: RuleCategory = "geo"): Omit<RuleTemplate, "id" | "c
     version: "v1.0",
     status: "Draft",
     conditionGroup: emptyGroupForCategory(category),
-    riskPoints,
-    multiplier,
-    threshold: Math.min(100, riskPoints * multiplier),
+    riskPoints: 25,
+    multiplier: 1,
+    threshold: 25,
     enabled: true,
     appliesTo: { transactionTypes: ["*"], projects: ["*"] },
   };
 }
 
-/* ── Condition Group Editor (recursive) ── */
+const MULTIPLIER_OPTIONS = [
+  { value: 1, label: "1x - Kích hoạt ngay (Điểm đơn lẻ đủ ngưỡng)", desc: "1 hit trigger" },
+  { value: 2, label: "2x - Phối hợp 2 lần vi phạm (Cộng dồn)", desc: "2 hits to trigger" },
+  { value: 3, label: "3x - Phối hợp 3 lần vi phạm (Nghiêm ngặt)", desc: "3 hits to trigger" },
+  { value: 4, label: "4x - Tích lũy chuỗi hành vi bất thường", desc: "4 hits to trigger" },
+];
+
+/* ── Condition Group Recursive Editor ── */
+
+interface GroupEditorProps {
+  group: ConditionGroupNode;
+  selectedCategory: RuleCategory;
+  onChange: (updated: ConditionGroupNode) => void;
+  onRemove?: () => void;
+  isRoot?: boolean;
+}
 
 function ConditionGroupEditor({
   group,
@@ -295,21 +302,22 @@ function ConditionGroupEditor({
   onChange,
   onRemove,
   isRoot = false,
-}: {
-  group: ConditionGroupNode;
-  selectedCategory: RuleCategory;
-  onChange: (updated: ConditionGroupNode) => void;
-  onRemove?: () => void;
-  isRoot?: boolean;
-}) {
-  const updateChild = (index: number, child: RuleConditionNode | ConditionGroupNode) => {
+}: GroupEditorProps) {
+  const { language } = useLanguage();
+
+  const toggleLogic = (val: LogicGroup) => {
+    onChange({ ...group, logic: val });
+  };
+
+  const updateChild = (index: number, updated: ConditionGroupNode | RuleConditionNode) => {
     const next = [...group.children];
-    next[index] = child;
+    next[index] = updated;
     onChange({ ...group, children: next });
   };
 
   const removeChild = (index: number) => {
-    onChange({ ...group, children: group.children.filter((_, i) => i !== index) });
+    const next = group.children.filter((_, i) => i !== index);
+    onChange({ ...group, children: next });
   };
 
   const addCondition = () => {
@@ -322,21 +330,21 @@ function ConditionGroupEditor({
   const addSubGroup = () => {
     onChange({
       ...group,
-      children: [...group.children, emptyGroupForCategory(selectedCategory)],
+      children: [
+        ...group.children,
+        {
+          type: "group",
+          id: uid(),
+          logic: "OR",
+          children: [createConditionForCategory(selectedCategory)],
+        },
+      ],
     });
   };
 
-  const toggleLogic = (logic: LogicGroup) => {
-    onChange({ ...group, logic });
-  };
-
   // Group fields: category-specific first, then other fields
-  const categoryFields = FIELDS.filter(
-    (f) => selectedCategory === "custom" || f.category === selectedCategory,
-  );
-  const otherFields = FIELDS.filter(
-    (f) => selectedCategory !== "custom" && f.category !== selectedCategory,
-  );
+  const categoryFields = FIELDS.filter((f) => f.category === selectedCategory);
+  const otherFields = FIELDS.filter((f) => f.category !== selectedCategory);
 
   return (
     <div className={`${styles.conditionGroup} ${!isRoot ? styles.conditionGroupNested : ""}`}>
@@ -397,7 +405,13 @@ function ConditionGroupEditor({
               }}
             >
               {selectedCategory !== "custom" && categoryFields.length > 0 && (
-                <optgroup label={`★ Khuyên dùng cho ${selectedCategory.toUpperCase()}`}>
+                <optgroup
+                  label={
+                    language === "vi"
+                      ? `★ Khuyên dùng cho ${selectedCategory.toUpperCase()}`
+                      : `★ Recommended for ${selectedCategory.toUpperCase()}`
+                  }
+                >
                   {categoryFields.map((f) => (
                     <option key={f.value} value={f.value}>
                       {f.group} - {f.label}
@@ -407,7 +421,17 @@ function ConditionGroupEditor({
               )}
 
               {otherFields.length > 0 && (
-                <optgroup label={selectedCategory === "custom" ? "Tất cả trường dữ liệu" : "Các trường khác"}>
+                <optgroup
+                  label={
+                    selectedCategory === "custom"
+                      ? language === "vi"
+                        ? "Tất cả trường dữ liệu"
+                        : "All Data Fields"
+                      : language === "vi"
+                      ? "Các trường khác"
+                      : "Other Fields"
+                  }
+                >
                   {otherFields.map((f) => (
                     <option key={f.value} value={f.value}>
                       {f.group} - {f.label}
@@ -439,8 +463,8 @@ function ConditionGroupEditor({
                 value={String(child.value)}
                 onChange={(e) => updateChild(i, { ...child, value: e.target.value === "true" })}
               >
-                <option value="true">True (Đúng)</option>
-                <option value="false">False (Sai)</option>
+                <option value="true">{language === "vi" ? "True (Đúng)" : "True"}</option>
+                <option value="false">{language === "vi" ? "False (Sai)" : "False"}</option>
               </select>
             ) : (
               <input
@@ -495,6 +519,7 @@ interface RuleBuilderProps {
 }
 
 export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
+  const { language } = useLanguage();
   const isEdit = !!rule;
   const [form, setForm] = useState(emptyRule("geo"));
 
@@ -588,7 +613,11 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
     <div className={styles.builderOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={styles.builderModal} role="dialog" aria-label={isEdit ? "Edit rule" : "Create rule"}>
         <div className={styles.builderHeader}>
-          <h2 className={styles.builderTitle}>{isEdit ? "Edit Rule" : "Create Rule"}</h2>
+          <h2 className={styles.builderTitle}>
+            {isEdit
+              ? language === "vi" ? "Sửa Quy tắc" : "Edit Rule"
+              : language === "vi" ? "Tạo Quy tắc Mới" : "Create Rule"}
+          </h2>
           <button type="button" className={styles.drawerCloseBtn} onClick={onClose} aria-label="Close">
             ✕
           </button>
@@ -598,7 +627,9 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
           {/* Category, Version, and Lifecycle Status */}
           <div className={styles.formRow}>
             <div className={styles.formGroup} style={{ flex: 1.2 }}>
-              <label className={styles.formLabel}>Category (Phân loại)</label>
+              <label className={styles.formLabel}>
+                {language === "vi" ? "Category (Phân loại)" : "Category"}
+              </label>
               <select
                 className={styles.formInput}
                 value={form.category}
@@ -621,7 +652,9 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
               />
             </div>
             <div className={styles.formGroup} style={{ flex: 1 }}>
-              <label className={styles.formLabel}>Lifecycle Status</label>
+              <label className={styles.formLabel}>
+                {language === "vi" ? "Trạng thái vòng đời" : "Lifecycle Status"}
+              </label>
               <select
                 className={styles.formInput}
                 value={form.status}
@@ -638,30 +671,36 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
 
           {/* Name */}
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Rule name</label>
+            <label className={styles.formLabel}>
+              {language === "vi" ? "Tên quy tắc *" : "Rule Name *"}
+            </label>
             <input
               className={styles.formInput}
               value={form.name}
               onChange={(e) => patch("name", e.target.value)}
-              placeholder="e.g. Unusual Overseas Withdrawal"
+              placeholder={language === "vi" ? "Ví dụ: Giao dịch COD đêm bất thường" : "e.g. Unusual Overseas Withdrawal"}
             />
           </div>
 
           {/* Description */}
           <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Description</label>
+            <label className={styles.formLabel}>
+              {language === "vi" ? "Mô tả mục đích quy tắc" : "Description"}
+            </label>
             <textarea
               className={styles.formTextarea}
               value={form.description}
               onChange={(e) => patch("description", e.target.value)}
-              placeholder="Mô tả mục đích của rule này..."
+              placeholder={language === "vi" ? "Mô tả mục đích của rule này..." : "Describe the purpose of this rule..."}
             />
           </div>
 
           {/* Risk Points + Multiplier Threshold Row */}
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Điểm phạt (Risk Points: 1-100)</label>
+              <label className={styles.formLabel}>
+                {language === "vi" ? "Điểm phạt (Risk Points: 1-100)" : "Risk Points (1-100)"}
+              </label>
               <input
                 className={styles.formInput}
                 type="number"
@@ -675,7 +714,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
 
             <div className={styles.formGroup}>
               <label className={styles.formLabel}>
-                Ngưỡng kích hoạt Cảnh báo (Multiplier)
+                {language === "vi" ? "Ngưỡng kích hoạt Cảnh báo (Multiplier)" : "Activation Multiplier"}
               </label>
               <select
                 className={styles.formInput}
@@ -694,11 +733,12 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
             </div>
           </div>
 
-
           {/* Conditions - Smartly linked with selectedCategory */}
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>
-              Conditions (Điều kiện đánh giá theo {form.category.toUpperCase()})
+              {language === "vi"
+                ? `Conditions (Điều kiện đánh giá theo ${form.category.toUpperCase()})`
+                : `Conditions (Evaluation criteria for ${form.category.toUpperCase()})`}
             </label>
             <ConditionGroupEditor
               group={form.conditionGroup}
@@ -711,7 +751,9 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
           {/* Applies To */}
           <div className={styles.formRow}>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Transaction types</label>
+              <label className={styles.formLabel}>
+                {language === "vi" ? "Loại giao dịch áp dụng" : "Transaction Types"}
+              </label>
               <input
                 className={styles.formInput}
                 value={form.appliesTo.transactionTypes.join(", ")}
@@ -725,7 +767,9 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
               />
             </div>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Projects</label>
+              <label className={styles.formLabel}>
+                {language === "vi" ? "Dự án áp dụng" : "Projects"}
+              </label>
               <input
                 className={styles.formInput}
                 value={form.appliesTo.projects.join(", ")}
@@ -743,7 +787,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
 
         <div className={styles.builderFooter}>
           <button type="button" className={styles.btnSecondary} onClick={onClose}>
-            Cancel
+            {language === "vi" ? "Hủy" : "Cancel"}
           </button>
           <button
             type="button"
@@ -751,7 +795,9 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
             onClick={handleSave}
             disabled={!form.name.trim()}
           >
-            {isEdit ? "Save Changes" : "Create Rule"}
+            {isEdit
+              ? language === "vi" ? "Lưu thay đổi" : "Save Changes"
+              : language === "vi" ? "Tạo Quy tắc" : "Create Rule"}
           </button>
         </div>
       </div>

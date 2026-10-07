@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import type { TransactionRisk } from "./types";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -25,6 +26,7 @@ export function TransactionRiskTrend({
   transactions,
   threshold = 75,
 }: TransactionRiskTrendProps) {
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function TransactionRiskTrend({
   if (trendData.length === 0) {
     return (
       <div className={styles.chartArea} style={{ display: "grid", placeItems: "center" }}>
-        <p className={styles.muted}>Không có dữ liệu xu hướng phù hợp với bộ lọc hiện tại.</p>
+        <p className={styles.muted}>{t.riskOverview.charts.trendEmpty}</p>
       </div>
     );
   }
@@ -94,14 +96,14 @@ export function TransactionRiskTrend({
           />
           <Legend />
           <Line
-            name="Bất thường (Anomaly)"
+            name={t.risk.anomaly}
             dataKey="anomaly"
             stroke="#ed6775"
             dot={{ r: 3 }}
             strokeWidth={2}
           />
           <Line
-            name="Bình thường (Normal)"
+            name={t.risk.normal}
             dataKey="normal"
             stroke="#78c9ac"
             dot={{ r: 3 }}

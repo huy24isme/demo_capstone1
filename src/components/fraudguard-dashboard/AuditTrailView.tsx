@@ -2,62 +2,47 @@
 
 import { useMemo, useState } from "react";
 import type { AuditAction, AuditLogEntry } from "./types";
+import { useLanguage } from "./i18n/LanguageContext";
+import type { TranslationKey } from "./i18n/translations";
 import styles from "./SecurityDashboard.module.css";
 
 interface AuditTrailViewProps {
   initialLogs: AuditLogEntry[];
 }
 
-function formatAuditTime(iso: string): string {
+function formatAuditTime(iso: string, locale: string): string {
   const d = new Date(iso);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const seconds = String(d.getSeconds()).padStart(2, "0");
-  return `${hours}:${minutes}:${seconds} · ${day}/${month}/${year}`;
+  return `${d.toLocaleTimeString(locale)} · ${d.toLocaleDateString(locale)}`;
 }
 
-const ACTION_LABELS: Record<
+const ACTION_CLASSES: Record<AuditAction, string> = {
+  CASE_STATUS_UPDATED: styles.auditActionUpdate,
+  RULE_CREATED: styles.auditActionCreate,
+  RULE_TOGGLED: styles.auditActionSecurity,
+  RULE_DELETED: styles.auditActionDelete,
+  API_KEY_GENERATED: styles.auditActionSecurity,
+  WEBHOOK_UPDATED: styles.auditActionUpdate,
+  ALERT_REVIEWED: styles.auditActionCreate,
+  EXPORT_GENERATED: styles.auditActionUpdate,
+};
+
+const ACTION_KEY_MAP: Record<
   AuditAction,
-  { label: string; className: string }
+  keyof TranslationKey["auditTrailView"]["actions"]
 > = {
-  CASE_STATUS_UPDATED: {
-    label: "Case Status Updated",
-    className: styles.auditActionUpdate,
-  },
-  RULE_CREATED: {
-    label: "Rule Created",
-    className: styles.auditActionCreate,
-  },
-  RULE_TOGGLED: {
-    label: "Rule Toggled",
-    className: styles.auditActionSecurity,
-  },
-  RULE_DELETED: {
-    label: "Rule Deleted",
-    className: styles.auditActionDelete,
-  },
-  API_KEY_GENERATED: {
-    label: "API Key Generated",
-    className: styles.auditActionSecurity,
-  },
-  WEBHOOK_UPDATED: {
-    label: "Webhook Updated",
-    className: styles.auditActionUpdate,
-  },
-  ALERT_REVIEWED: {
-    label: "Alert Reviewed",
-    className: styles.auditActionCreate,
-  },
-  EXPORT_GENERATED: {
-    label: "Export Generated",
-    className: styles.auditActionUpdate,
-  },
+  CASE_STATUS_UPDATED: "caseStatusUpdated",
+  RULE_CREATED: "ruleCreated",
+  RULE_TOGGLED: "ruleToggled",
+  RULE_DELETED: "ruleDeleted",
+  API_KEY_GENERATED: "apiKeyGenerated",
+  WEBHOOK_UPDATED: "webhookUpdated",
+  ALERT_REVIEWED: "alertReviewed",
+  EXPORT_GENERATED: "exportGenerated",
 };
 
 export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const [logs] = useState<AuditLogEntry[]>(initialLogs);
   const [query, setQuery] = useState("");
   const [actionCategory, setActionCategory] = useState("all");
@@ -124,49 +109,47 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Security Audit Trail</h1>
-          <p>
-            Nhật ký kiểm toán ghi nhận mọi thay đổi cấu hình, cập nhật case điều tra và thao tác nhạy cảm.
-          </p>
+          <h1>{t.auditTrailView.title}</h1>
+          <p>{t.auditTrailView.subtitle}</p>
         </div>
       </div>
 
       {/* Stats */}
       <section className={styles.metricsGrid} style={{ marginTop: 24 }}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Total Audit Logs</div>
+          <div className={styles.statLabel}>{t.auditTrailView.kpis.totalLogs}</div>
           <strong className={styles.statValue}>{stats.total}</strong>
-          <span className={styles.statDescription}>Được lưu trữ bất biến</span>
+          <span className={styles.statDescription}>{t.auditTrailView.kpis.totalLogsDesc}</span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Case Status Changes</div>
+          <div className={styles.statLabel}>{t.auditTrailView.kpis.caseChanges}</div>
           <strong
             className={styles.statValue}
             style={{ color: "var(--security-blue)" }}
           >
             {stats.cases}
           </strong>
-          <span className={styles.statDescription}>Thao tác của Risk Staff</span>
+          <span className={styles.statDescription}>{t.auditTrailView.kpis.caseChangesDesc}</span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Rule & Policy Updates</div>
+          <div className={styles.statLabel}>{t.auditTrailView.kpis.ruleUpdates}</div>
           <strong
             className={styles.statValue}
             style={{ color: "var(--security-purple)" }}
           >
             {stats.rules}
           </strong>
-          <span className={styles.statDescription}>Tạo, sửa hoặc xóa rules</span>
+          <span className={styles.statDescription}>{t.auditTrailView.kpis.ruleUpdatesDesc}</span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>API & Secret Key Events</div>
+          <div className={styles.statLabel}>{t.auditTrailView.kpis.securityEvents}</div>
           <strong
             className={styles.statValue}
             style={{ color: "var(--security-orange)" }}
           >
             {stats.security}
           </strong>
-          <span className={styles.statDescription}>Sinh key và đổi Webhook</span>
+          <span className={styles.statDescription}>{t.auditTrailView.kpis.securityEventsDesc}</span>
         </article>
       </section>
 
@@ -176,7 +159,7 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
           <input
             className={styles.searchInput}
             type="search"
-            placeholder="Tìm theo nhân sự, ID đối tượng, IP..."
+            placeholder={t.auditTrailView.searchPlaceholder}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -185,17 +168,17 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
           />
           <select
             className={styles.control}
-            aria-label="Loại hành động"
+            aria-label={t.auditTrailView.filterCategory}
             value={actionCategory}
             onChange={(e) => {
               setActionCategory(e.target.value);
               setPage(1);
             }}
           >
-            <option value="all">Tất cả hành động</option>
-            <option value="cases">Case Updates</option>
-            <option value="rules">Rule Engine Changes</option>
-            <option value="security">API Keys & Webhooks</option>
+            <option value="all">{t.auditTrailView.categories.all}</option>
+            <option value="cases">{t.auditTrailView.categories.cases}</option>
+            <option value="rules">{t.auditTrailView.categories.rules}</option>
+            <option value="security">{t.auditTrailView.categories.security}</option>
           </select>
         </div>
       </div>
@@ -204,44 +187,45 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
       <section className={`${styles.panel} ${styles.tablePanel}`}>
         <div className={`${styles.panelHeader} ${styles.tablePanelHeader}`}>
           <div>
-            <h2>Audit Log Records</h2>
-            <p className={styles.muted}>
-              Bản ghi thời gian thực hỗ trợ tuân thủ quy định và thanh tra an ninh
-            </p>
+            <h2>{t.auditTrailView.title}</h2>
+            <p className={styles.muted}>{t.auditTrailView.subtitle}</p>
           </div>
-          <span className={styles.muted}>{filtered.length} sự kiện</span>
+          <span className={styles.muted}>
+            {filtered.length} {t.auditTrailView.eventsCount}
+          </span>
         </div>
 
         <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Timestamp</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Target</th>
-                <th>Details / Reason</th>
-                <th>IP Address</th>
+                <th>{t.auditTrailView.table.time}</th>
+                <th>{t.auditTrailView.table.actor}</th>
+                <th>{t.auditTrailView.table.action}</th>
+                <th>{t.auditTrailView.table.target}</th>
+                <th>{t.auditTrailView.table.details}</th>
+                <th>{t.auditTrailView.table.ip}</th>
               </tr>
             </thead>
             <tbody>
               {pageLogs.length === 0 ? (
                 <tr>
                   <td className={styles.emptyState} colSpan={6}>
-                    Không tìm thấy bản ghi kiểm toán phù hợp.
+                    {t.auditTrailView.table.emptyMessage}
                   </td>
                 </tr>
               ) : (
                 pageLogs.map((log) => {
-                  const meta =
-                    ACTION_LABELS[log.action] || {
-                      label: log.action,
-                      className: styles.auditActionUpdate,
-                    };
+                  const actionClass = ACTION_CLASSES[log.action] || styles.auditActionUpdate;
+                  const actionKey = ACTION_KEY_MAP[log.action];
+                  const actionLabel =
+                    actionKey && t.auditTrailView.actions
+                      ? t.auditTrailView.actions[actionKey]
+                      : log.action;
                   return (
                     <tr key={log.id}>
                       <td style={{ fontSize: 11, color: "var(--security-muted)" }}>
-                        {formatAuditTime(log.timestamp)}
+                        {formatAuditTime(log.timestamp, dateLocale)}
                       </td>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -284,9 +268,9 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
                       </td>
                       <td>
                         <span
-                          className={`${styles.auditActionBadge} ${meta.className}`}
+                          className={`${styles.auditActionBadge} ${actionClass}`}
                         >
-                          {meta.label}
+                          {actionLabel}
                         </span>
                       </td>
                       <td>
@@ -317,15 +301,15 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
         {/* Pagination */}
         <div className={styles.pagination}>
           <div className={styles.paginationInfo}>
-            Showing {filtered.length === 0 ? 0 : startIdx + 1}–
-            {Math.min(startIdx + pageSize, filtered.length)} of {filtered.length}
+            {t.auditTrailView.showing} {filtered.length === 0 ? 0 : startIdx + 1}–
+            {Math.min(startIdx + pageSize, filtered.length)} {t.auditTrailView.of} {filtered.length}
           </div>
           <div className={styles.paginationControls}>
             <button
               className={styles.paginationBtn}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage <= 1}
-              aria-label="Trang trước"
+              aria-label={t.auditTrailView.prevPage}
               type="button"
             >
               ‹
@@ -346,7 +330,7 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
               className={styles.paginationBtn}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage >= totalPages}
-              aria-label="Trang sau"
+              aria-label={t.auditTrailView.nextPage}
               type="button"
             >
               ›

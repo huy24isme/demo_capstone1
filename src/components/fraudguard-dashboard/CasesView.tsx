@@ -22,6 +22,8 @@ import {
   Send,
 } from "lucide-react";
 import { AVAILABLE_INVESTIGATORS } from "./AlertCaseDrawer";
+import { useLanguage } from "./i18n/LanguageContext";
+import type { TranslationKey } from "./i18n/translations";
 
 interface CasesViewProps {
   transactions: TransactionRisk[];
@@ -35,59 +37,50 @@ interface CasesViewProps {
 
 const STATUS_BADGE_STYLE: Record<
   CaseStatus,
-  { bg: string; text: string; border: string; label: string }
+  { bg: string; text: string; border: string; labelKey: keyof TranslationKey["caseStatus"] }
 > = {
   Open: {
     bg: "rgba(237, 167, 101, 0.15)",
     text: "var(--security-orange)",
     border: "#715139",
-    label: "Chờ phân công",
+    labelKey: "open",
   },
   Assigned: {
     bg: "rgba(113, 185, 244, 0.15)",
     text: "var(--security-blue)",
     border: "#2d5a7b",
-    label: "Đã phân công",
+    labelKey: "assigned",
   },
   Investigating: {
     bg: "rgba(173, 138, 243, 0.15)",
     text: "var(--security-purple)",
     border: "#5c4778",
-    label: "Đang xác minh",
+    labelKey: "investigating",
   },
   Reported: {
     bg: "rgba(255, 215, 0, 0.15)",
     text: "#ffd700",
     border: "#8c7b00",
-    label: "Đã nộp báo cáo",
+    labelKey: "reported",
   },
   "Confirmed Fraud": {
     bg: "var(--critical-bg)",
     text: "var(--critical-text)",
     border: "var(--critical-border)",
-    label: "Gian lận xác nhận",
+    labelKey: "confirmedFraud",
   },
   "False Alarm": {
     bg: "rgba(120, 201, 172, 0.15)",
     text: "var(--security-green)",
     border: "#3f665a",
-    label: "Báo động giả",
+    labelKey: "falseAlarm",
   },
   Resolved: {
     bg: "rgba(120, 201, 172, 0.15)",
     text: "var(--security-green)",
     border: "#3f665a",
-    label: "Đã giải quyết",
+    labelKey: "resolved",
   },
-};
-
-const FINDING_LABEL: Record<
-  InvestigationFinding,
-  { label: string; color: string }
-> = {
-  Suspicious: { label: "Nghi vấn gian lận", color: "var(--security-red)" },
-  Legitimate: { label: "Giao dịch hợp lệ", color: "var(--security-green)" },
-  "Need More Info": { label: "Cần thêm chứng cứ", color: "var(--security-purple)" },
 };
 
 type OperationQueueTab = "all" | "unassigned" | "in-field" | "reported" | "completed";
@@ -102,10 +95,29 @@ export function CasesView({
   currentUserName = "Trần Mai Anh",
   threshold = 75,
 }: CasesViewProps) {
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const [opTab, setOpTab] = useState<OperationQueueTab>("all");
   const [invTab, setInvTab] = useState<InvestigatorTaskTab>("all");
   const [filterProject, setFilterProject] = useState<string>("all");
+
+  const getBadgeLabel = (status?: CaseStatus) => {
+    const item = STATUS_BADGE_STYLE[status || "Open"];
+    return item ? t.caseStatus[item.labelKey] : status || "";
+  };
+
+  const getFindingLabel = (finding?: InvestigationFinding) => {
+    switch (finding) {
+      case "Suspicious":
+        return t.findings.suspicious;
+      case "Legitimate":
+        return t.findings.legitimate;
+      case "Need More Info":
+        return t.findings.needMoreInfo;
+      default:
+        return finding || "";
+    }
+  };
 
   const isInvestigator = currentRole === "Investigator";
   const investigatorName = currentUserName || "Nguyễn Văn An";
@@ -189,14 +201,25 @@ export function CasesView({
       investigationNotes: [
         ...(tx.investigationNotes || []),
         {
-          text: `Điều tra viên ${investigatorName} đã tiếp nhận hồ sơ và bắt đầu xác minh hiện trường.`,
-          time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+          text:
+            language === "vi"
+              ? `Điều tra viên ${investigatorName} đã tiếp nhận hồ sơ và bắt đầu xác minh hiện trường.`
+              : `Investigator ${investigatorName} accepted case and started field investigation.`,
+          time: new Date().toLocaleTimeString(language === "vi" ? "vi-VN" : "en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
           author: investigatorName,
         },
       ],
     };
     onUpdateTransaction(updated);
-    toast("success", `Đã tiếp nhận hồ sơ ${tx.caseId}. Trạng thái chuyển sang: Đang thẩm định`);
+    toast(
+      "success",
+      language === "vi"
+        ? `Đã tiếp nhận hồ sơ ${tx.caseId}. Trạng thái chuyển sang: Đang thẩm định`
+        : `Accepted case ${tx.caseId}. Status changed to: Investigating`,
+    );
   };
 
   /* ─────────────────────────────────────────────────────────────
@@ -261,7 +284,12 @@ export function CasesView({
       caseStatus: "Assigned",
     };
     onUpdateTransaction(updated);
-    toast("success", `Đã phân công hồ sơ ${tx.caseId} cho điều tra viên ${assignTarget}`);
+    toast(
+      "success",
+      language === "vi"
+        ? `Đã phân công hồ sơ ${tx.caseId} cho điều tra viên ${assignTarget}`
+        : `Assigned case ${tx.caseId} to investigator ${assignTarget}`,
+    );
   };
 
   /* ─────────────────────────────────────────────────────────────
@@ -272,10 +300,8 @@ export function CasesView({
       <>
         <div className={styles.pageHeading}>
           <div>
-            <h1>My Assigned Cases</h1>
-            <p>
-              Bàn làm việc thẩm định hiện trường cá nhân ({investigatorName}). Tiếp nhận hồ sơ, thu thập chứng cứ và soạn nộp Báo cáo điều tra cho Team Leader.
-            </p>
+            <h1>{t.caseQueue.invTitle}</h1>
+            <p>{t.caseQueue.invSubtitle}</p>
           </div>
         </div>
 
@@ -284,37 +310,37 @@ export function CasesView({
           <article
             className={`${styles.statCard} ${investigatorStats.assigned > 0 ? styles.statWarning : ""}`}
           >
-            <div className={styles.statLabel}>Hồ sơ mới được giao (To-Do)</div>
+            <div className={styles.statLabel}>{t.caseQueue.kpis.newAssigned}</div>
             <strong className={styles.statValue} style={{ color: "var(--security-blue)" }}>
               {investigatorStats.assigned}
             </strong>
-            <span className={styles.statDescription}>Cần tiếp nhận & bắt đầu thẩm định</span>
+            <span className={styles.statDescription}>{t.caseQueue.kpis.newAssignedDesc}</span>
           </article>
 
           <article className={styles.statCard}>
-            <div className={styles.statLabel}>Đang xác minh (In Progress)</div>
+            <div className={styles.statLabel}>{t.caseQueue.kpis.inProgress}</div>
             <strong className={styles.statValue} style={{ color: "var(--security-purple)" }}>
               {investigatorStats.investigating}
             </strong>
-            <span className={styles.statDescription}>Đang thu thập chứng cứ thực địa</span>
+            <span className={styles.statDescription}>{t.caseQueue.kpis.inProgressDesc}</span>
           </article>
 
           <article className={styles.statCard} style={{ borderColor: "#8c7b00" }}>
-            <div className={styles.statLabel}>Đã nộp báo cáo (Awaiting Review)</div>
+            <div className={styles.statLabel}>{t.caseQueue.kpis.awaitingReview}</div>
             <strong className={styles.statValue} style={{ color: "#ffd700" }}>
               {investigatorStats.reported}
             </strong>
-            <span className={styles.statDescription}>Chờ Operation Team Leader duyệt</span>
+            <span className={styles.statDescription}>{t.caseQueue.kpis.awaitingReviewDesc}</span>
           </article>
 
           <article
             className={`${styles.statCard} ${investigatorStats.urgent > 0 ? styles.statCritical : ""}`}
           >
-            <div className={styles.statLabel}>Ca rủi ro cao (Score &ge; 80)</div>
+            <div className={styles.statLabel}>{t.caseQueue.kpis.urgentCases}</div>
             <strong className={styles.statValue}>
               {investigatorStats.urgent}
             </strong>
-            <span className={styles.statDescription}>Ưu tiên xác minh khẩn cấp</span>
+            <span className={styles.statDescription}>{t.caseQueue.kpis.urgentCasesDesc}</span>
           </article>
         </section>
 
@@ -329,46 +355,46 @@ export function CasesView({
               onClick={() => setInvTab("all")}
               type="button"
             >
-              Tất cả việc của tôi ({myAssignedCases.length})
+              {t.caseQueue.tabs.myAll} ({myAssignedCases.length})
             </button>
             <button
               className={`${styles.tab} ${invTab === "todo" ? styles.tabActive : ""}`}
               onClick={() => setInvTab("todo")}
               type="button"
             >
-              Mới được giao ({investigatorStats.assigned})
+              {t.caseQueue.tabs.myTodo} ({investigatorStats.assigned})
             </button>
             <button
               className={`${styles.tab} ${invTab === "investigating" ? styles.tabActive : ""}`}
               onClick={() => setInvTab("investigating")}
               type="button"
             >
-              Đang xác minh ({investigatorStats.investigating})
+              {t.caseQueue.tabs.myInvestigating} ({investigatorStats.investigating})
             </button>
             <button
               className={`${styles.tab} ${invTab === "reported" ? styles.tabActive : ""}`}
               onClick={() => setInvTab("reported")}
               type="button"
             >
-              Đã nộp báo cáo ({investigatorStats.reported})
+              {t.caseQueue.tabs.myReported} ({investigatorStats.reported})
             </button>
             <button
               className={`${styles.tab} ${invTab === "completed" ? styles.tabActive : ""}`}
               onClick={() => setInvTab("completed")}
               type="button"
             >
-              Đã hoàn tất ({investigatorStats.completed})
+              {t.caseQueue.tabs.myCompleted} ({investigatorStats.completed})
             </button>
           </div>
 
           <div className={styles.toolbarGroup}>
             <select
               className={styles.control}
-              aria-label="Filter project"
+              aria-label={t.actions.allProjects}
               value={filterProject}
               onChange={(e) => setFilterProject(e.target.value)}
             >
-              <option value="all">Tất cả dự án</option>
+              <option value="all">{t.actions.allProjects}</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -382,7 +408,7 @@ export function CasesView({
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
           {filteredInvestigatorCases.length === 0 ? (
             <div className={styles.panel} style={{ padding: 40, textAlign: "center" }}>
-              <p className={styles.muted}>Không có hồ sơ nào trong mục này.</p>
+              <p className={styles.muted}>{t.caseQueue.emptyMessage}</p>
             </div>
           ) : (
             filteredInvestigatorCases.map((tx) => {
@@ -434,7 +460,7 @@ export function CasesView({
                             fontWeight: 700,
                           }}
                         >
-                          {badgeStyle.label}
+                          {getBadgeLabel(tx.caseStatus)}
                         </span>
 
                         <RiskLevelBadge
@@ -464,11 +490,11 @@ export function CasesView({
                             }}
                           >
                             <Clock size={12} />
-                            Giao lúc: {new Date(tx.assignedAt).toLocaleTimeString("vi-VN", {
+                            {t.caseQueue.assignedAtTime}: {new Date(tx.assignedAt).toLocaleTimeString(language === "vi" ? "vi-VN" : "en-US", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })} (
-                            {new Date(tx.assignedAt).toLocaleDateString("vi-VN")})
+                            {new Date(tx.assignedAt).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US")})
                           </span>
                         )}
                       </div>
@@ -497,21 +523,21 @@ export function CasesView({
                         }}
                       >
                         <span>
-                          <strong>Số tiền:</strong>{" "}
+                          <strong>{t.risk.amount}:</strong>{" "}
                           <span style={{ color: "var(--security-text)" }}>
                             {tx.amount != null
-                              ? `${tx.amount.toLocaleString("en")} ${tx.currency || "VND"}`
+                              ? `${tx.amount.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} ${tx.currency || "VND"}`
                               : "N/A"}
                           </span>
                         </span>
                         <span>
-                          <strong>Kênh:</strong> {tx.channel || tx.transactionType}
+                          <strong>{t.risk.channel}:</strong> {tx.channel || tx.transactionType}
                         </span>
                         <span>
-                          <strong>Thiết bị:</strong> {tx.deviceId || "Chưa định danh"}
+                          <strong>{t.risk.device}:</strong> {tx.deviceId || t.risk.unidentifiedDevice}
                         </span>
                         <span>
-                          <strong>Khách hàng:</strong> {tx.entityReference}
+                          <strong>{t.risk.customer}:</strong> {tx.entityReference}
                         </span>
                       </div>
 
@@ -527,7 +553,7 @@ export function CasesView({
                           }}
                         >
                           <span style={{ fontSize: 11, color: "var(--security-subtle)" }}>
-                            Dấu hiệu cần xác minh:
+                            {t.risk.verificationSigns}:
                           </span>
                           {tx.triggeredRules.map((r) => (
                             <span key={r} className={styles.ruleTag}>
@@ -553,11 +579,7 @@ export function CasesView({
                           }}
                         >
                           <AlertTriangle size={14} />
-                          <span>
-                            <strong>Hồ sơ mới được bàn giao:</strong> Vui lòng bấm{" "}
-                            <strong>"Tiếp nhận & Bắt đầu thẩm định"</strong> để chuyển sang giai
-                            đoạn điều tra thực địa.
-                          </span>
+                          <span>{t.caseQueue.calloutNew}</span>
                         </div>
                       )}
 
@@ -576,10 +598,7 @@ export function CasesView({
                           }}
                         >
                           <Clock size={14} />
-                          <span>
-                            <strong>Đang thẩm định:</strong> Bạn đang thụ lý hồ sơ này. Mở hồ sơ để
-                            ghi chép nhật ký cuộc gọi, IP đối soát hoặc soạn nộp Báo cáo điều tra.
-                          </span>
+                          <span>{t.caseQueue.calloutInvestigating}</span>
                         </div>
                       )}
 
@@ -600,16 +619,15 @@ export function CasesView({
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <FileCheck2 size={15} style={{ color: "#ffd700" }} />
                             <span style={{ color: "#ffd700" }}>
-                              <strong>Đã nộp báo cáo:</strong> Đề xuất{" "}
+                              <strong>{t.caseQueue.calloutReported}:</strong> {t.caseQueue.proposedFinding}{" "}
                               <strong>
-                                {FINDING_LABEL[tx.investigationReport.finding]?.label ||
-                                  tx.investigationReport.finding}
+                                {getFindingLabel(tx.investigationReport.finding)}
                               </strong>{" "}
                               — "{tx.investigationReport.notes}"
                             </span>
                           </div>
                           <span style={{ color: "var(--security-muted)", fontSize: 10 }}>
-                            Chờ Operation Team Leader phê duyệt
+                            {t.caseQueue.calloutReportedPending}
                           </span>
                         </div>
                       )}
@@ -642,7 +660,7 @@ export function CasesView({
                           }}
                         >
                           <Play size={13} />
-                          Tiếp nhận thẩm định
+                          {t.actions.acceptInvestigation}
                         </button>
                       )}
 
@@ -664,7 +682,7 @@ export function CasesView({
                           }}
                         >
                           <Send size={13} />
-                          Soạn & Nộp Báo cáo
+                          {t.actions.submitReport}
                         </button>
                       )}
 
@@ -687,7 +705,7 @@ export function CasesView({
                           }}
                         >
                           <Eye size={13} />
-                          Xem lại Báo cáo
+                          {t.actions.reviewReport}
                         </button>
                       )}
 
@@ -705,7 +723,7 @@ export function CasesView({
                           justifyContent: "center",
                         }}
                       >
-                        Chi tiết Hồ sơ
+                        {t.actions.caseDetails}
                       </button>
                     </div>
                   </div>
@@ -725,59 +743,57 @@ export function CasesView({
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Fraud Case Queue</h1>
-          <p>
-            Hàng đợi điều phối & Phê duyệt trung tâm (Operation Team Leader). Phân loại ca mới (Triage), phân công điều tra viên và phê duyệt báo cáo kết luận.
-          </p>
+          <h1>{t.caseQueue.opTitle}</h1>
+          <p>{t.caseQueue.opSubtitle}</p>
         </div>
       </div>
 
       {/* Operation Macro KPIs */}
       <section className={styles.metricsGrid} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Hàng đợi Case Queue</div>
+          <div className={styles.statLabel}>{t.caseQueue.kpis.totalQueue}</div>
           <strong className={styles.statValue}>{operationStats.total}</strong>
-          <span className={styles.statDescription}>Tổng số hồ sơ trong hệ thống</span>
+          <span className={styles.statDescription}>{t.caseQueue.kpis.totalQueueDesc}</span>
         </article>
 
         <article
           className={`${styles.statCard} ${operationStats.unassigned > 0 ? styles.statWarning : ""}`}
         >
-          <div className={styles.statLabel}>Chưa phân công (Cần Triage)</div>
+          <div className={styles.statLabel}>{t.caseQueue.kpis.unassigned}</div>
           <strong
             className={styles.statValue}
             style={{ color: operationStats.unassigned > 0 ? "var(--security-orange)" : undefined }}
           >
             {operationStats.unassigned}
           </strong>
-          <span className={styles.statDescription}>Cần chỉ định Điều tra viên</span>
+          <span className={styles.statDescription}>{t.caseQueue.kpis.unassignedDesc}</span>
         </article>
 
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Đang xử lý ngoài hiện trường</div>
+          <div className={styles.statLabel}>{t.caseQueue.kpis.inField}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-blue)" }}>
             {operationStats.inField}
           </strong>
-          <span className={styles.statDescription}>Assigned & Investigating</span>
+          <span className={styles.statDescription}>{t.caseQueue.kpis.inFieldDesc}</span>
         </article>
 
         <article
           className={styles.statCard}
           style={{ borderColor: operationStats.reported > 0 ? "#8c7b00" : undefined }}
         >
-          <div className={styles.statLabel}>Chờ phê duyệt kết quả (Reported)</div>
+          <div className={styles.statLabel}>{t.caseQueue.kpis.awaitingReview}</div>
           <strong className={styles.statValue} style={{ color: "#ffd700" }}>
             {operationStats.reported}
           </strong>
-          <span className={styles.statDescription}>Cần Operation Leader ra quyết định</span>
+          <span className={styles.statDescription}>{t.caseQueue.kpis.awaitingReviewDesc}</span>
         </article>
 
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Đã có kết luận</div>
+          <div className={styles.statLabel}>{t.caseQueue.kpis.completed}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-green)" }}>
             {operationStats.completed}
           </strong>
-          <span className={styles.statDescription}>Gian lận, False Alarm & Resolved</span>
+          <span className={styles.statDescription}>{t.caseQueue.kpis.completedDesc}</span>
         </article>
       </section>
 
@@ -792,46 +808,46 @@ export function CasesView({
             onClick={() => setOpTab("all")}
             type="button"
           >
-            Tất cả ({allCases.length})
+            {t.caseQueue.tabs.allQueue} ({allCases.length})
           </button>
           <button
             className={`${styles.tab} ${opTab === "unassigned" ? styles.tabActive : ""}`}
             onClick={() => setOpTab("unassigned")}
             type="button"
           >
-            Chưa gán ({operationStats.unassigned})
+            {t.caseQueue.tabs.unassigned} ({operationStats.unassigned})
           </button>
           <button
             className={`${styles.tab} ${opTab === "in-field" ? styles.tabActive : ""}`}
             onClick={() => setOpTab("in-field")}
             type="button"
           >
-            Đang xử lý ({operationStats.inField})
+            {t.caseQueue.tabs.inField} ({operationStats.inField})
           </button>
           <button
             className={`${styles.tab} ${opTab === "reported" ? styles.tabActive : ""}`}
             onClick={() => setOpTab("reported")}
             type="button"
           >
-            Chờ duyệt ({operationStats.reported})
+            {t.caseQueue.tabs.awaitingReview} ({operationStats.reported})
           </button>
           <button
             className={`${styles.tab} ${opTab === "completed" ? styles.tabActive : ""}`}
             onClick={() => setOpTab("completed")}
             type="button"
           >
-            Đã hoàn tất ({operationStats.completed})
+            {t.caseQueue.tabs.completed} ({operationStats.completed})
           </button>
         </div>
 
         <div className={styles.toolbarGroup}>
           <select
             className={styles.control}
-            aria-label="Filter project"
+            aria-label={t.actions.allProjects}
             value={filterProject}
             onChange={(e) => setFilterProject(e.target.value)}
           >
-            <option value="all">Tất cả dự án</option>
+            <option value="all">{t.actions.allProjects}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -845,7 +861,7 @@ export function CasesView({
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
         {filteredOperationCases.length === 0 ? (
           <div className={styles.panel} style={{ padding: 40, textAlign: "center" }}>
-            <p className={styles.muted}>Không có hồ sơ nào phù hợp với bộ lọc hàng đợi hiện tại.</p>
+            <p className={styles.muted}>{t.caseQueue.emptyMessage}</p>
           </div>
         ) : (
           filteredOperationCases.map((tx) => {
@@ -894,7 +910,7 @@ export function CasesView({
                           fontWeight: 700,
                         }}
                       >
-                        {badgeStyle.label}
+                        {getBadgeLabel(tx.caseStatus)}
                       </span>
 
                       <RiskLevelBadge
@@ -932,8 +948,8 @@ export function CasesView({
                       >
                         <UserCheck size={12} />
                         {tx.assignedInvestigator
-                          ? `Điều tra viên: ${tx.assignedInvestigator}`
-                          : "Chưa phân công"}
+                          ? `${t.caseStatus.investigatorBadge}: ${tx.assignedInvestigator}`
+                          : t.caseStatus.unassignedBadge}
                       </span>
                     </div>
 
@@ -958,11 +974,11 @@ export function CasesView({
                       }}
                     >
                       {tx.transactionType}
-                      {tx.channel && ` · Kênh: ${tx.channel}`}
-                      {tx.deviceId && ` · Device: ${tx.deviceId}`}
-                      {` · Điểm rủi ro: ${tx.riskScore}/100`}
+                      {tx.channel && ` · ${t.risk.channel}: ${tx.channel}`}
+                      {tx.deviceId && ` · ${t.risk.device}: ${tx.deviceId}`}
+                      {` · ${t.risk.riskScore}: ${tx.riskScore}/100`}
                       {tx.amount != null &&
-                        ` · ${tx.amount.toLocaleString("en")} ${tx.currency || "VND"}`}
+                        ` · ${tx.amount.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} ${tx.currency || "VND"}`}
                       {` · Entity: ${tx.entityReference}`}
                     </div>
 
@@ -1003,16 +1019,15 @@ export function CasesView({
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <FileCheck2 size={15} style={{ color: "#ffd700" }} />
                           <span style={{ color: "#ffd700" }}>
-                            <strong>Báo cáo điều tra:</strong> Đề xuất{" "}
+                            <strong>{t.caseQueue.calloutReported}:</strong> {t.caseQueue.proposedFinding}{" "}
                             <strong>
-                              {FINDING_LABEL[tx.investigationReport.finding]?.label ||
-                                tx.investigationReport.finding}
+                              {getFindingLabel(tx.investigationReport.finding)}
                             </strong>{" "}
-                            bởi {tx.investigationReport.submittedBy}
+                            {t.caseQueue.submittedBy} {tx.investigationReport.submittedBy}
                           </span>
                         </div>
                         <span style={{ color: "var(--security-muted)", fontSize: 10 }}>
-                          Cần Operation xem xét chứng cứ & ra quyết định cuối
+                          {t.caseQueue.calloutReportedPending}
                         </span>
                       </div>
                     )}
@@ -1037,7 +1052,7 @@ export function CasesView({
                             handleQuickAssign(tx, e.target.value);
                           }
                         }}
-                        aria-label="Phân công điều tra viên"
+                        aria-label={t.actions.assignInvestigator}
                         style={{
                           fontSize: 12,
                           height: 32,
@@ -1053,7 +1068,7 @@ export function CasesView({
                         }}
                       >
                         <option value="" disabled style={{ background: "var(--security-panel)", color: "var(--security-muted)" }}>
-                          Gán điều tra viên…
+                          {t.actions.assignInvestigator}
                         </option>
                         {AVAILABLE_INVESTIGATORS.map((inv) => (
                           <option
@@ -1087,7 +1102,7 @@ export function CasesView({
                         }}
                       >
                         <ShieldCheck size={13} />
-                        Phê duyệt Báo cáo
+                        {t.actions.approveReport}
                       </button>
                     )}
 
@@ -1105,7 +1120,7 @@ export function CasesView({
                         justifyContent: "center",
                       }}
                     >
-                      Chi tiết Case
+                      {t.actions.caseDetails}
                     </button>
                   </div>
                 </div>

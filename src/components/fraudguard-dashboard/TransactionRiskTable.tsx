@@ -13,14 +13,16 @@ import type {
 } from "./types";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: string): string {
   const d = new Date(iso);
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const year = d.getUTCFullYear();
-  return `${day}/${month}/${year}`;
+  return d.toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 interface TransactionRiskTableProps {
@@ -122,6 +124,9 @@ export function TransactionRiskTable({
   onReview,
   threshold = 75,
 }: TransactionRiskTableProps) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
+
   const patch = (next: Partial<FraudGuardFilters>) =>
     onFiltersChange((current) => ({ ...current, ...next }));
 
@@ -150,15 +155,15 @@ export function TransactionRiskTable({
   const pageData = sorted.slice(startIdx, startIdx + pagination.pageSize);
 
   const tabs: { id: TableTab; label: string; count: number }[] = [
-    { id: "all", label: "All transactions", count: transactions.length },
+    { id: "all", label: t.table.tabs.all, count: transactions.length },
     {
       id: "alerts",
-      label: "Alerts only",
+      label: t.table.tabs.alerts,
       count: transactions.filter((t) => t.alertId).length,
     },
     {
       id: "cases",
-      label: "Cases",
+      label: t.table.tabs.cases,
       count: transactions.filter((t) => t.caseId).length,
     },
   ];
@@ -167,19 +172,19 @@ export function TransactionRiskTable({
     <section className={`${styles.panel} ${styles.tablePanel}`}>
       <div className={`${styles.panelHeader} ${styles.tablePanelHeader}`}>
         <div>
-          <h2>Scored transactions</h2>
-          <p className={styles.muted}>
-            Kết quả do Risk Score Gateway chuẩn hóa trên thang 0–100
-          </p>
+          <h2>{t.table.title}</h2>
+          <p className={styles.muted}>{t.table.subtitle}</p>
         </div>
-        <span className={styles.muted}>{sorted.length} transactions</span>
+        <span className={styles.muted}>
+          {t.table.totalTxns.replace("{count}", String(sorted.length))}
+        </span>
       </div>
 
       <div className={styles.tableControls}>
         <div
           className={styles.tabs}
           role="tablist"
-          aria-label="Transaction view"
+          aria-label={t.table.title}
         >
           {tabs.map((tab) => (
             <button
@@ -204,15 +209,15 @@ export function TransactionRiskTable({
           <input
             className={styles.searchInput}
             type="search"
-            aria-label="Search transactions"
-            placeholder="Search transaction, entity, or project…"
+            aria-label={t.table.searchPlaceholder}
+            placeholder={t.table.searchPlaceholder}
             value={filters.query}
             onChange={(event) => patch({ query: event.target.value })}
           />
 
           <select
             className={styles.control}
-            aria-label="Phân loại rủi ro"
+            aria-label={t.table.filterRisk}
             value={filters.riskLevel}
             onChange={(event) =>
               patch({
@@ -221,9 +226,9 @@ export function TransactionRiskTable({
               })
             }
           >
-            <option value="all">Tất cả giao dịch</option>
-            <option value="Anomaly">🔴 Bất thường (Anomaly)</option>
-            <option value="Normal">🟢 Bình thường (Normal)</option>
+            <option value="all">{t.table.filterAllRisk}</option>
+            <option value="Anomaly">{t.table.filterAnomaly}</option>
+            <option value="Normal">{t.table.filterNormal}</option>
           </select>
         </div>
       </div>
@@ -233,39 +238,39 @@ export function TransactionRiskTable({
           <thead>
             <tr>
               <SortHeader
-                label="Đánh giá"
+                label={t.table.columns.assessment}
                 field="riskLevel"
                 sort={sort}
                 onSort={onSortChange}
               />
-              <th>Transaction</th>
+              <th>{t.table.columns.transaction}</th>
               <SortHeader
-                label="Project / Type"
+                label={t.table.columns.projectType}
                 field="projectName"
                 sort={sort}
                 onSort={onSortChange}
               />
               <SortHeader
-                label="Score"
+                label={t.table.columns.score}
                 field="riskScore"
                 sort={sort}
                 onSort={onSortChange}
               />
-              <th>Scoring source</th>
+              <th>{t.table.columns.scoringSource}</th>
               <SortHeader
-                label="Processed at"
+                label={t.table.columns.processedAt}
                 field="processedAt"
                 sort={sort}
                 onSort={onSortChange}
               />
-              <th aria-label="Actions" />
+              <th aria-label={t.table.columns.actions} />
             </tr>
           </thead>
           <tbody>
             {pageData.length === 0 ? (
               <tr>
                 <td className={styles.emptyState} colSpan={7}>
-                  Không có kết quả phù hợp với bộ lọc hiện tại.
+                  {t.table.emptyMessage}
                 </td>
               </tr>
             ) : (
@@ -283,7 +288,7 @@ export function TransactionRiskTable({
                       {transaction.transactionReference}
                     </span>
                     <span className={styles.findingMeta}>
-                      Entity: {transaction.entityReference}
+                      {transaction.entityReference}
                     </span>
                   </td>
                   <td>
@@ -296,14 +301,14 @@ export function TransactionRiskTable({
                   <td>
                     <ScoringSourceBadge source={transaction.scoringSource} />
                   </td>
-                  <td>{formatDate(transaction.processedAt)}</td>
+                  <td>{formatDate(transaction.processedAt, dateLocale)}</td>
                   <td>
                     <button
                       className={styles.button}
                       onClick={() => onReview(transaction)}
                       type="button"
                     >
-                      Review
+                      {t.table.reviewBtn}
                     </button>
                   </td>
                 </tr>
@@ -316,14 +321,14 @@ export function TransactionRiskTable({
       {/* Pagination */}
       <div className={styles.pagination}>
         <div className={styles.paginationInfo}>
-          Showing {sorted.length === 0 ? 0 : startIdx + 1}–
-          {Math.min(startIdx + pagination.pageSize, sorted.length)} of{" "}
-          {sorted.length}
+          {language === "vi"
+            ? `${t.table.showing} ${sorted.length === 0 ? 0 : startIdx + 1}–${Math.min(startIdx + pagination.pageSize, sorted.length)} ${t.table.of} ${sorted.length}`
+            : `${t.table.showing} ${sorted.length === 0 ? 0 : startIdx + 1}–${Math.min(startIdx + pagination.pageSize, sorted.length)} ${t.table.of} ${sorted.length}`}
         </div>
         <div className={styles.paginationControls}>
           <select
             className={styles.control}
-            aria-label="Page size"
+            aria-label={t.table.perPage}
             value={pagination.pageSize}
             onChange={(e) =>
               onPaginationChange({
@@ -332,9 +337,9 @@ export function TransactionRiskTable({
               })
             }
           >
-            <option value={10}>10 / page</option>
-            <option value={25}>25 / page</option>
-            <option value={50}>50 / page</option>
+            <option value={10}>10 {t.table.perPage}</option>
+            <option value={25}>25 {t.table.perPage}</option>
+            <option value={50}>50 {t.table.perPage}</option>
           </select>
           <button
             className={styles.paginationBtn}
@@ -342,7 +347,7 @@ export function TransactionRiskTable({
               onPaginationChange({ ...pagination, page: safePage - 1 })
             }
             disabled={safePage <= 1}
-            aria-label="Previous page"
+            aria-label={language === "vi" ? "Trang trước" : "Previous page"}
             type="button"
           >
             ‹
@@ -365,7 +370,7 @@ export function TransactionRiskTable({
               onPaginationChange({ ...pagination, page: safePage + 1 })
             }
             disabled={safePage >= totalPages}
-            aria-label="Next page"
+            aria-label={language === "vi" ? "Trang sau" : "Next page"}
             type="button"
           >
             ›

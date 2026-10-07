@@ -18,12 +18,15 @@ import {
   initialSmeTenants,
 } from "../../data/fraudguard-platform";
 import { useToast } from "./ToastProvider";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 export function PlatformHealthView() {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
-  const [services, setServices] = useState<MicroserviceHealth[]>(initialMicroservices);
+  const [services] = useState<MicroserviceHealth[]>(initialMicroservices);
   const [tenants] = useState<SmeTenantItem[]>(initialSmeTenants);
   const [isPinging, setIsPinging] = useState<Record<string, boolean>>({});
 
@@ -37,7 +40,7 @@ export function PlatformHealthView() {
       setIsPinging((prev) => ({ ...prev, [service.id]: false }));
       toast(
         "success",
-        `[Ping OK] ${service.name} phản hồi sau ${service.latencyMs}ms. Status: ${service.status}`,
+        `[Ping OK] ${service.name} (${service.latencyMs}ms). Status: ${service.status}`,
       );
     }, 450);
   };
@@ -58,19 +61,17 @@ export function PlatformHealthView() {
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Platform Health & Tenants Monitoring</h1>
-          <p>
-            Giám sát cụm máy chủ microservices, độ trễ AI inference, cơ chế tự động Fallback và danh sách doanh nghiệp SME.
-          </p>
+          <h1>{t.platformHealthView.title}</h1>
+          <p>{t.platformHealthView.subtitle}</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button
             className={styles.button}
-            onClick={() => toast("info", "Đã đồng bộ metrics cụm server mới nhất")}
+            onClick={() => toast("info", t.platformHealthView.toastRefreshed)}
             type="button"
           >
             <RefreshCw size={13} style={{ marginRight: 6 }} />
-            Refresh Metrics
+            {t.platformHealthView.btnRefresh}
           </button>
         </div>
       </div>
@@ -78,30 +79,38 @@ export function PlatformHealthView() {
       {/* KPI Stats */}
       <section className={styles.metricsGrid} style={{ marginTop: 24 }}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>SLA Uptime (30d)</div>
+          <div className={styles.statLabel}>{t.platformHealthView.kpis.uptime}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-green)" }}>
             99.98%
           </strong>
-          <span className={styles.statDescription}>0 downtime sự cố nghiêm trọng</span>
+          <span className={styles.statDescription}>
+            {t.platformHealthView.kpis.uptimeDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>AI Inference Latency (P95)</div>
+          <div className={styles.statLabel}>{t.platformHealthView.kpis.latency}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-blue)" }}>
             42ms
           </strong>
-          <span className={styles.statDescription}>P99: 68ms · Model v2.4 ONNX</span>
+          <span className={styles.statDescription}>
+            {t.platformHealthView.kpis.latencyDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>RULE_FALLBACK Rate</div>
+          <div className={styles.statLabel}>{t.platformHealthView.kpis.fallback}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-orange)" }}>
             1.2%
           </strong>
-          <span className={styles.statDescription}>18/1,500 requests fallback hôm nay</span>
+          <span className={styles.statDescription}>
+            {t.platformHealthView.kpis.fallbackDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Active SME Tenants</div>
+          <div className={styles.statLabel}>{t.platformHealthView.kpis.activeTenants}</div>
           <strong className={styles.statValue}>{tenants.length}</strong>
-          <span className={styles.statDescription}>10 projects đang kết nối API</span>
+          <span className={styles.statDescription}>
+            {t.platformHealthView.kpis.activeTenantsDesc}
+          </span>
         </article>
       </section>
 
@@ -111,10 +120,10 @@ export function PlatformHealthView() {
           <Zap size={22} color="var(--security-orange)" style={{ flexShrink: 0, marginTop: 2 }} />
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--security-text)", marginBottom: 3 }}>
-              Cơ chế Dự phòng Không Gián đoạn (RULE_FALLBACK Protocol)
+              {t.platformHealthView.failoverTitle}
             </div>
             <p style={{ margin: 0, fontSize: 12, color: "var(--security-text-secondary)", lineHeight: 1.5 }}>
-              Khi AI Scoring Service vượt ngưỡng timeout 100ms hoặc bảo trì, hệ thống tự động chuyển hướng chấm điểm sang <strong>Dynamic Rule Engine</strong> và gắn cờ <code>RULE_FALLBACK</code> trên transaction để đảm bảo luồng thanh toán của SME <strong>không bao giờ bị gián đoạn</strong>.
+              {t.platformHealthView.failoverDesc}
             </p>
           </div>
         </div>
@@ -128,13 +137,13 @@ export function PlatformHealthView() {
             fontSize: 11,
           }}
         >
-          High-Availability Active
+          {t.platformHealthView.failoverBadge}
         </span>
       </div>
 
       {/* Microservices Health Grid */}
       <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>
-        Cụm Dịch vụ Microservices (Core Services)
+        {t.platformHealthView.microservicesTitle}
       </h2>
       <div className={styles.servicesGrid}>
         {services.map((svc) => (
@@ -152,27 +161,35 @@ export function PlatformHealthView() {
 
             <div className={styles.serviceMetricGrid}>
               <div className={styles.serviceMetricItem}>
-                <span className={styles.serviceMetricLabel}>Độ trễ (Latency)</span>
+                <span className={styles.serviceMetricLabel}>
+                  {t.platformHealthView.metrics.latency}
+                </span>
                 <span className={styles.serviceMetricVal} style={{ color: "var(--security-blue)" }}>
                   {svc.latencyMs} ms
                 </span>
               </div>
               <div className={styles.serviceMetricItem}>
-                <span className={styles.serviceMetricLabel}>Throughput</span>
+                <span className={styles.serviceMetricLabel}>
+                  {t.platformHealthView.metrics.throughput}
+                </span>
                 <span className={styles.serviceMetricVal}>{svc.throughput}</span>
               </div>
               <div className={styles.serviceMetricItem}>
-                <span className={styles.serviceMetricLabel}>CPU Load</span>
+                <span className={styles.serviceMetricLabel}>
+                  {t.platformHealthView.metrics.cpuLoad}
+                </span>
                 <span className={styles.serviceMetricVal}>{svc.cpuUsage}%</span>
               </div>
               <div className={styles.serviceMetricItem}>
-                <span className={styles.serviceMetricLabel}>Memory</span>
+                <span className={styles.serviceMetricLabel}>
+                  {t.platformHealthView.metrics.memory}
+                </span>
                 <span className={styles.serviceMetricVal}>{svc.memoryUsage}%</span>
               </div>
             </div>
 
             <div className={styles.serviceFooter}>
-              <span>Uptime: {svc.uptime}</span>
+              <span>{t.platformHealthView.metrics.uptime}: {svc.uptime}</span>
               <button
                 className={styles.button}
                 style={{ fontSize: 11, padding: "3px 8px", minHeight: 26 }}
@@ -180,7 +197,9 @@ export function PlatformHealthView() {
                 disabled={isPinging[svc.id]}
                 type="button"
               >
-                {isPinging[svc.id] ? "Pinging…" : "Ping Check"}
+                {isPinging[svc.id]
+                  ? t.platformHealthView.metrics.pinging
+                  : t.platformHealthView.metrics.btnPing}
               </button>
             </div>
           </article>
@@ -191,9 +210,9 @@ export function PlatformHealthView() {
       <section className={styles.panel} style={{ marginBottom: 28 }}>
         <div className={styles.panelHeader} style={{ marginBottom: 14 }}>
           <div>
-            <h2>Giám sát Lưu lượng Chấm điểm & Tỷ lệ Fallback 24h</h2>
+            <h2>{t.platformHealthView.chart.title}</h2>
             <span className={styles.muted}>
-              Phân bổ số lượng giao dịch chấm điểm bằng AI vs Dynamic Rule Fallback theo khung giờ
+              {t.platformHealthView.chart.subtitle}
             </span>
           </div>
           <div className={styles.legend}>
@@ -237,7 +256,7 @@ export function PlatformHealthView() {
                 <Area
                   type="monotone"
                   dataKey="aiRequests"
-                  name="AI Scoring (Requests)"
+                  name={t.platformHealthView.chart.aiLabel}
                   stroke="#ad8af3"
                   fillOpacity={1}
                   fill="url(#aiGrad)"
@@ -245,7 +264,7 @@ export function PlatformHealthView() {
                 <Area
                   type="monotone"
                   dataKey="fallbackRequests"
-                  name="Rule Fallback (Requests)"
+                  name={t.platformHealthView.chart.fallbackLabel}
                   stroke="#eda765"
                   fillOpacity={1}
                   fill="url(#fbGrad)"
@@ -260,9 +279,9 @@ export function PlatformHealthView() {
       <section className={styles.panel}>
         <div className={styles.panelHeader} style={{ marginBottom: 16 }}>
           <div>
-            <h2>Danh sách Khách hàng Doanh nghiệp (SME Tenants)</h2>
+            <h2>{t.platformHealthView.tenantsTitle}</h2>
             <span className={styles.muted}>
-              Các tổ chức đang đăng ký thuê nền tảng FraudGuard SaaS và mức tiêu thụ hạn ngạch
+              {t.platformHealthView.tenantsDesc}
             </span>
           </div>
         </div>
@@ -271,42 +290,42 @@ export function PlatformHealthView() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Tổ chức / Doanh nghiệp</th>
-                <th>Gói dịch vụ</th>
-                <th>Cơ chế Chấm điểm</th>
-                <th>Hạn ngạch tiêu thụ (Tháng)</th>
-                <th>Số dự án</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
+                <th>{t.platformHealthView.tableTenants.name}</th>
+                <th>{t.platformHealthView.tableTenants.plan}</th>
+                <th>{t.platformHealthView.tableTenants.scoringEngine}</th>
+                <th>{t.platformHealthView.tableTenants.quota}</th>
+                <th>{t.platformHealthView.tableTenants.activeProjects}</th>
+                <th>{t.platformHealthView.tableTenants.status}</th>
+                <th>{t.platformHealthView.tableTenants.actions}</th>
               </tr>
             </thead>
             <tbody>
-              {tenants.map((t) => {
-                const usagePercent = Math.round((t.quotaUsed / t.quotaLimit) * 100);
+              {tenants.map((item) => {
+                const usagePercent = Math.round((item.quotaUsed / item.quotaLimit) * 100);
                 return (
-                  <tr key={t.id}>
+                  <tr key={item.id}>
                     <td>
                       <div style={{ fontWeight: 600, color: "var(--security-text)" }}>
-                        {t.name}
+                        {item.name}
                       </div>
                       <div style={{ fontSize: 11, color: "var(--security-subtle)" }}>
-                        Code: {t.code} · Ngày gia nhập: {t.joinedDate}
+                        {t.platformHealthView.tableTenants.code}: {item.code} · {t.platformHealthView.tableTenants.joined}: {item.joinedDate}
                       </div>
                     </td>
                     <td>
-                      <span className={`${styles.badge} ${getPlanBadgeClass(t.plan)}`}>
-                        {t.plan}
+                      <span className={`${styles.badge} ${getPlanBadgeClass(item.plan)}`}>
+                        {item.plan}
                       </span>
                     </td>
                     <td>
                       <span style={{ fontSize: 12, color: "var(--security-text)" }}>
-                        {t.scoringEngine}
+                        {item.scoringEngine}
                       </span>
                     </td>
                     <td>
                       <div style={{ width: 140 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
-                          <span>{t.quotaUsed.toLocaleString("vi-VN")}</span>
+                          <span>{item.quotaUsed.toLocaleString(dateLocale)}</span>
                           <span style={{ color: usagePercent > 85 ? "var(--security-orange)" : "var(--security-muted)" }}>
                             {usagePercent}%
                           </span>
@@ -324,26 +343,26 @@ export function PlatformHealthView() {
                     </td>
                     <td>
                       <span style={{ fontSize: 12, fontWeight: 500 }}>
-                        {t.activeProjectsCount} projects
+                        {item.activeProjectsCount} projects
                       </span>
                     </td>
                     <td>
                       <span
                         className={`${styles.badge} ${
-                          t.status === "Active" ? styles.low : styles.high
+                          item.status === "Active" ? styles.low : styles.high
                         }`}
                       >
-                        {t.status}
+                        {item.status}
                       </span>
                     </td>
                     <td>
                       <button
                         className={styles.button}
-                        onClick={() => toast("info", `Đang chuyển quyền hỗ trợ Tenant: ${t.name}`)}
+                        onClick={() => toast("info", `${t.platformHealthView.tableTenants.btnInspect}: ${item.name}`)}
                         type="button"
                         style={{ fontSize: 11, padding: "3px 8px", minHeight: 26 }}
                       >
-                        Inspect Tenant
+                        {t.platformHealthView.tableTenants.btnInspect}
                       </button>
                     </td>
                   </tr>

@@ -527,6 +527,27 @@
   background: var(--security-control-hover);
 }
 
+.languageToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--security-border-strong);
+  border-radius: 4px;
+  background: var(--security-control);
+  color: var(--security-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.languageToggleBtn:hover {
+  background: var(--security-control-hover);
+  border-color: var(--security-blue);
+}
+
 /* Content */
 .main {
   width: 100%;

@@ -13,11 +13,7 @@ import {
 } from "recharts";
 import styles from "./SecurityDashboard.module.css";
 import type { TransactionRisk } from "./types";
-
-const BINARY_COLORS: Record<string, string> = {
-  "Bình thường (Normal)": "#78c9ac",
-  "Bất thường (Anomaly)": "#ed6775",
-};
+import { useLanguage } from "./i18n/LanguageContext";
 
 interface RiskDistributionChartProps {
   transactions: TransactionRisk[];
@@ -28,6 +24,7 @@ export function RiskDistributionChart({
   transactions,
   threshold = 75,
 }: RiskDistributionChartProps) {
+  const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -37,16 +34,27 @@ export function RiskDistributionChart({
   const anomalies = transactions.filter((t) => t.riskScore >= threshold).length;
   const normals = transactions.length - anomalies;
 
+  const normalLabel = t.riskOverview.charts.distNormal;
+  const anomalyLabel = t.riskOverview.charts.distAnomaly;
+
   const distribution = [
     {
-      level: "Bình thường (Normal)",
+      level: normalLabel,
+      color: "#78c9ac",
       count: normals,
-      percentage: transactions.length > 0 ? ((normals / transactions.length) * 100).toFixed(1) : "0",
+      percentage:
+        transactions.length > 0
+          ? ((normals / transactions.length) * 100).toFixed(1)
+          : "0",
     },
     {
-      level: "Bất thường (Anomaly)",
+      level: anomalyLabel,
+      color: "#ed6775",
       count: anomalies,
-      percentage: transactions.length > 0 ? ((anomalies / transactions.length) * 100).toFixed(1) : "0",
+      percentage:
+        transactions.length > 0
+          ? ((anomalies / transactions.length) * 100).toFixed(1)
+          : "0",
     },
   ];
 
@@ -57,10 +65,17 @@ export function RiskDistributionChart({
   return (
     <div className={styles.chartArea}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={distribution} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <BarChart
+          data={distribution}
+          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+        >
           <CartesianGrid stroke="var(--security-border)" strokeDasharray="3 3" />
           <XAxis dataKey="level" stroke="var(--security-muted)" fontSize={11} />
-          <YAxis stroke="var(--security-muted)" fontSize={10} allowDecimals={false} />
+          <YAxis
+            stroke="var(--security-muted)"
+            fontSize={10}
+            allowDecimals={false}
+          />
           <Tooltip
             contentStyle={{
               background: "var(--security-panel)",
@@ -68,17 +83,16 @@ export function RiskDistributionChart({
               borderRadius: 4,
               color: "var(--security-text)",
             }}
-            formatter={(value: any, name: any, item: any) => [
-              `${value} giao dịch (${item.payload.percentage}%)`,
-              "Số lượng",
+            formatter={(value: any, _name: any, item: any) => [
+              t.riskOverview.charts.distTooltip
+                .replace("{count}", String(value))
+                .replace("{percent}", item.payload.percentage),
+              t.riskOverview.charts.distQuantity,
             ]}
           />
           <Bar dataKey="count" radius={[4, 4, 0, 0]}>
             {distribution.map((entry) => (
-              <Cell
-                key={entry.level}
-                fill={BINARY_COLORS[entry.level]}
-              />
+              <Cell key={entry.level} fill={entry.color} />
             ))}
           </Bar>
         </BarChart>

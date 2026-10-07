@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Check, ShieldAlert } from "lucide-react";
 import { PERMISSION_MATRIX_DATA } from "../../data/fraudguard-roles";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface PermissionMatrixModalProps {
@@ -12,6 +13,7 @@ interface PermissionMatrixModalProps {
 }
 
 export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalProps) {
+  const { t, language } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -38,16 +40,18 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
 
   const renderBadge = (val: string) => {
     if (val.startsWith("Có")) {
+      const displayVal = language === "en" ? val.replace("Có", "Yes") : val;
       return (
         <span className={styles.matrixBadgeYes}>
-          <Check size={12} /> {val}
+          <Check size={12} /> {displayVal}
         </span>
       );
     }
     if (val.startsWith("Không")) {
+      const displayVal = language === "en" ? val.replace("Không", "No") : val;
       return (
         <span className={styles.matrixBadgeNo}>
-          <ShieldAlert size={12} /> {val}
+          <ShieldAlert size={12} /> {displayVal}
         </span>
       );
     }
@@ -59,10 +63,8 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
       <div className={styles.matrixModalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.matrixModalHeader}>
           <div>
-            <h2>Ma trận Phân quyền Truy cập (Permission Matrix)</h2>
-            <p>
-              Quy chuẩn phân quyền 4 vai trò người dùng trích xuất từ <code>FRAUDGUARD_UI_SYSTEM_SPEC.md</code>
-            </p>
+            <h2>{t.permissionMatrixModal.title}</h2>
+            <p>{t.permissionMatrixModal.subtitle}</p>
           </div>
           <button
             className={styles.button}
@@ -79,7 +81,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
           <table className={styles.matrixTable}>
             <thead>
               <tr>
-                <th style={{ width: "30%" }}>Quyền hạn / Nghiệp vụ</th>
+                <th style={{ width: "30%" }}>{t.permissionMatrixModal.colCapability}</th>
                 <th style={{ width: "14%" }}>Platform Admin</th>
                 <th style={{ width: "14%" }}>SME Admin</th>
                 <th style={{ width: "14%" }}>Operation</th>
@@ -93,7 +95,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
                   <td>
                     <div style={{ fontWeight: 500 }}>{item.capability}</div>
                     <div style={{ fontSize: 10, color: "var(--security-subtle)" }}>
-                      Nhóm: {item.category}
+                      {t.permissionMatrixModal.groupPrefix} {item.category}
                     </div>
                   </td>
                   <td>{renderBadge(item.platformAdmin)}</td>

@@ -28,12 +28,12 @@ import { RulesView } from "./RulesView";
 import { ProjectsView } from "./ProjectsView";
 import { ReportsView } from "./ReportsView";
 import { AuditTrailView } from "./AuditTrailView";
-import { RoleNoticeBanner } from "./RoleNoticeBanner";
 import { PlatformHealthView } from "./PlatformHealthView";
 import { initialProjects } from "../../data/fraudguard-projects";
 import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
 import { DEMO_USERS, getRolePermissions } from "../../data/fraudguard-roles";
 import { ToastProvider } from "./ToastProvider";
+import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
 import { OnboardingView } from "./OnboardingView";
 import { RuleTestingView } from "./RuleTestingView";
 import styles from "./SecurityDashboard.module.css";
@@ -55,26 +55,14 @@ const initialFilters: FraudGuardFilters = {
   range: 30,
 };
 
-const VIEW_TITLES: Record<SecondaryView, string> = {
-  "risk-overview": "Risk Overview",
-  "recent-alerts": "Recent Alerts",
-  "active-cases": "Case Queue",
-  "my-cases": "My Cases (Hồ sơ được giao)",
-  "rule-templates": "Rule Templates",
-  "rule-testing": "Rule Testing Sandbox",
-  onboarding: "Enterprise Onboarding & Handover",
-  projects: "Projects & Integrations",
-  reports: "Reports & Performance",
-  "audit-trail": "Security Audit Trail",
-  "platform-health": "Platform Health & Tenants",
-};
 
-export function FraudGuardDashboard({
+function FraudGuardDashboardContent({
   initialTransactions,
   initialRules,
   initialProjects: defaultProjects = initialProjects,
   initialAuditLogs: defaultAuditLogs = initialAuditLogs,
 }: FraudGuardDashboardProps) {
+  const { t, language } = useLanguage();
   // Data state (mutable for case management)
   const [transactions, setTransactions] = useState(initialTransactions);
   const [rules, setRules] = useState(initialRules);
@@ -352,10 +340,8 @@ export function FraudGuardDashboard({
           <>
             <div className={styles.pageHeading}>
               <div>
-                <h1>Transaction risk overview</h1>
-                <p>
-                  Theo dõi risk score, cảnh báo và case cần nhân sự kiểm tra.
-                </p>
+                <h1>{t.riskOverview.title}</h1>
+                <p>{t.riskOverview.subtitle}</p>
               </div>
             </div>
 
@@ -370,48 +356,48 @@ export function FraudGuardDashboard({
             {currentUser.role === "Operation" || currentUser.role === "Investigator" ? (
               <section className={styles.metricsGrid}>
                 <StatCard
-                  label="Pending alerts"
+                  label={t.riskOverview.kpis.pendingAlerts}
                   value={metrics.openAlerts}
-                  description="Cảnh báo cần thẩm định ngay"
+                  description={t.riskOverview.kpis.pendingAlertsDesc}
                   tone={metrics.openAlerts > 0 ? "critical" : undefined}
                 />
                 <StatCard
-                  label="Active cases"
+                  label={t.riskOverview.kpis.activeCases}
                   value={metrics.activeCases}
-                  description="Hồ sơ đang xử lý trong luồng"
+                  description={t.riskOverview.kpis.activeCasesDesc}
                   tone="warning"
                 />
                 <StatCard
-                  label="Bất thường (Anomaly)"
+                  label={t.riskOverview.kpis.anomaly}
                   value={metrics.highRisk}
-                  description={`Score ≥ ${tenantThreshold} (Đỏ)`}
+                  description={`${t.riskOverview.kpis.anomalyDescExceeded} (≥ ${tenantThreshold})`}
                   tone="critical"
                 />
                 <StatCard
-                  label="Giao dịch an toàn (Normal)"
+                  label={t.riskOverview.kpis.normal}
                   value={metrics.normals}
-                  description={`Score < ${tenantThreshold} (Xanh)`}
+                  description={`${t.riskOverview.kpis.normalDescSafe} (< ${tenantThreshold})`}
                 />
               </section>
             ) : currentUser.role === "Viewer" ? (
               <section className={styles.metricsGrid}>
                 <StatCard
-                  label="Total analyzed"
+                  label={t.riskOverview.kpis.totalAnalyzed}
                   value={metrics.analyzed}
-                  description={`Trong ${filters.range} ngày gần nhất`}
+                  description={t.riskOverview.kpis.inLastDays.replace("{range}", String(filters.range))}
                 />
                 <StatCard
-                  label="Anomaly ratio"
+                  label={t.riskOverview.kpis.anomalyRatio}
                   value={
                     metrics.analyzed > 0
                       ? `${Math.round((metrics.highRisk / metrics.analyzed) * 100)}%`
                       : "0%"
                   }
-                  description={`${metrics.highRisk} giao dịch bất thường`}
+                  description={`${metrics.highRisk} ${t.riskOverview.kpis.anomalyRatioDesc}`}
                   tone="critical"
                 />
                 <StatCard
-                  label="False alarm rate"
+                  label={t.riskOverview.kpis.falseAlarmRate}
                   value={
                     visibleTransactions.filter((t) => t.caseStatus).length > 0
                       ? `${Math.round(
@@ -422,10 +408,10 @@ export function FraudGuardDashboard({
                         )}%`
                       : "0%"
                   }
-                  description="Tỷ lệ báo động nhầm sau điều tra"
+                  description={t.riskOverview.kpis.falseAlarmRateDesc}
                 />
                 <StatCard
-                  label="Resolved audits"
+                  label={t.riskOverview.kpis.resolvedAudits}
                   value={
                     visibleTransactions.filter(
                       (t) =>
@@ -433,32 +419,32 @@ export function FraudGuardDashboard({
                         t.caseStatus === "Confirmed Fraud",
                     ).length
                   }
-                  description="Hồ sơ đã có kết luận"
+                  description={t.riskOverview.kpis.resolvedAuditsDesc}
                   tone="warning"
                 />
               </section>
             ) : (
               <section className={styles.metricsGrid}>
                 <StatCard
-                  label="Transactions analyzed"
+                  label={t.riskOverview.kpis.totalAnalyzed}
                   value={metrics.analyzed}
-                  description={`Trong ${filters.range} ngày gần nhất`}
+                  description={t.riskOverview.kpis.inLastDays.replace("{range}", String(filters.range))}
                 />
                 <StatCard
-                  label="Bất thường (Anomaly)"
+                  label={t.riskOverview.kpis.anomaly}
                   value={metrics.highRisk}
-                  description={`Score ≥ ${tenantThreshold} (Vượt ngưỡng)`}
+                  description={`${t.riskOverview.kpis.anomalyDescExceeded} (≥ ${tenantThreshold})`}
                   tone="critical"
                 />
                 <StatCard
-                  label="Bình thường (Normal)"
+                  label={t.riskOverview.kpis.normal}
                   value={metrics.normals}
-                  description={`Score < ${tenantThreshold} (An toàn)`}
+                  description={`${t.riskOverview.kpis.normalDescSafe} (< ${tenantThreshold})`}
                 />
                 <StatCard
-                  label="Active cases"
+                  label={t.riskOverview.kpis.activeCases}
                   value={metrics.activeCases}
-                  description="Đang xử lý trong luồng"
+                  description={t.riskOverview.kpis.activeCasesDesc}
                   tone="warning"
                 />
               </section>
@@ -466,8 +452,8 @@ export function FraudGuardDashboard({
 
             <section className={styles.chartGrid}>
               <Panel
-                title="Risk trend"
-                description={`Xu hướng Bất thường (Đỏ) vs Bình thường (Xanh) theo thời gian`}
+                title={t.riskOverview.charts.trendTitle}
+                description={t.riskOverview.charts.trendDesc}
               >
                 <TransactionRiskTrend
                   transactions={visibleTransactions}
@@ -475,8 +461,8 @@ export function FraudGuardDashboard({
                 />
               </Panel>
               <Panel
-                title="Risk distribution"
-                description={`Tỷ lệ phân bố theo ngưỡng nhị phân (τ = ${tenantThreshold})`}
+                title={t.riskOverview.charts.distTitle}
+                description={t.riskOverview.charts.distDesc.replace("{threshold}", String(tenantThreshold))}
               >
                 <RiskDistributionChart
                   transactions={visibleTransactions}
@@ -505,12 +491,25 @@ export function FraudGuardDashboard({
 
   const currentViewTitle = useMemo(() => {
     if (currentUser.role === "Investigator") {
-      if (activeNavItem === "reports") return "Investigation History (Lịch sử thụ lý)";
+      if (activeNavItem === "reports") return t.nav.items.investigationHistory;
       if (activeNavItem === "active-cases" || activeNavItem === "my-cases")
-        return "My Cases (Hồ sơ được giao)";
+        return t.nav.items.myCases;
     }
-    return VIEW_TITLES[activeNavItem] || "Risk Overview";
-  }, [currentUser.role, activeNavItem]);
+    const navTitleMap: Record<SecondaryView, string> = {
+      "risk-overview": t.nav.items.riskOverview,
+      "recent-alerts": t.nav.items.recentAlerts,
+      "active-cases": t.nav.items.activeCases,
+      "my-cases": t.nav.items.myCases,
+      "rule-templates": t.nav.items.ruleTemplates,
+      "rule-testing": t.nav.items.ruleTesting,
+      onboarding: t.nav.items.onboarding,
+      projects: t.nav.items.projects,
+      reports: t.nav.items.reports,
+      "audit-trail": t.nav.items.auditTrail,
+      "platform-health": t.nav.items.platformHealth,
+    };
+    return navTitleMap[activeNavItem] || t.nav.items.riskOverview;
+  }, [currentUser.role, activeNavItem, t]);
 
   return (
     <ToastProvider>
@@ -532,10 +531,6 @@ export function FraudGuardDashboard({
             onNavigate={setActiveNavItem}
           />
           <main className={styles.main}>
-            <RoleNoticeBanner
-              currentUser={currentUser}
-              activeNavItem={activeNavItem}
-            />
             {renderView()}
           </main>
         </div>
@@ -552,5 +547,13 @@ export function FraudGuardDashboard({
         />
       </div>
     </ToastProvider>
+  );
+}
+
+export function FraudGuardDashboard(props: FraudGuardDashboardProps) {
+  return (
+    <LanguageProvider>
+      <FraudGuardDashboardContent {...props} />
+    </LanguageProvider>
   );
 }

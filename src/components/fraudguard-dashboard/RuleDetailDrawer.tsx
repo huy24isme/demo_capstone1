@@ -16,6 +16,7 @@ import type {
   RuleTemplate,
 } from "./types";
 import { fraudGuardTransactions } from "@/data/fraudguard-transactions";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RuleDetailDrawerProps {
@@ -39,6 +40,7 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; border: string }>
 
 function renderConditionHierarchy(
   node: ConditionGroupNode | RuleConditionNode,
+  language: "vi" | "en",
   depth = 0,
 ): React.ReactNode {
   if (node.type === "condition") {
@@ -81,7 +83,7 @@ function renderConditionHierarchy(
             letterSpacing: "0.05em",
           }}
         >
-          GROUP LOGIC: {node.logic}
+          {language === "vi" ? "LOGIC NHÓM: " : "GROUP LOGIC: "}{node.logic}
         </span>
       )}
       {node.children.map((child, i) => (
@@ -91,7 +93,7 @@ function renderConditionHierarchy(
               {node.logic}
             </div>
           )}
-          {renderConditionHierarchy(child, depth + (child.type === "group" ? 1 : 0))}
+          {renderConditionHierarchy(child, language, depth + (child.type === "group" ? 1 : 0))}
         </div>
       ))}
     </div>
@@ -108,6 +110,8 @@ export function RuleDetailDrawer({
   onDelete,
   permissions,
 }: RuleDetailDrawerProps) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const canManage = permissions ? permissions.canManageRules : true;
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -130,7 +134,7 @@ export function RuleDetailDrawer({
     const falsePositives = Math.max(1, Math.round(triggers * (0.04 + (seed % 6) * 0.01)));
     const confirmedFraud = triggers - falsePositives;
     const precision = Math.round((confirmedFraud / triggers) * 100);
-    const blockedAmountVND = (triggers * (3500000 + (seed % 5000000))).toLocaleString();
+    const blockedAmountVND = (triggers * (3500000 + (seed % 5000000))).toLocaleString(dateLocale);
 
     return {
       triggers,
@@ -139,7 +143,7 @@ export function RuleDetailDrawer({
       precision,
       blockedAmountVND,
     };
-  }, [rule]);
+  }, [rule, dateLocale]);
 
   // Sample transactions that triggered this rule or category
   const matchedTransactions = useMemo(() => {
@@ -148,16 +152,18 @@ export function RuleDetailDrawer({
     const ruleKey = rule.id.toLowerCase();
 
     return fraudGuardTransactions
-      .filter(
-        (t) =>
-          t.triggeredRules.some(
+      .filter((tx) => {
+        if (!tx.triggeredRules || tx.triggeredRules.length === 0) return false;
+        return (
+          tx.triggeredRules.some(
             (r) =>
+              r.toLowerCase().includes(ruleKey) ||
               r.toLowerCase().includes(cat) ||
-              rule.name.toLowerCase().includes(r.replace(/_/g, " ")),
-          ) ||
-          (t.riskLevel === "Anomaly" && rule.riskPoints >= 30),
-      )
-      .slice(0, 3);
+              rule.name.toLowerCase().includes(r.toLowerCase()),
+          ) || tx.riskScore >= rule.threshold
+        );
+      })
+      .slice(0, 4);
   }, [rule]);
 
   if (!open || !rule) return null;
@@ -168,14 +174,13 @@ export function RuleDetailDrawer({
     <>
       <div className={styles.drawerOverlay} onClick={onClose} aria-hidden="true" />
       <div
-        ref={drawerRef}
         className={styles.drawer}
-        role="dialog"
-        aria-label={`Rule detail: ${rule.name}`}
+        style={{ width: "min(640px, 100vw)" }}
+        ref={drawerRef}
         tabIndex={-1}
-        style={{ width: "min(560px, 100vw)" }}
+        role="dialog"
+        aria-label={language === "vi" ? "Chi tiết Quy tắc" : "Rule Detail"}
       >
-        {/* Header */}
         <div className={styles.drawerHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
@@ -193,7 +198,7 @@ export function RuleDetailDrawer({
             </div>
             <div>
               <h2 className={styles.drawerTitle} style={{ fontSize: 16 }}>
-                Rule Specification Detail
+                {language === "vi" ? "Chi tiết Quy tắc Phát hiện" : "Rule Specification Detail"}
               </h2>
               <span style={{ fontSize: 11, color: "var(--security-muted)" }}>
                 ID: {rule.id} · Ver: {rule.version || "v1.0"}
@@ -203,7 +208,7 @@ export function RuleDetailDrawer({
           <button
             className={styles.drawerCloseBtn}
             onClick={onClose}
-            aria-label="Close drawer"
+            aria-label={t.actions.close}
             type="button"
           >
             ✕
@@ -222,7 +227,7 @@ export function RuleDetailDrawer({
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
                   <span className={styles.categoryBadge} style={{ fontSize: 10 }}>
-                    CATEGORY: {rule.category.toUpperCase()}
+                    {language === "vi" ? "DANH MỤC: " : "CATEGORY: "}{rule.category.toUpperCase()}
                   </span>
                   <span
                     className={styles.badge}
@@ -252,7 +257,9 @@ export function RuleDetailDrawer({
                     className={`${styles.badge} ${rule.enabled ? styles.low : styles.medium}`}
                     style={{ fontSize: 10 }}
                   >
-                    {rule.enabled ? "ACTIVE (ENABLED)" : "PAUSED (DISABLED)"}
+                    {rule.enabled
+                      ? language === "vi" ? "ĐANG BẬT" : "ACTIVE"
+                      : language === "vi" ? "ĐÃ TẮT" : "PAUSED"}
                   </span>
                 </div>
                 <p style={{ margin: 0, fontSize: 12, color: "var(--security-text-secondary)", lineHeight: 1.6 }}>
@@ -273,17 +280,21 @@ export function RuleDetailDrawer({
                 }}
                 onClick={() => canManage && onToggle(rule.id)}
                 disabled={!canManage}
-                title={!canManage ? "Chỉ SME Admin mới có quyền bật/tắt" : undefined}
+                title={!canManage ? (language === "vi" ? "Yêu cầu quyền Quản trị Doanh nghiệp" : "SME Admin permission required") : undefined}
                 type="button"
               >
-                {rule.enabled ? "Disable" : "Enable"}
+                {rule.enabled
+                  ? language === "vi" ? "Tắt" : "Disable"
+                  : language === "vi" ? "Bật" : "Enable"}
               </button>
             </div>
           </div>
 
           {/* Risk Scoring & Thresholds */}
           <div className={styles.drawerSection}>
-            <h3 className={styles.drawerSectionTitle}>Cấu hình Điểm số & Ngưỡng Kích hoạt</h3>
+            <h3 className={styles.drawerSectionTitle}>
+              {language === "vi" ? "Cấu hình Điểm số & Ngưỡng Kích hoạt" : "Scoring & Threshold Configuration"}
+            </h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
               <div
                 style={{
@@ -294,13 +305,13 @@ export function RuleDetailDrawer({
                 }}
               >
                 <div className={styles.drawerLabel} style={{ marginBottom: 4 }}>
-                  Điểm phạt rủi ro (Risk Points)
+                  {language === "vi" ? "Điểm phạt rủi ro" : "Risk Points Penalty"}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: "var(--security-orange)" }}>
-                  +{rule.riskPoints} pts
+                  +{rule.riskPoints} {language === "vi" ? "điểm" : "pts"}
                 </div>
                 <span style={{ fontSize: 10, color: "var(--security-subtle)" }}>
-                  Cộng trực tiếp vào Risk Score Gateway (0–100)
+                  {language === "vi" ? "Cộng trực tiếp vào Risk Score Gateway (0–100)" : "Direct addition to Risk Score Gateway (0–100)"}
                 </span>
               </div>
 
@@ -313,25 +324,29 @@ export function RuleDetailDrawer({
                 }}
               >
                 <div className={styles.drawerLabel} style={{ marginBottom: 4 }}>
-                  Ngưỡng quyết định (Threshold)
+                  {language === "vi" ? "Ngưỡng quyết định" : "Decision Threshold"}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: "var(--security-blue)" }}>
                   {rule.threshold}
                 </div>
                 <span style={{ fontSize: 10, color: "var(--security-subtle)" }}>
-                  Tự động kích hoạt Alert nếu điểm ≥ {rule.threshold}
+                  {language === "vi" ? `Tự động kích hoạt Alert nếu điểm ≥ ${rule.threshold}` : `Auto-triggers alert when score ≥ ${rule.threshold}`}
                 </span>
               </div>
             </div>
 
             <div className={styles.drawerRow}>
-              <span className={styles.drawerLabel}>Dự án áp dụng (Projects)</span>
+              <span className={styles.drawerLabel}>
+                {language === "vi" ? "Dự án áp dụng" : "Applicable Projects"}
+              </span>
               <span style={{ fontWeight: 600, color: "var(--security-text)" }}>
                 {rule.appliesTo.projects.join(", ")}
               </span>
             </div>
             <div className={styles.drawerRow}>
-              <span className={styles.drawerLabel}>Loại giao dịch (Transaction Types)</span>
+              <span className={styles.drawerLabel}>
+                {language === "vi" ? "Loại giao dịch" : "Transaction Types"}
+              </span>
               <span style={{ fontWeight: 600, color: "var(--security-text)" }}>
                 {rule.appliesTo.transactionTypes.join(", ")}
               </span>
@@ -342,7 +357,7 @@ export function RuleDetailDrawer({
           <div className={styles.drawerSection}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <h3 className={styles.drawerSectionTitle} style={{ margin: 0 }}>
-                Cấu trúc Điều kiện (Condition AST)
+                {language === "vi" ? "Cấu trúc Điều kiện" : "Condition Structure"}
               </h3>
               <span
                 style={{
@@ -354,7 +369,7 @@ export function RuleDetailDrawer({
                   background: "var(--security-purple-bg)",
                 }}
               >
-                ROOT LOGIC: {rule.conditionGroup.logic}
+                {language === "vi" ? "LOGIC GỐC: " : "ROOT LOGIC: "}{rule.conditionGroup.logic}
               </span>
             </div>
 
@@ -366,7 +381,7 @@ export function RuleDetailDrawer({
                 padding: "12px 14px",
               }}
             >
-              {renderConditionHierarchy(rule.conditionGroup)}
+              {renderConditionHierarchy(rule.conditionGroup, language)}
             </div>
           </div>
 
@@ -376,7 +391,7 @@ export function RuleDetailDrawer({
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
                 <TrendingUp size={16} color="var(--security-green)" />
                 <h3 className={styles.drawerSectionTitle} style={{ margin: 0 }}>
-                  Hiệu năng thực tế 30 ngày qua
+                  {language === "vi" ? "Hiệu năng thực tế 30 ngày qua" : "30-Day Performance & Impact"}
                 </h3>
               </div>
 
@@ -392,19 +407,25 @@ export function RuleDetailDrawer({
                   <div style={{ fontSize: 18, fontWeight: 700, color: "var(--security-text)" }}>
                     {metrics.triggers}
                   </div>
-                  <div style={{ fontSize: 10, color: "var(--security-muted)" }}>Số lần kích hoạt</div>
+                  <div style={{ fontSize: 10, color: "var(--security-muted)" }}>
+                    {language === "vi" ? "Số lần kích hoạt" : "Triggers"}
+                  </div>
                 </div>
                 <div style={{ background: "var(--security-control)", padding: 10, borderRadius: 4, textAlign: "center" }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: "var(--security-green)" }}>
                     {metrics.precision}%
                   </div>
-                  <div style={{ fontSize: 10, color: "var(--security-muted)" }}>Độ chính xác</div>
+                  <div style={{ fontSize: 10, color: "var(--security-muted)" }}>
+                    {language === "vi" ? "Độ chính xác" : "Precision"}
+                  </div>
                 </div>
                 <div style={{ background: "var(--security-control)", padding: 10, borderRadius: 4, textAlign: "center" }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: "var(--critical-text)" }}>
                     {metrics.falsePositives}
                   </div>
-                  <div style={{ fontSize: 10, color: "var(--security-muted)" }}>Báo động giả</div>
+                  <div style={{ fontSize: 10, color: "var(--security-muted)" }}>
+                    {language === "vi" ? "Báo động giả" : "False Alarms"}
+                  </div>
                 </div>
               </div>
 
@@ -422,7 +443,7 @@ export function RuleDetailDrawer({
                 }}
               >
                 <span style={{ color: "var(--security-text-secondary)" }}>
-                  Tổng tiền rủi ro bị chặn lại:
+                  {language === "vi" ? "Tổng tiền rủi ro bị chặn lại:" : "Guarded transaction volume:"}
                 </span>
                 <strong style={{ color: "var(--security-green)", fontSize: 13 }}>
                   {metrics.blockedAmountVND} VND
@@ -436,13 +457,15 @@ export function RuleDetailDrawer({
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
               <Activity size={16} color="var(--security-blue)" />
               <h3 className={styles.drawerSectionTitle} style={{ margin: 0 }}>
-                Giao dịch khớp luật gần đây
+                {language === "vi" ? "Giao dịch khớp luật gần đây" : "Recent Matched Transactions"}
               </h3>
             </div>
 
             {matchedTransactions.length === 0 ? (
               <p style={{ margin: 0, fontSize: 12, color: "var(--security-muted)" }}>
-                Chưa có giao dịch nào khớp với rule này trong phiên làm việc.
+                {language === "vi"
+                  ? "Chưa có giao dịch nào khớp với rule này trong phiên làm việc."
+                  : "No transactions matched this rule in the current session."}
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -465,7 +488,7 @@ export function RuleDetailDrawer({
                         {tx.transactionReference} · {tx.projectName}
                       </div>
                       <div style={{ color: "var(--security-muted)", fontSize: 10 }}>
-                        {tx.amount != null ? `${tx.amount.toLocaleString()} ${tx.currency}` : "N/A"} · Entity: {tx.entityReference}
+                        {tx.amount != null ? `${tx.amount.toLocaleString(dateLocale)} ${tx.currency}` : "N/A"} · Entity: {tx.entityReference}
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
@@ -475,10 +498,10 @@ export function RuleDetailDrawer({
                           color: tx.riskLevel === "Anomaly" ? "var(--critical-text)" : "var(--security-green)",
                         }}
                       >
-                        Score: {tx.riskScore}/100
+                        {language === "vi" ? "Điểm" : "Score"}: {tx.riskScore}/100
                       </span>
                       <div style={{ fontSize: 9, color: "var(--security-subtle)" }}>
-                        {new Date(tx.processedAt).toLocaleDateString()}
+                        {new Date(tx.processedAt).toLocaleDateString(dateLocale)}
                       </div>
                     </div>
                   </div>
@@ -489,7 +512,9 @@ export function RuleDetailDrawer({
 
           {/* Actions & Timestamps */}
           <div className={styles.drawerSection}>
-            <h3 className={styles.drawerSectionTitle}>Thao tác Quản trị</h3>
+            <h3 className={styles.drawerSectionTitle}>
+              {language === "vi" ? "Thao tác Quản trị" : "Administration"}
+            </h3>
             <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
               <button
                 className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
@@ -499,10 +524,10 @@ export function RuleDetailDrawer({
                   onEdit(rule);
                 }}
                 disabled={!canManage}
-                title={!canManage ? "Yêu cầu quyền SME Admin" : undefined}
+                title={!canManage ? (language === "vi" ? "Yêu cầu quyền Quản trị Doanh nghiệp" : "SME Admin permission required") : undefined}
                 type="button"
               >
-                <Edit3 size={14} /> Edit Rule
+                <Edit3 size={14} /> {language === "vi" ? "Sửa Quy tắc" : "Edit Rule"}
               </button>
 
               <button
@@ -513,10 +538,10 @@ export function RuleDetailDrawer({
                   onClose();
                 }}
                 disabled={!canManage}
-                title={!canManage ? "Yêu cầu quyền SME Admin" : undefined}
+                title={!canManage ? (language === "vi" ? "Yêu cầu quyền Quản trị Doanh nghiệp" : "SME Admin permission required") : undefined}
                 type="button"
               >
-                <Copy size={14} /> Clone
+                <Copy size={14} /> {language === "vi" ? "Nhân bản" : "Clone"}
               </button>
 
               <button
@@ -529,22 +554,22 @@ export function RuleDetailDrawer({
                   borderColor: canManage ? "var(--critical-border)" : undefined,
                 }}
                 onClick={() => {
-                  if (confirm(`Bạn có chắc chắn muốn xóa rule "${rule.name}"?`)) {
+                  if (confirm(language === "vi" ? `Bạn có chắc chắn muốn xóa rule "${rule.name}"?` : `Are you sure you want to delete rule "${rule.name}"?`)) {
                     onDelete(rule.id);
                     onClose();
                   }
                 }}
                 disabled={!canManage}
-                title={!canManage ? "Yêu cầu quyền SME Admin" : undefined}
+                title={!canManage ? (language === "vi" ? "Yêu cầu quyền Quản trị Doanh nghiệp" : "SME Admin permission required") : undefined}
                 type="button"
               >
-                <Trash2 size={14} /> Delete
+                <Trash2 size={14} /> {language === "vi" ? "Xóa" : "Delete"}
               </button>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, color: "var(--security-subtle)" }}>
-              <div>📅 Ngày tạo: {new Date(rule.createdAt).toLocaleString()}</div>
-              <div>🔄 Cập nhật lần cuối: {new Date(rule.updatedAt).toLocaleString()}</div>
+              <div>📅 {language === "vi" ? "Ngày tạo" : "Created"}: {new Date(rule.createdAt).toLocaleString(dateLocale)}</div>
+              <div>🔄 {language === "vi" ? "Cập nhật lần cuối" : "Last updated"}: {new Date(rule.updatedAt).toLocaleString(dateLocale)}</div>
             </div>
           </div>
         </div>

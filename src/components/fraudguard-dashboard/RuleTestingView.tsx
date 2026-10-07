@@ -5,6 +5,7 @@ import type { RuleLifecycleStatus, RuleTemplate } from "./types";
 import styles from "./SecurityDashboard.module.css";
 import { Play, Check, Sliders } from "lucide-react";
 import { useToast } from "./ToastProvider";
+import { useLanguage } from "./i18n/LanguageContext";
 
 interface RuleTestingViewProps {
   rules: RuleTemplate[];
@@ -80,10 +81,13 @@ const SAMPLE_DATASET: TestSampleTx[] = [
 ];
 
 export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
 
-  const [selectedRuleId, setSelectedRuleId] = useState(rules[0]?.id || "rule-cod-001");
-  const [selectedVersion, setSelectedVersion] = useState("v2.1 (Draft)");
+  const [selectedRuleId, setSelectedRuleId] = useState(
+    rules[0]?.id || "rule-cod-001",
+  );
   const [testDataset, setTestDataset] = useState<TestSampleTx[]>(SAMPLE_DATASET);
   const [isRunning, setIsRunning] = useState(false);
   const [hasRun, setHasRun] = useState(false);
@@ -131,7 +135,12 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
       setTestDataset(evaluated);
       setIsRunning(false);
       setHasRun(true);
-      toast("success", "Đã hoàn thành kiểm thử Sandbox trên 5 giao dịch mẫu. 100% test cases khớp expected result!");
+      toast(
+        "success",
+        language === "vi"
+          ? "Đã hoàn thành kiểm thử Sandbox trên 5 giao dịch mẫu. 100% test cases khớp expected result!"
+          : "Sandbox testing complete on 5 samples. 100% match expected results!",
+      );
     }, 600);
   };
 
@@ -149,60 +158,103 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
     if (onPublishRule) {
       onPublishRule(updatedRule);
     }
-    toast("success", `Đã phát hành phiên bản ${updatedRule.version} lên môi trường Production của ABC Fashion!`);
+    toast(
+      "success",
+      language === "vi"
+        ? `Đã phát hành phiên bản ${updatedRule.version} lên môi trường Production của ABC Fashion!`
+        : `Published version ${updatedRule.version} to ABC Fashion Production!`,
+    );
   };
 
-  const passedCount = testDataset.filter((t) => t.status === "PASSED").length;
+  const passedCount = testDataset.filter((tx) => tx.status === "PASSED").length;
 
   return (
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Rule Testing Environment (Sandbox Kiểm thử Rule)</h1>
-          <p>
-            Môi trường kiểm thử biệt lập dành cho Platform Admin. Kiểm tra và tinh chỉnh Rule với test data mà không ảnh hưởng tới dữ liệu vận hành thực tế.
-          </p>
+          <h1>{t.ruleTestingView.title}</h1>
+          <p>{t.ruleTestingView.subtitle}</p>
         </div>
       </div>
 
       {/* Overview Grid */}
       <div className={styles.metricsGrid} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Target Project</div>
-          <strong className={styles.statValue} style={{ fontSize: 20, color: "var(--security-blue)" }}>
+          <div className={styles.statLabel}>
+            {t.ruleTestingView.kpis.targetProject}
+          </div>
+          <strong
+            className={styles.statValue}
+            style={{ fontSize: 20, color: "var(--security-blue)" }}
+          >
             ABC Fashion
           </strong>
-          <span className={styles.statDescription}>COD Order Monitoring</span>
+          <span className={styles.statDescription}>
+            {t.ruleTestingView.kpis.targetProjectDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Active Version</div>
+          <div className={styles.statLabel}>
+            {t.ruleTestingView.kpis.activeVersion}
+          </div>
           <strong className={styles.statValue} style={{ fontSize: 22 }}>
             {selectedRule?.version || "v1.0"}
           </strong>
-          <span className={styles.statDescription}>Đang chạy trên Production</span>
+          <span className={styles.statDescription}>
+            {t.ruleTestingView.kpis.activeVersionDesc}
+          </span>
         </article>
         <article className={styles.statCard} style={{ borderColor: "#715139" }}>
-          <div className={styles.statLabel}>Sandbox Version</div>
-          <strong className={styles.statValue} style={{ fontSize: 22, color: "var(--security-orange)" }}>
+          <div className={styles.statLabel}>
+            {t.ruleTestingView.kpis.sandboxVersion}
+          </div>
+          <strong
+            className={styles.statValue}
+            style={{ fontSize: 22, color: "var(--security-orange)" }}
+          >
             v2.0 (Testing)
           </strong>
-          <span className={styles.statDescription}>Dự kiến phát hành kế tiếp</span>
+          <span className={styles.statDescription}>
+            {t.ruleTestingView.kpis.sandboxVersionDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Validation Rate</div>
-          <strong className={styles.statValue} style={{ color: "var(--security-green)" }}>
-            {hasRun ? `${(passedCount / testDataset.length) * 100}%` : "Chờ test"}
+          <div className={styles.statLabel}>
+            {t.ruleTestingView.kpis.validationRate}
+          </div>
+          <strong
+            className={styles.statValue}
+            style={{ color: "var(--security-green)" }}
+          >
+            {hasRun
+              ? `${(passedCount / testDataset.length) * 100}%`
+              : t.ruleTestingView.kpis.validationWaiting}
           </strong>
-          <span className={styles.statDescription}>{hasRun ? `${passedCount}/${testDataset.length} mẫu đạt chuẩn` : "Chưa chạy kiểm thử"}</span>
+          <span className={styles.statDescription}>
+            {hasRun
+              ? t.ruleTestingView.kpis.validationSummary
+                  .replace("{passed}", String(passedCount))
+                  .replace("{total}", String(testDataset.length))
+              : t.ruleTestingView.kpis.validationNotRun}
+          </span>
         </article>
       </div>
 
       {/* Sandbox Controls Panel */}
       <div className={styles.panel} style={{ marginTop: 14, padding: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Sliders size={20} color="var(--security-blue)" />
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Cấu hình Rule thử nghiệm</h2>
+            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
+              {t.ruleTestingView.controls.title}
+            </h2>
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
@@ -222,7 +274,9 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               }}
             >
               <Play size={14} />
-              {isRunning ? "Đang chạy test…" : "Chạy kiểm thử Sandbox"}
+              {isRunning
+                ? t.ruleTestingView.controls.running
+                : t.ruleTestingView.controls.btnRun}
             </button>
 
             <button
@@ -238,16 +292,25 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               }}
             >
               <Check size={16} />
-              Publish Rule Version v2.0
+              {t.ruleTestingView.controls.btnPublish.replace("{version}", "v2.0")}
             </button>
           </div>
         </div>
 
         {/* Rule selector & threshold adjusters */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 16,
+          }}
+        >
           <div>
-            <label className={styles.drawerLabel} style={{ display: "block", marginBottom: 6 }}>
-              Chọn Rule cần kiểm thử
+            <label
+              className={styles.drawerLabel}
+              style={{ display: "block", marginBottom: 6 }}
+            >
+              {t.ruleTestingView.controls.selectRule}
             </label>
             <select
               className={styles.control}
@@ -264,8 +327,14 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
           </div>
 
           <div>
-            <label className={styles.drawerLabel} style={{ display: "block", marginBottom: 6 }}>
-              Điểm rủi ro (Risk Points): +{riskPoints} pts
+            <label
+              className={styles.drawerLabel}
+              style={{ display: "block", marginBottom: 6 }}
+            >
+              {t.ruleTestingView.controls.riskPoints.replace(
+                "{points}",
+                String(riskPoints),
+              )}
             </label>
             <input
               type="range"
@@ -279,8 +348,14 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
           </div>
 
           <div>
-            <label className={styles.drawerLabel} style={{ display: "block", marginBottom: 6 }}>
-              Ngưỡng kích hoạt (Threshold): {threshold}
+            <label
+              className={styles.drawerLabel}
+              style={{ display: "block", marginBottom: 6 }}
+            >
+              {t.ruleTestingView.controls.threshold.replace(
+                "{val}",
+                String(threshold),
+              )}
             </label>
             <input
               type="range"
@@ -296,52 +371,75 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
       </div>
 
       {/* Test Results Table */}
-      <section className={`${styles.panel} ${styles.tablePanel}`} style={{ marginTop: 20 }}>
+      <section
+        className={`${styles.panel} ${styles.tablePanel}`}
+        style={{ marginTop: 20 }}
+      >
         <div className={`${styles.panelHeader} ${styles.tablePanelHeader}`}>
           <div>
-            <h2>Kết quả kiểm thử trên Test Dataset</h2>
-            <p className={styles.muted}>
-              So sánh Expected Anomaly vs Actual Detection sau khi Rule Engine xử lý
-            </p>
+            <h2>{t.ruleTestingView.results.title}</h2>
+            <p className={styles.muted}>{t.ruleTestingView.results.subtitle}</p>
           </div>
-          <span className={styles.muted}>{testDataset.length} sample transactions</span>
+          <span className={styles.muted}>
+            {t.ruleTestingView.results.sampleCount.replace(
+              "{count}",
+              String(testDataset.length),
+            )}
+          </span>
         </div>
 
         <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Test Transaction</th>
-                <th>Thông số kiểm thử</th>
-                <th>Kỳ vọng (Expected)</th>
-                <th>Thực tế (Actual Score)</th>
-                <th>Rule kích hoạt</th>
-                <th>Trạng thái</th>
+                <th>{t.ruleTestingView.results.colTxn}</th>
+                <th>{t.ruleTestingView.results.colParams}</th>
+                <th>{t.ruleTestingView.results.colExpected}</th>
+                <th>{t.ruleTestingView.results.colActual}</th>
+                <th>{t.ruleTestingView.results.colTriggered}</th>
+                <th>{t.ruleTestingView.results.colStatus}</th>
               </tr>
             </thead>
             <tbody>
               {testDataset.map((item) => (
                 <tr key={item.id}>
                   <td>
-                    <strong style={{ fontFamily: "monospace", color: "var(--security-text)" }}>{item.ref}</strong>
+                    <strong
+                      style={{
+                        fontFamily: "monospace",
+                        color: "var(--security-text)",
+                      }}
+                    >
+                      {item.ref}
+                    </strong>
                   </td>
                   <td>
                     <div style={{ fontSize: 11 }}>
-                      {item.amount.toLocaleString()} VND · Kênh {item.channel}
+                      {item.amount.toLocaleString(dateLocale)} VND · {item.channel}
                     </div>
-                    <div style={{ fontSize: 10, color: "var(--security-subtle)" }}>
-                      {item.deviceId} · {item.failCount} lần lỗi
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: "var(--security-subtle)",
+                      }}
+                    >
+                      {item.deviceId} · {item.failCount}{" "}
+                      {language === "vi" ? "lỗi" : "fails"}
                     </div>
                   </td>
                   <td>
                     <span
                       className={styles.badge}
                       style={{
-                        background: item.expectedAnomaly ? "var(--critical-bg)" : "rgba(120, 201, 172, 0.15)",
-                        color: item.expectedAnomaly ? "var(--critical-text)" : "var(--security-green)",
+                        background: item.expectedAnomaly
+                          ? "var(--critical-bg)"
+                          : "rgba(120, 201, 172, 0.15)",
+                        color: item.expectedAnomaly
+                          ? "var(--critical-text)"
+                          : "var(--security-green)",
                       }}
                     >
-                      {item.expectedAnomaly ? "ANOMALY (BẤT THƯỜNG)" : "NORMAL (BÌNH THƯỜNG)"}
+                      {item.expectedAnomaly ? t.risk.anomaly : t.risk.normal}
                     </span>
                   </td>
                   <td>
@@ -349,50 +447,80 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
                       <div>
                         <strong
                           style={{
-                            color: item.actualAnomaly ? "var(--security-red)" : "var(--security-green)",
+                            color: item.actualAnomaly
+                              ? "var(--security-red)"
+                              : "var(--security-green)",
                             fontSize: 13,
                           }}
                         >
                           {item.actualScore}/100
                         </strong>
-                        <span style={{ fontSize: 10, color: "var(--security-muted)", marginLeft: 6 }}>
-                          ({item.actualAnomaly ? "Anomaly" : "Normal"})
+                        <span
+                          style={{
+                            fontSize: 10,
+                            color: "var(--security-muted)",
+                            marginLeft: 6,
+                          }}
+                        >
+                          ({item.actualAnomaly ? t.risk.anomaly : t.risk.normal})
                         </span>
                       </div>
                     ) : (
-                      <span style={{ color: "var(--security-muted)", fontSize: 11 }}>Chưa test</span>
+                      <span
+                        style={{ color: "var(--security-muted)", fontSize: 11 }}
+                      >
+                        {t.ruleTestingView.results.notTested}
+                      </span>
                     )}
                   </td>
                   <td>
                     {item.triggered && item.triggered.length > 0 ? (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                        {item.triggered.map((t) => (
-                          <span key={t} className={styles.ruleTag} style={{ fontSize: 9 }}>
-                            {t}
+                        {item.triggered.map((trg) => (
+                          <span
+                            key={trg}
+                            className={styles.ruleTag}
+                            style={{ fontSize: 9 }}
+                          >
+                            {trg}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span style={{ color: "var(--security-subtle)", fontSize: 10 }}>None</span>
+                      <span
+                        style={{ color: "var(--security-subtle)", fontSize: 10 }}
+                      >
+                        None
+                      </span>
                     )}
                   </td>
                   <td>
                     {item.status === "PASSED" ? (
                       <span
                         className={styles.badge}
-                        style={{ background: "rgba(120, 201, 172, 0.15)", color: "var(--security-green)" }}
+                        style={{
+                          background: "rgba(120, 201, 172, 0.15)",
+                          color: "var(--security-green)",
+                        }}
                       >
-                        ✓ PASSED
+                        {t.ruleTestingView.results.passed}
                       </span>
                     ) : item.status === "FAILED" ? (
                       <span
                         className={styles.badge}
-                        style={{ background: "var(--critical-bg)", color: "var(--critical-text)" }}
+                        style={{
+                          background: "var(--critical-bg)",
+                          color: "var(--critical-text)",
+                        }}
                       >
-                        ✗ MISMATCH
+                        {t.ruleTestingView.results.mismatch}
                       </span>
                     ) : (
-                      <span style={{ color: "var(--security-subtle)", fontSize: 11 }}>Chờ chạy</span>
+                      <span
+                        style={{ color: "var(--security-subtle)", fontSize: 11 }}
+                      >
+                        {t.ruleTestingView.results.pending}
+                      </span>
                     )}
                   </td>
                 </tr>

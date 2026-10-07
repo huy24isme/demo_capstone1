@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { TransactionRisk } from "./types";
+import type { CaseStatus, TransactionRisk } from "./types";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface AlertsViewProps {
@@ -12,6 +13,7 @@ interface AlertsViewProps {
 }
 
 export function AlertsView({ transactions, onReview }: AlertsViewProps) {
+  const { t, language } = useLanguage();
   const [filterRisk, setFilterRisk] = useState<string>("all");
   const [filterProject, setFilterProject] = useState<string>("all");
 
@@ -29,51 +31,91 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
     return Array.from(map, ([id, name]) => ({ id, name }));
   }, [transactions]);
 
-  const stats = useMemo(() => ({
-    total: alerts.length,
-    anomaly: alerts.filter((t) => t.riskLevel === "Anomaly" || t.riskScore >= 75).length,
-    withoutCase: alerts.filter((t) => !t.caseId).length,
-  }), [alerts]);
+  const stats = useMemo(
+    () => ({
+      total: alerts.length,
+      anomaly: alerts.filter((t) => t.riskLevel === "Anomaly" || t.riskScore >= 75).length,
+      withoutCase: alerts.filter((t) => !t.caseId).length,
+    }),
+    [alerts],
+  );
+
+  const getStatusLabel = (status?: CaseStatus) => {
+    switch (status) {
+      case "Open":
+        return t.caseStatus.open;
+      case "Assigned":
+        return t.caseStatus.assigned;
+      case "Investigating":
+        return t.caseStatus.investigating;
+      case "Reported":
+        return t.caseStatus.reported;
+      case "Confirmed Fraud":
+        return t.caseStatus.confirmedFraud;
+      case "False Alarm":
+        return t.caseStatus.falseAlarm;
+      case "Resolved":
+        return t.caseStatus.resolved;
+      default:
+        return status || t.alertsView.noCaseLabel;
+    }
+  };
+
+  const numLocale = language === "vi" ? "vi-VN" : "en-US";
 
   return (
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Recent Alerts</h1>
-          <p>Cảnh báo vượt threshold từ Rule Engine và AI Scoring</p>
+          <h1>{t.alertsView.title}</h1>
+          <p>{t.alertsView.subtitle}</p>
         </div>
       </div>
 
       {/* Stats */}
       <section className={styles.metricsGrid} style={{ marginTop: 24 }}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Total alerts</div>
+          <div className={styles.statLabel}>{t.alertsView.kpis.totalAlerts}</div>
           <strong className={styles.statValue}>{stats.total}</strong>
-          <span className={styles.statDescription}>Trong khoảng thời gian đã chọn</span>
+          <span className={styles.statDescription}>{t.alertsView.kpis.totalAlertsDesc}</span>
         </article>
         <article className={`${styles.statCard} ${styles.statCritical}`}>
-          <div className={styles.statLabel}>Bất thường (Anomaly)</div>
+          <div className={styles.statLabel}>{t.alertsView.kpis.anomaly}</div>
           <strong className={styles.statValue}>{stats.anomaly}</strong>
-          <span className={styles.statDescription}>Vượt ngưỡng rủi ro (&ge; 75)</span>
+          <span className={styles.statDescription}>{t.alertsView.kpis.anomalyDesc}</span>
         </article>
         <article className={`${styles.statCard} ${styles.statWarning}`}>
-          <div className={styles.statLabel}>Without case</div>
+          <div className={styles.statLabel}>{t.alertsView.kpis.withoutCase}</div>
           <strong className={styles.statValue}>{stats.withoutCase}</strong>
-          <span className={styles.statDescription}>Chưa tạo case điều tra</span>
+          <span className={styles.statDescription}>{t.alertsView.kpis.withoutCaseDesc}</span>
         </article>
       </section>
 
       {/* Filters */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarGroup}>
-          <select className={styles.control} aria-label="Risk level" value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)}>
-            <option value="all">Tất cả cảnh báo</option>
-            <option value="Anomaly">🔴 Bất thường (Anomaly)</option>
-            <option value="Normal">🟢 Bình thường (Normal)</option>
+          <select
+            className={styles.control}
+            aria-label={t.alertsView.filterRiskLabel}
+            value={filterRisk}
+            onChange={(e) => setFilterRisk(e.target.value)}
+          >
+            <option value="all">{t.alertsView.filterAllAlerts}</option>
+            <option value="Anomaly">{t.alertsView.filterAnomaly}</option>
+            <option value="Normal">{t.alertsView.filterNormal}</option>
           </select>
-          <select className={styles.control} aria-label="Project" value={filterProject} onChange={(e) => setFilterProject(e.target.value)}>
-            <option value="all">All projects</option>
-            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          <select
+            className={styles.control}
+            aria-label={t.alertsView.filterProjectLabel}
+            value={filterProject}
+            onChange={(e) => setFilterProject(e.target.value)}
+          >
+            <option value="all">{t.alertsView.filterAllProjects}</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -82,50 +124,84 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {alerts.length === 0 ? (
           <div className={styles.panel} style={{ padding: 40, textAlign: "center" }}>
-            <p className={styles.muted}>Không có alert phù hợp với bộ lọc hiện tại.</p>
+            <p className={styles.muted}>{t.alertsView.emptyMessage}</p>
           </div>
         ) : (
           alerts.map((alert) => (
             <article key={alert.id} className={styles.panel} style={{ padding: "14px 17px" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 16,
+                }}
+              >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <RiskLevelBadge riskLevel={alert.riskLevel} />
                     <ScoringSourceBadge source={alert.scoringSource} />
-                    <span style={{ color: "var(--security-muted)", fontSize: 11 }}>{alert.alertId}</span>
+                    <span style={{ color: "var(--security-muted)", fontSize: 11 }}>
+                      {alert.alertId}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: "var(--security-text)", marginBottom: 4 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "var(--security-text)",
+                      marginBottom: 4,
+                    }}
+                  >
                     {alert.transactionReference} — {alert.projectName}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--security-muted)", marginBottom: 6 }}>
                     {alert.transactionType} · Entity: {alert.entityReference}
-                    {alert.amount != null && ` · ${alert.amount.toLocaleString("en")} ${alert.currency}`}
+                    {alert.amount != null &&
+                      ` · ${alert.amount.toLocaleString(numLocale)} ${alert.currency || "VND"}`}
                   </div>
                   {alert.triggeredRules.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
                       {alert.triggeredRules.map((rule) => (
-                        <span key={rule} className={styles.ruleTag}>{rule}</span>
+                        <span key={rule} className={styles.ruleTag}>
+                          {rule}
+                        </span>
                       ))}
                     </div>
                   )}
                   {alert.explanation && (
-                    <p style={{ margin: 0, fontSize: 11, color: "var(--security-text-secondary)", lineHeight: 1.5 }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 11,
+                        color: "var(--security-text-secondary)",
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {alert.explanation}
                     </p>
                   )}
                   <div style={{ marginTop: 8, fontSize: 10, color: "var(--security-subtle)" }}>
-                    Score: {alert.riskScore}/100
-                    {alert.confidence != null && ` · Confidence: ${(alert.confidence * 100).toFixed(0)}%`}
-                    {` · ${new Date(alert.processedAt).toUTCString()}`}
+                    {t.alertsView.scoreLabel} {alert.riskScore}/100
+                    {alert.confidence != null &&
+                      ` · ${t.alertsView.confidenceLabel} ${(alert.confidence * 100).toFixed(0)}%`}
+                    {` · ${new Date(alert.processedAt).toLocaleString(numLocale)}`}
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
-                  <button className={styles.button} onClick={() => onReview(alert)} type="button">Review</button>
-                  {alert.caseId ? (
-                    <span className={styles.muted} style={{ fontSize: 10, textAlign: "center" }}>{alert.caseStatus}</span>
-                  ) : (
-                    <span className={styles.muted} style={{ fontSize: 10, textAlign: "center" }}>No case</span>
-                  )}
+                  <button
+                    className={styles.button}
+                    onClick={() => onReview(alert)}
+                    type="button"
+                  >
+                    {t.alertsView.reviewBtn}
+                  </button>
+                  <span
+                    className={styles.muted}
+                    style={{ fontSize: 10, textAlign: "center" }}
+                  >
+                    {alert.caseId ? getStatusLabel(alert.caseStatus) : t.alertsView.noCaseLabel}
+                  </span>
                 </div>
               </div>
             </article>

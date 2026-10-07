@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { SecondaryView, UserProfile } from "./types";
 import { PermissionMatrixModal } from "./PermissionMatrixModal";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface UserProfileMenuProps {
@@ -23,6 +24,7 @@ interface UserProfileMenuProps {
 }
 
 export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProps) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
@@ -60,7 +62,10 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
     setAudioAlert(nextVal);
     if (nextVal && typeof window !== "undefined") {
       try {
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext })
+            .webkitAudioContext;
         if (AudioCtx) {
           const ctx = new AudioCtx();
           const osc = ctx.createOscillator();
@@ -112,14 +117,17 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
           type="button"
           aria-expanded={menuOpen}
           aria-haspopup="true"
-          title={`Tài khoản: ${currentUser?.name || "Người dùng"} (${currentUser?.role || "User"}) — Tùy chọn & Đăng xuất`}
+          title={t.userMenu.title}
         >
           <div
             className={styles.userMenuAvatar}
             style={{ backgroundColor: currentUser?.avatarBg || "#7c3aed" }}
           >
             {currentUser?.avatarLetter || "U"}
-            <span className={styles.avatarOnlineDot} title="Trực tuyến" />
+            <span
+              className={styles.avatarOnlineDot}
+              title={t.userMenu.online}
+            />
           </div>
 
           <ChevronDown
@@ -141,37 +149,51 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
               </div>
 
               <div className={styles.userDropdownMeta}>
-                <div className={styles.userDropdownName}>{currentUser?.name || "Người dùng"}</div>
-                <div className={styles.userDropdownEmail}>{currentUser?.email || "user@fraudguard.io"}</div>
+                <div className={styles.userDropdownName}>
+                  {currentUser?.name || "User"}
+                </div>
+                <div className={styles.userDropdownEmail}>
+                  {currentUser?.email || "user@fraudguard.io"}
+                </div>
                 <div className={styles.userDropdownRoleRow}>
                   <span className={`${styles.roleBadge} ${roleBadgeClass()}`}>
                     {currentUser?.role || "User"}
                   </span>
                   <span className={styles.userStatusPill}>
-                    <span className={styles.statusDotGreen} /> Online
+                    <span className={styles.statusDotGreen} /> {t.userMenu.online}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Section 1: Console Preferences (Cài đặt hiển thị & cảnh báo) */}
+            {/* Section 1: Console Preferences */}
             <div className={styles.userDropdownSection}>
-              <div className={styles.userDropdownSectionTitle}>Tùy chọn hiển thị & Cảnh báo</div>
+              <div className={styles.userDropdownSectionTitle}>
+                {t.userMenu.title}
+              </div>
 
               {/* Audio Alert Toggle */}
               <div className={styles.userPreferenceItem}>
                 <div className={styles.userPrefIcon}>
-                  {audioAlert ? <Volume2 size={15} color="#78c9ac" /> : <VolumeX size={15} color="var(--security-muted)" />}
+                  {audioAlert ? (
+                    <Volume2 size={15} color="#78c9ac" />
+                  ) : (
+                    <VolumeX size={15} color="var(--security-muted)" />
+                  )}
                 </div>
                 <div className={styles.userPrefContent}>
-                  <div className={styles.userPrefLabel}>Âm thanh cảnh báo gian lận</div>
-                  <div className={styles.userPrefSub}>Báo chuông khi có giao dịch Bất thường (Anomaly)</div>
+                  <div className={styles.userPrefLabel}>
+                    {t.userMenu.audioAlert}
+                  </div>
+                  <div className={styles.userPrefSub}>
+                    {t.userMenu.audioAlertSub}
+                  </div>
                 </div>
                 <button
                   type="button"
                   className={`${styles.userToggleSwitch} ${audioAlert ? styles.userToggleSwitchActive : ""}`}
                   onClick={toggleAudio}
-                  aria-label="Bật/Tắt âm thanh cảnh báo"
+                  aria-label={t.userMenu.audioToggleAria}
                 >
                   <span className={styles.userToggleKnob} />
                 </button>
@@ -183,8 +205,12 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                   <RefreshCw size={15} color="var(--security-blue)" />
                 </div>
                 <div className={styles.userPrefContent}>
-                  <div className={styles.userPrefLabel}>Tự động làm mới dữ liệu</div>
-                  <div className={styles.userPrefSub}>Tần suất polling giao dịch mới</div>
+                  <div className={styles.userPrefLabel}>
+                    {t.userMenu.autoRefresh}
+                  </div>
+                  <div className={styles.userPrefSub}>
+                    {t.userMenu.autoRefreshSub}
+                  </div>
                 </div>
                 <div className={styles.refreshIntervalGroup}>
                   {(["off", "15s", "30s"] as const).map((interval) => (
@@ -194,7 +220,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                       className={`${styles.refreshIntervalBtn} ${refreshInterval === interval ? styles.refreshIntervalBtnActive : ""}`}
                       onClick={() => setRefreshInterval(interval)}
                     >
-                      {interval === "off" ? "Tắt" : interval}
+                      {interval === "off" ? t.userMenu.refreshOff : interval}
                     </button>
                   ))}
                 </div>
@@ -206,8 +232,12 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                   <Clock size={15} color="var(--security-purple)" />
                 </div>
                 <div className={styles.userPrefContent}>
-                  <div className={styles.userPrefLabel}>Múi giờ hệ thống</div>
-                  <div className={styles.userPrefSub}>UTC+07:00 (Hà Nội, BKK)</div>
+                  <div className={styles.userPrefLabel}>
+                    {t.userMenu.timezone}
+                  </div>
+                  <div className={styles.userPrefSub}>
+                    {t.userMenu.timezoneSub}
+                  </div>
                 </div>
                 <span className={styles.timezoneBadge}>GMT+7</span>
               </div>
@@ -215,21 +245,25 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
 
             {/* Section 2: Quick Links */}
             <div className={styles.userDropdownSection}>
-              <div className={styles.userDropdownSectionTitle}>Lối tắt quản trị</div>
+              <div className={styles.userDropdownSectionTitle}>
+                {t.userMenu.shortcuts}
+              </div>
 
-              {onNavigate && (currentUser?.role === "SME Admin" || currentUser?.role === "Platform Admin") && (
-                <button
-                  type="button"
-                  className={styles.userDropdownLinkBtn}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onNavigate("projects");
-                  }}
-                >
-                  <Key size={14} />
-                  <span>Quản lý API Keys & Webhook</span>
-                </button>
-              )}
+              {onNavigate &&
+                (currentUser?.role === "SME Admin" ||
+                  currentUser?.role === "Platform Admin") && (
+                  <button
+                    type="button"
+                    className={styles.userDropdownLinkBtn}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onNavigate("projects");
+                    }}
+                  >
+                    <Key size={14} />
+                    <span>{t.userMenu.apiKeys}</span>
+                  </button>
+                )}
 
               <button
                 type="button"
@@ -240,7 +274,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                 }}
               >
                 <ShieldCheck size={14} />
-                <span>Xem ma trận phân quyền (RBAC)</span>
+                <span>{t.userMenu.rbac}</span>
               </button>
 
               {onNavigate && (
@@ -253,7 +287,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                   }}
                 >
                   <FileText size={14} />
-                  <span>Nhật ký bảo mật (Audit Trail)</span>
+                  <span>{t.userMenu.auditTrail}</span>
                 </button>
               )}
             </div>
@@ -266,7 +300,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                 onClick={handleLogout}
               >
                 <LogOut size={15} />
-                <span>Đăng xuất khỏi phiên làm việc</span>
+                <span>{t.userMenu.logout}</span>
               </button>
             </div>
           </div>

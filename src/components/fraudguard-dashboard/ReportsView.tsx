@@ -22,6 +22,8 @@ import type {
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
 import { useToast } from "./ToastProvider";
+import { useLanguage } from "./i18n/LanguageContext";
+import type { TranslationKey } from "./i18n/translations";
 import styles from "./SecurityDashboard.module.css";
 
 interface ReportsViewProps {
@@ -32,77 +34,91 @@ interface ReportsViewProps {
   onReview?: (transaction: TransactionRisk) => void;
 }
 
-const FINDING_BADGE_STYLE: Record<
-  InvestigationFinding,
-  { bg: string; text: string; border: string; label: string }
-> = {
-  Suspicious: {
-    bg: "rgba(237, 103, 117, 0.15)",
-    text: "var(--security-red)",
-    border: "var(--critical-border)",
-    label: "Suspicious (Khả nghi)",
-  },
-  Legitimate: {
-    bg: "rgba(120, 201, 172, 0.15)",
-    text: "var(--security-green)",
-    border: "#3f665a",
-    label: "Legitimate (Hợp lệ)",
-  },
-  "Need More Info": {
-    bg: "rgba(173, 138, 243, 0.15)",
-    text: "var(--security-purple)",
-    border: "#5c4778",
-    label: "Need More Info (Cần thêm tin)",
-  },
-};
+function getFindingBadgeStyle(
+  finding: InvestigationFinding,
+  t: TranslationKey,
+): { bg: string; text: string; border: string; label: string } {
+  switch (finding) {
+    case "Suspicious":
+      return {
+        bg: "rgba(237, 103, 117, 0.15)",
+        text: "var(--security-red)",
+        border: "var(--critical-border)",
+        label: t.findings.suspicious,
+      };
+    case "Legitimate":
+      return {
+        bg: "rgba(120, 201, 172, 0.15)",
+        text: "var(--security-green)",
+        border: "#3f665a",
+        label: t.findings.legitimate,
+      };
+    case "Need More Info":
+      return {
+        bg: "rgba(173, 138, 243, 0.15)",
+        text: "var(--security-purple)",
+        border: "#5c4778",
+        label: t.findings.needMoreInfo,
+      };
+  }
+}
 
-const DECISION_BADGE_STYLE: Record<
-  CaseStatus,
-  { label: string; bg: string; text: string; border: string }
-> = {
-  Reported: {
-    label: "Chờ Operation duyệt",
-    bg: "rgba(255, 215, 0, 0.15)",
-    text: "#ffd700",
-    border: "#8c7b00",
-  },
-  "Confirmed Fraud": {
-    label: "Gian lận (Đã duyệt)",
-    bg: "var(--critical-bg)",
-    text: "var(--critical-text)",
-    border: "var(--critical-border)",
-  },
-  "False Alarm": {
-    label: "Báo động giả (Đã duyệt)",
-    bg: "rgba(120, 201, 172, 0.15)",
-    text: "var(--security-green)",
-    border: "#3f665a",
-  },
-  Resolved: {
-    label: "Đã đóng case",
-    bg: "rgba(120, 201, 172, 0.15)",
-    text: "var(--security-green)",
-    border: "#3f665a",
-  },
-  Investigating: {
-    label: "Đang xác minh",
-    bg: "rgba(173, 138, 243, 0.15)",
-    text: "var(--security-purple)",
-    border: "#5c4778",
-  },
-  Assigned: {
-    label: "Đã giao việc",
-    bg: "rgba(113, 185, 244, 0.15)",
-    text: "var(--security-blue)",
-    border: "#2d5a7b",
-  },
-  Open: {
-    label: "Chưa phân công",
-    bg: "rgba(237, 167, 101, 0.15)",
-    text: "var(--security-orange)",
-    border: "#715139",
-  },
-};
+function getDecisionBadgeStyle(
+  status: CaseStatus,
+  t: TranslationKey,
+): { label: string; bg: string; text: string; border: string } {
+  switch (status) {
+    case "Reported":
+      return {
+        label: t.caseStatus.reported,
+        bg: "rgba(255, 215, 0, 0.15)",
+        text: "#ffd700",
+        border: "#8c7b00",
+      };
+    case "Confirmed Fraud":
+      return {
+        label: t.caseStatus.confirmedFraud,
+        bg: "var(--critical-bg)",
+        text: "var(--critical-text)",
+        border: "var(--critical-border)",
+      };
+    case "False Alarm":
+      return {
+        label: t.caseStatus.falseAlarm,
+        bg: "rgba(120, 201, 172, 0.15)",
+        text: "var(--security-green)",
+        border: "#3f665a",
+      };
+    case "Resolved":
+      return {
+        label: t.caseStatus.resolved,
+        bg: "rgba(120, 201, 172, 0.15)",
+        text: "var(--security-green)",
+        border: "#3f665a",
+      };
+    case "Investigating":
+      return {
+        label: t.caseStatus.investigating,
+        bg: "rgba(173, 138, 243, 0.15)",
+        text: "var(--security-purple)",
+        border: "#5c4778",
+      };
+    case "Assigned":
+      return {
+        label: t.caseStatus.assigned,
+        bg: "rgba(113, 185, 244, 0.15)",
+        text: "var(--security-blue)",
+        border: "#2d5a7b",
+      };
+    case "Open":
+      return {
+        label: t.caseStatus.open,
+        bg: "rgba(237, 167, 101, 0.15)",
+        text: "var(--security-orange)",
+        border: "#715139",
+      };
+  }
+}
 
 export function ReportsView({
   transactions,
@@ -111,6 +127,8 @@ export function ReportsView({
   permissions,
   onReview,
 }: ReportsViewProps) {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [range, setRange] = useState<number>(30);
@@ -131,10 +149,10 @@ export function ReportsView({
   const investigatorCases = useMemo(() => {
     if (!isInvestigator) return [];
     return transactions.filter(
-      (t) =>
-        t.caseId &&
-        (t.assignedInvestigator === investigatorName ||
-          t.assignedInvestigator === "Nguyễn Văn An"),
+      (tx) =>
+        tx.caseId &&
+        (tx.assignedInvestigator === investigatorName ||
+          tx.assignedInvestigator === "Nguyễn Văn An"),
     );
   }, [transactions, isInvestigator, investigatorName]);
 
@@ -143,14 +161,14 @@ export function ReportsView({
     const cutoff = new Date(now.getTime() - range * 24 * 60 * 60 * 1000);
 
     return investigatorCases
-      .filter((t) => {
-        const d = new Date(t.processedAt);
+      .filter((tx) => {
+        const d = new Date(tx.processedAt);
         if (d < cutoff) return false;
-        if (filterProject !== "all" && t.projectId !== filterProject) return false;
-        if (filterStatus !== "all" && t.caseStatus !== filterStatus) return false;
+        if (filterProject !== "all" && tx.projectId !== filterProject) return false;
+        if (filterStatus !== "all" && tx.caseStatus !== filterStatus) return false;
         if (filterFinding !== "all") {
-          if (!t.investigationReport) return false;
-          if (t.investigationReport.finding !== filterFinding) return false;
+          if (!tx.investigationReport) return false;
+          if (tx.investigationReport.finding !== filterFinding) return false;
         }
         return true;
       })
@@ -163,30 +181,30 @@ export function ReportsView({
   const investigatorStats = useMemo(() => {
     const total = investigatorCases.length;
     const reported = investigatorCases.filter(
-      (t) => t.caseStatus === "Reported",
+      (tx) => tx.caseStatus === "Reported",
     ).length;
     const confirmedFraud = investigatorCases.filter(
-      (t) => t.caseStatus === "Confirmed Fraud",
+      (tx) => tx.caseStatus === "Confirmed Fraud",
     ).length;
     const falseAlarm = investigatorCases.filter(
-      (t) => t.caseStatus === "False Alarm",
+      (tx) => tx.caseStatus === "False Alarm",
     ).length;
     const investigating = investigatorCases.filter(
-      (t) => t.caseStatus === "Investigating",
+      (tx) => tx.caseStatus === "Investigating",
     ).length;
     const resolved = investigatorCases.filter(
-      (t) => t.caseStatus === "Resolved",
+      (tx) => tx.caseStatus === "Resolved",
     ).length;
 
     // Finding breakdown
     const suspiciousFindings = investigatorCases.filter(
-      (t) => t.investigationReport?.finding === "Suspicious",
+      (tx) => tx.investigationReport?.finding === "Suspicious",
     ).length;
     const legitimateFindings = investigatorCases.filter(
-      (t) => t.investigationReport?.finding === "Legitimate",
+      (tx) => tx.investigationReport?.finding === "Legitimate",
     ).length;
     const needMoreInfoFindings = investigatorCases.filter(
-      (t) => t.investigationReport?.finding === "Need More Info",
+      (tx) => tx.investigationReport?.finding === "Need More Info",
     ).length;
 
     return {
@@ -208,7 +226,7 @@ export function ReportsView({
   const projects = useMemo(() => {
     const map = new Map<string, string>();
     const sourceList = isInvestigator ? investigatorCases : transactions;
-    sourceList.forEach((t) => map.set(t.projectId, t.projectName));
+    sourceList.forEach((tx) => map.set(tx.projectId, tx.projectName));
     return Array.from(map, ([id, name]) => ({ id, name }));
   }, [transactions, investigatorCases, isInvestigator]);
 
@@ -216,10 +234,10 @@ export function ReportsView({
     const now = new Date("2026-09-17T16:00:00Z");
     const cutoff = new Date(now.getTime() - range * 24 * 60 * 60 * 1000);
 
-    return transactions.filter((t) => {
-      const d = new Date(t.processedAt);
+    return transactions.filter((tx) => {
+      const d = new Date(tx.processedAt);
       if (d < cutoff) return false;
-      if (filterProject !== "all" && t.projectId !== filterProject) return false;
+      if (filterProject !== "all" && tx.projectId !== filterProject) return false;
       return true;
     });
   }, [transactions, range, filterProject]);
@@ -227,18 +245,18 @@ export function ReportsView({
   const macroMetrics = useMemo(() => {
     const total = filteredMacro.length;
     const highRisk = filteredMacro.filter(
-      (t) => t.riskLevel === "Anomaly" || t.riskScore >= threshold,
+      (tx) => tx.riskLevel === "Anomaly" || tx.riskScore >= threshold,
     ).length;
     const confirmed = filteredMacro.filter(
-      (t) => t.caseStatus === "Confirmed Fraud",
+      (tx) => tx.caseStatus === "Confirmed Fraud",
     ).length;
     const falseAlarms = filteredMacro.filter(
-      (t) => t.caseStatus === "False Alarm",
+      (tx) => tx.caseStatus === "False Alarm",
     ).length;
     const resolvedCases = confirmed + falseAlarms;
-    const aiCount = filteredMacro.filter((t) => t.scoringSource === "AI").length;
+    const aiCount = filteredMacro.filter((tx) => tx.scoringSource === "AI").length;
     const fallbackCount = filteredMacro.filter(
-      (t) => t.scoringSource === "RULE_FALLBACK",
+      (tx) => tx.scoringSource === "RULE_FALLBACK",
     ).length;
 
     return {
@@ -255,65 +273,65 @@ export function ReportsView({
   const conclusionData = useMemo(() => {
     return [
       {
-        name: "Confirmed Fraud",
-        count: filteredMacro.filter((t) => t.caseStatus === "Confirmed Fraud").length,
+        name: t.reportsView.execCharts.legendConfirmed,
+        count: filteredMacro.filter((tx) => tx.caseStatus === "Confirmed Fraud").length,
         color: "#ed6775",
       },
       {
-        name: "Investigating / Reported",
+        name: t.reportsView.execCharts.legendInvestigating,
         count: filteredMacro.filter(
-          (t) =>
-            t.caseStatus === "Investigating" ||
-            t.caseStatus === "Reported" ||
-            t.caseStatus === "Assigned",
+          (tx) =>
+            tx.caseStatus === "Investigating" ||
+            tx.caseStatus === "Reported" ||
+            tx.caseStatus === "Assigned",
         ).length,
         color: "#eda765",
       },
       {
-        name: "False Alarm",
-        count: filteredMacro.filter((t) => t.caseStatus === "False Alarm").length,
+        name: t.reportsView.execCharts.legendFalseAlarm,
+        count: filteredMacro.filter((tx) => tx.caseStatus === "False Alarm").length,
         color: "#78c9ac",
       },
       {
-        name: "Open / No Case",
+        name: t.reportsView.execCharts.legendOpen,
         count: filteredMacro.filter(
-          (t) => !t.caseStatus || t.caseStatus === "Open",
+          (tx) => !tx.caseStatus || tx.caseStatus === "Open",
         ).length,
         color: "#ad8af3",
       },
     ].filter((d) => d.count > 0);
-  }, [filteredMacro]);
+  }, [filteredMacro, t]);
 
   const scoringData = useMemo(() => {
     return [
       {
-        name: "AI Risk Scoring",
-        count: filteredMacro.filter((t) => t.scoringSource === "AI").length,
+        name: t.reportsView.execCharts.legendAi,
+        count: filteredMacro.filter((tx) => tx.scoringSource === "AI").length,
         color: "#ad8af3",
       },
       {
-        name: "Rule Engine",
-        count: filteredMacro.filter((t) => t.scoringSource === "RULE").length,
+        name: t.reportsView.execCharts.legendRule,
+        count: filteredMacro.filter((tx) => tx.scoringSource === "RULE").length,
         color: "#71b9f4",
       },
       {
-        name: "Rule Fallback",
+        name: t.reportsView.execCharts.legendFallback,
         count: filteredMacro.filter(
-          (t) => t.scoringSource === "RULE_FALLBACK",
+          (tx) => tx.scoringSource === "RULE_FALLBACK",
         ).length,
         color: "#eda765",
       },
     ];
-  }, [filteredMacro]);
+  }, [filteredMacro, t]);
 
   const projectStats = useMemo(() => {
     return projects.map((p) => {
-      const pTxns = filteredMacro.filter((t) => t.projectId === p.id);
+      const pTxns = filteredMacro.filter((tx) => tx.projectId === p.id);
       const highCount = pTxns.filter(
-        (t) => t.riskLevel === "Anomaly" || t.riskScore >= threshold,
+        (tx) => tx.riskLevel === "Anomaly" || tx.riskScore >= threshold,
       ).length;
       const fraudCount = pTxns.filter(
-        (t) => t.caseStatus === "Confirmed Fraud",
+        (tx) => tx.caseStatus === "Confirmed Fraud",
       ).length;
       return {
         name: p.name,
@@ -355,7 +373,12 @@ export function ReportsView({
     link.click();
     document.body.removeChild(link);
 
-    toast("success", "Đã xuất báo cáo tổng kết FraudGuard định dạng CSV");
+    toast(
+      "success",
+      language === "vi"
+        ? "Đã xuất báo cáo tổng kết FraudGuard định dạng CSV"
+        : "FraudGuard summary report exported to CSV",
+    );
   };
 
   /* ─────────────────────────────────────────────────────────────
@@ -366,40 +389,42 @@ export function ReportsView({
       <>
         <div className={styles.pageHeading}>
           <div>
-            <h1>Investigation History</h1>
-            <p>
-              Xem lại danh sách hồ sơ bạn ({investigatorName}) đã thẩm định, kết quả báo cáo điều tra và quyết định phê duyệt từ Operation Team Leader.
-            </p>
+            <h1>{t.reportsView.invTitle}</h1>
+            <p>{t.reportsView.invSubtitle}</p>
           </div>
         </div>
 
         {/* Investigator KPI Cards */}
         <section className={styles.metricsGrid} style={{ marginTop: 20 }}>
           <article className={styles.statCard}>
-            <div className={styles.statLabel}>Tổng hồ sơ thụ lý</div>
+            <div className={styles.statLabel}>{t.reportsView.kpis.totalAssigned}</div>
             <strong className={styles.statValue}>{investigatorStats.total}</strong>
             <span className={styles.statDescription}>
-              Hồ sơ được phân công cho bạn
+              {t.reportsView.kpis.totalAssignedDesc}
             </span>
           </article>
           <article className={`${styles.statCard} ${styles.statWarning}`}>
-            <div className={styles.statLabel}>Chờ phê duyệt (Reported)</div>
+            <div className={styles.statLabel}>
+              {t.reportsView.kpis.awaitingApproval}
+            </div>
             <strong className={styles.statValue}>{investigatorStats.reported}</strong>
             <span className={styles.statDescription}>
-              Đã nộp báo cáo, chờ Team Leader
+              {t.reportsView.kpis.awaitingApprovalDesc}
             </span>
           </article>
           <article className={`${styles.statCard} ${styles.statCritical}`}>
-            <div className={styles.statLabel}>Xác nhận gian lận</div>
+            <div className={styles.statLabel}>
+              {t.reportsView.kpis.confirmedFraud}
+            </div>
             <strong className={styles.statValue}>
               {investigatorStats.confirmedFraud}
             </strong>
             <span className={styles.statDescription}>
-              Operation đã phê duyệt gian lận
+              {t.reportsView.kpis.confirmedFraudDesc}
             </span>
           </article>
           <article className={styles.statCard}>
-            <div className={styles.statLabel}>Cảnh báo sai (False Alarm)</div>
+            <div className={styles.statLabel}>{t.reportsView.kpis.falseAlarm}</div>
             <strong
               className={styles.statValue}
               style={{ color: "var(--security-green)" }}
@@ -407,7 +432,7 @@ export function ReportsView({
               {investigatorStats.falseAlarm}
             </strong>
             <span className={styles.statDescription}>
-              Operation phê duyệt hợp lệ
+              {t.reportsView.kpis.falseAlarmDesc}
             </span>
           </article>
         </section>
@@ -417,22 +442,22 @@ export function ReportsView({
           <div className={styles.toolbarGroup}>
             <select
               className={styles.control}
-              aria-label="Khoảng thời gian"
+              aria-label={t.reportsView.invFilters.timeRange}
               value={range}
               onChange={(e) => setRange(Number(e.target.value))}
             >
-              <option value={7}>7 ngày gần nhất</option>
-              <option value={30}>30 ngày gần nhất</option>
-              <option value={90}>90 ngày gần nhất</option>
+              <option value={7}>{t.reportsView.invFilters.days7}</option>
+              <option value={30}>{t.reportsView.invFilters.days30}</option>
+              <option value={90}>{t.reportsView.invFilters.days90}</option>
             </select>
 
             <select
               className={styles.control}
-              aria-label="Dự án"
+              aria-label={t.reportsView.invFilters.project}
               value={filterProject}
               onChange={(e) => setFilterProject(e.target.value)}
             >
-              <option value="all">Tất cả dự án</option>
+              <option value="all">{t.reportsView.invFilters.allProjects}</option>
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -442,28 +467,28 @@ export function ReportsView({
 
             <select
               className={styles.control}
-              aria-label="Kết luận của bạn"
+              aria-label={t.reportsView.invFilters.finding}
               value={filterFinding}
               onChange={(e) => setFilterFinding(e.target.value)}
             >
-              <option value="all">Tất cả đề xuất thẩm định</option>
-              <option value="Suspicious">Khả nghi (Suspicious)</option>
-              <option value="Legitimate">Hợp lệ (Legitimate)</option>
-              <option value="Need More Info">Cần bổ sung tin (Need More Info)</option>
+              <option value="all">{t.reportsView.invFilters.allFindings}</option>
+              <option value="Suspicious">{t.findings.suspicious}</option>
+              <option value="Legitimate">{t.findings.legitimate}</option>
+              <option value="Need More Info">{t.findings.needMoreInfo}</option>
             </select>
 
             <select
               className={styles.control}
-              aria-label="Trạng thái phê duyệt"
+              aria-label={t.reportsView.invFilters.status}
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
-              <option value="all">Tất cả trạng thái hồ sơ</option>
-              <option value="Reported">Chờ Operation duyệt (Reported)</option>
-              <option value="Confirmed Fraud">Gian lận xác nhận (Confirmed Fraud)</option>
-              <option value="False Alarm">Cảnh báo sai (False Alarm)</option>
-              <option value="Resolved">Đã đóng (Resolved)</option>
-              <option value="Investigating">Đang điều tra (Investigating)</option>
+              <option value="all">{t.reportsView.invFilters.allStatuses}</option>
+              <option value="Reported">{t.caseStatus.reported}</option>
+              <option value="Confirmed Fraud">{t.caseStatus.confirmedFraud}</option>
+              <option value="False Alarm">{t.caseStatus.falseAlarm}</option>
+              <option value="Resolved">{t.caseStatus.resolved}</option>
+              <option value="Investigating">{t.caseStatus.investigating}</option>
             </select>
           </div>
         </div>
@@ -472,9 +497,12 @@ export function ReportsView({
         <section className={`${styles.panel} ${styles.tablePanel}`}>
           <div className={`${styles.panelHeader} ${styles.tablePanelHeader}`}>
             <div>
-              <h2>Danh sách hồ sơ điều tra cá nhân</h2>
+              <h2>{t.reportsView.invTable.title}</h2>
               <p className={styles.muted}>
-                {filteredInvestigatorCases.length} hồ sơ phù hợp bộ lọc hiện tại
+                {t.reportsView.invTable.subtitle.replace(
+                  "{count}",
+                  String(filteredInvestigatorCases.length),
+                )}
               </p>
             </div>
           </div>
@@ -483,29 +511,31 @@ export function ReportsView({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Case ID / Tham chiếu</th>
-                  <th>Dự án / Giao dịch</th>
-                  <th>Risk Score</th>
-                  <th>Báo cáo điều tra của bạn</th>
-                  <th>Quyết định phê duyệt (Operation)</th>
-                  <th>Thời gian</th>
-                  <th style={{ textAlign: "right" }}>Thao tác</th>
+                  <th>{t.reportsView.invTable.colCase}</th>
+                  <th>{t.reportsView.invTable.colProject}</th>
+                  <th>{t.reportsView.invTable.colScore}</th>
+                  <th>{t.reportsView.invTable.colFinding}</th>
+                  <th>{t.reportsView.invTable.colDecision}</th>
+                  <th>{t.reportsView.invTable.colTime}</th>
+                  <th style={{ textAlign: "right" }}>
+                    {t.reportsView.invTable.colActions}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredInvestigatorCases.length === 0 ? (
                   <tr>
                     <td className={styles.emptyState} colSpan={7}>
-                      Không tìm thấy hồ sơ nào phù hợp với bộ lọc đã chọn.
+                      {t.reportsView.invTable.emptyMessage}
                     </td>
                   </tr>
                 ) : (
                   filteredInvestigatorCases.map((tx) => {
                     const findingStyle = tx.investigationReport
-                      ? FINDING_BADGE_STYLE[tx.investigationReport.finding]
+                      ? getFindingBadgeStyle(tx.investigationReport.finding, t)
                       : null;
                     const decisionStyle = tx.caseStatus
-                      ? DECISION_BADGE_STYLE[tx.caseStatus]
+                      ? getDecisionBadgeStyle(tx.caseStatus, t)
                       : null;
 
                     return (
@@ -528,12 +558,19 @@ export function ReportsView({
                           <span className={styles.findingMeta}>
                             {tx.transactionType}
                             {tx.amount != null
-                              ? ` · ${tx.amount.toLocaleString("en")} ${tx.currency}`
+                              ? ` · ${tx.amount.toLocaleString(dateLocale)} ${tx.currency}`
                               : ""}
                           </span>
                         </td>
                         <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              marginBottom: 4,
+                            }}
+                          >
                             <RiskLevelBadge riskLevel={tx.riskLevel} />
                             <span style={{ fontWeight: 600, fontSize: 13 }}>
                               {tx.riskScore}/100
@@ -576,7 +613,7 @@ export function ReportsView({
                             </div>
                           ) : (
                             <span style={{ color: "var(--security-muted)", fontSize: 11 }}>
-                              Chưa nộp báo cáo
+                              {t.reportsView.invTable.noReportYet}
                             </span>
                           )}
                         </td>
@@ -598,16 +635,16 @@ export function ReportsView({
                             </span>
                           ) : (
                             <span style={{ color: "var(--security-muted)", fontSize: 11 }}>
-                              {tx.caseStatus || "Chờ xử lý"}
+                              {tx.caseStatus || t.reportsView.invTable.pendingDecision}
                             </span>
                           )}
                         </td>
                         <td>
                           <span style={{ fontSize: 11, color: "var(--security-text)" }}>
-                            {new Date(tx.processedAt).toLocaleDateString("vi-VN")}
+                            {new Date(tx.processedAt).toLocaleDateString(dateLocale)}
                           </span>
                           <span className={styles.findingMeta}>
-                            {new Date(tx.processedAt).toLocaleTimeString("vi-VN", {
+                            {new Date(tx.processedAt).toLocaleTimeString(dateLocale, {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -619,11 +656,14 @@ export function ReportsView({
                               className={styles.button}
                               onClick={() => onReview(tx)}
                               type="button"
-                              title="Xem chi tiết hồ sơ & chứng cứ"
+                              title={t.reportsView.invTable.viewDetails}
                               style={{ fontSize: 11, padding: "5px 12px" }}
                             >
-                              <Eye size={13} style={{ marginRight: 5, verticalAlign: "-2px" }} />
-                              Chi tiết
+                              <Eye
+                                size={13}
+                                style={{ marginRight: 5, verticalAlign: "-2px" }}
+                              />
+                              {t.reportsView.invTable.viewDetails}
                             </button>
                           )}
                         </td>
@@ -646,10 +686,8 @@ export function ReportsView({
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Reports & AI Performance</h1>
-          <p>
-            Phân tích tỷ lệ phát hiện gian lận, hiệu suất AI Scoring so với Rule Engine và độ chính xác cảnh báo.
-          </p>
+          <h1>{t.reportsView.execTitle}</h1>
+          <p>{t.reportsView.execSubtitle}</p>
         </div>
         {permissions?.canExport !== false && (
           <button
@@ -658,7 +696,7 @@ export function ReportsView({
             type="button"
           >
             <Download size={15} style={{ marginRight: 6 }} />
-            Export Report (CSV)
+            {t.reportsView.btnExport}
           </button>
         )}
       </div>
@@ -668,21 +706,21 @@ export function ReportsView({
         <div className={styles.toolbarGroup}>
           <select
             className={styles.control}
-            aria-label="Khoảng thời gian"
+            aria-label={t.reportsView.invFilters.timeRange}
             value={range}
             onChange={(e) => setRange(Number(e.target.value))}
           >
-            <option value={7}>7 ngày gần nhất</option>
-            <option value={30}>30 ngày gần nhất</option>
-            <option value={90}>90 ngày gần nhất</option>
+            <option value={7}>{t.reportsView.invFilters.days7}</option>
+            <option value={30}>{t.reportsView.invFilters.days30}</option>
+            <option value={90}>{t.reportsView.invFilters.days90}</option>
           </select>
           <select
             className={styles.control}
-            aria-label="Dự án"
+            aria-label={t.reportsView.invFilters.project}
             value={filterProject}
             onChange={(e) => setFilterProject(e.target.value)}
           >
-            <option value="all">Tất cả dự án</option>
+            <option value="all">{t.reportsView.invFilters.allProjects}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -695,26 +733,32 @@ export function ReportsView({
       {/* KPI Cards */}
       <section className={styles.metricsGrid}>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>Analyzed Transactions</div>
+          <div className={styles.statLabel}>{t.reportsView.execKpis.analyzedTxns}</div>
           <strong className={styles.statValue}>{macroMetrics.total}</strong>
           <span className={styles.statDescription}>
-            Trong {range} ngày qua
+            {t.reportsView.execKpis.inLastDays.replace("{range}", String(range))}
           </span>
         </article>
         <article className={`${styles.statCard} ${styles.statCritical}`}>
-          <div className={styles.statLabel}>Tỷ lệ Bất thường (Anomaly Rate)</div>
+          <div className={styles.statLabel}>{t.reportsView.execKpis.anomalyRate}</div>
           <strong className={styles.statValue}>{macroMetrics.fraudRate}%</strong>
           <span className={styles.statDescription}>
-            {macroMetrics.highRisk} giao dịch bất thường (Score &ge; {threshold})
+            {t.reportsView.execKpis.anomalyRateDesc
+              .replace("{count}", String(macroMetrics.highRisk))
+              .replace("{threshold}", String(threshold))}
           </span>
         </article>
         <article className={`${styles.statCard} ${styles.statWarning}`}>
-          <div className={styles.statLabel}>False Alarm Rate</div>
+          <div className={styles.statLabel}>
+            {t.reportsView.execKpis.falseAlarmRate}
+          </div>
           <strong className={styles.statValue}>{macroMetrics.falseAlarmRate}%</strong>
-          <span className={styles.statDescription}>Tỷ lệ báo động giả</span>
+          <span className={styles.statDescription}>
+            {t.reportsView.execKpis.falseAlarmRateDesc}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>AI Scoring Coverage</div>
+          <div className={styles.statLabel}>{t.reportsView.execKpis.aiCoverage}</div>
           <strong
             className={styles.statValue}
             style={{ color: "var(--security-purple)" }}
@@ -722,7 +766,10 @@ export function ReportsView({
             {macroMetrics.aiCoverage}%
           </strong>
           <span className={styles.statDescription}>
-            Fallback: {macroMetrics.fallbackRate}%
+            {t.reportsView.execKpis.fallbackCoverage.replace(
+              "{rate}",
+              macroMetrics.fallbackRate,
+            )}
           </span>
         </article>
       </section>
@@ -733,10 +780,8 @@ export function ReportsView({
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
-              <h2>Case Investigation Outcomes</h2>
-              <p className={styles.muted}>
-                Kết luận điều tra thực tế từ đội ngũ Điều tra viên & Vận hành
-              </p>
+              <h2>{t.reportsView.execCharts.outcomesTitle}</h2>
+              <p className={styles.muted}>{t.reportsView.execCharts.outcomesDesc}</p>
             </div>
           </div>
           <div className={styles.chartArea} style={{ height: 260 }}>
@@ -776,8 +821,8 @@ export function ReportsView({
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
-              <h2>Scoring Engine Reliability</h2>
-              <p className={styles.muted}>Tỷ trọng AI vs Rule Engine vs Fallback</p>
+              <h2>{t.reportsView.execCharts.scoringTitle}</h2>
+              <p className={styles.muted}>{t.reportsView.execCharts.scoringDesc}</p>
             </div>
           </div>
           <div className={styles.chartArea} style={{ height: 260 }}>
@@ -818,10 +863,8 @@ export function ReportsView({
       <section className={`${styles.panel} ${styles.tablePanel}`}>
         <div className={`${styles.panelHeader} ${styles.tablePanelHeader}`}>
           <div>
-            <h2>Project Performance Breakdown</h2>
-            <p className={styles.muted}>
-              Thống kê chi tiết khối lượng giao dịch và gian lận theo từng nguồn tích hợp
-            </p>
+            <h2>{t.reportsView.execTable.title}</h2>
+            <p className={styles.muted}>{t.reportsView.execTable.subtitle}</p>
           </div>
         </div>
 
@@ -829,11 +872,11 @@ export function ReportsView({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Project Name</th>
-                <th>Total Analyzed</th>
-                <th>Bất thường (Anomaly)</th>
-                <th>Confirmed Fraud</th>
-                <th>Risk Rate (%)</th>
+                <th>{t.reportsView.execTable.colProject}</th>
+                <th>{t.reportsView.execTable.colTotal}</th>
+                <th>{t.reportsView.execTable.colAnomaly}</th>
+                <th>{t.reportsView.execTable.colConfirmed}</th>
+                <th>{t.reportsView.execTable.colRate}</th>
               </tr>
             </thead>
             <tbody>
@@ -842,7 +885,7 @@ export function ReportsView({
                   <td style={{ fontWeight: 600, color: "var(--security-text)" }}>
                     {stat.name}
                   </td>
-                  <td>{stat.total.toLocaleString("en")}</td>
+                  <td>{stat.total.toLocaleString(dateLocale)}</td>
                   <td style={{ color: "var(--security-orange)" }}>
                     {stat.highRisk}
                   </td>

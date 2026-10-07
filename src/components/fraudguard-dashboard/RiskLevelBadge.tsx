@@ -1,4 +1,7 @@
+"use client";
+
 import type { RiskLevel } from "./types";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RiskLevelBadgeProps {
@@ -12,6 +15,8 @@ export function RiskLevelBadge({
   score,
   threshold = 75,
 }: RiskLevelBadgeProps) {
+  const { t } = useLanguage();
+
   // Determine if anomalous:
   // 1. Explicit Anomaly / Critical / High
   // 2. Score >= threshold (default 75)
@@ -21,17 +26,23 @@ export function RiskLevelBadge({
 
   if (isAnomaly) {
     return (
-      <span className={styles.anomalyBadge} title={`Giao dịch Bất thường (Score: ${score ?? "N/A"}${threshold ? ` >= ${threshold}` : ""})`}>
+      <span
+        className={styles.anomalyBadge}
+        title={`${t.risk.anomalyTitle} (Score: ${score ?? "N/A"}${threshold ? ` >= ${threshold}` : ""})`}
+      >
         <span className={styles.dotAnomaly} />
-        Bất thường
+        {t.risk.anomaly}
       </span>
     );
   }
 
   return (
-    <span className={styles.normalBadge} title={`Giao dịch Bình thường (Score: ${score ?? "N/A"}${threshold ? ` < ${threshold}` : ""})`}>
+    <span
+      className={styles.normalBadge}
+      title={`${t.risk.normalTitle} (Score: ${score ?? "N/A"}${threshold ? ` < ${threshold}` : ""})`}
+    >
       <span className={styles.dotNormal} />
-      Bình thường
+      {t.risk.normal}
     </span>
   );
 }

@@ -5,6 +5,7 @@ import { ChevronDown, Check, FileSpreadsheet } from "lucide-react";
 import type { UserProfile } from "./types";
 import { DEMO_USERS } from "../../data/fraudguard-roles";
 import { PermissionMatrixModal } from "./PermissionMatrixModal";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RoleSwitcherProps {
@@ -13,6 +14,7 @@ interface RoleSwitcherProps {
 }
 
 export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
+  const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,7 +74,9 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
           className={styles.roleTriggerBtn}
           onClick={() => setMenuOpen((prev) => !prev)}
           type="button"
-          title={`Đang đăng nhập: ${currentUser.name} (${currentUser.role}) — Click để đổi vai trò`}
+          title={t.roleSwitcher.triggerTitle
+            .replace("{name}", currentUser.name)
+            .replace("{role}", currentUser.role)}
           aria-expanded={menuOpen}
         >
           <div
@@ -96,7 +100,9 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
         {menuOpen && (
           <div className={styles.roleDropdownMenu} role="menu">
             <div className={styles.roleMenuHeader}>
-              <div className={styles.roleMenuTitle}>Chọn vai trò người dùng (RBAC)</div>
+              <div className={styles.roleMenuTitle}>
+                {t.roleSwitcher.menuTitle}
+              </div>
             </div>
 
             {DEMO_USERS.map((u) => {
@@ -129,7 +135,11 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
                   </div>
 
                   {isSelected && (
-                    <Check size={14} color="var(--security-blue)" style={{ flexShrink: 0, marginTop: 4 }} />
+                    <Check
+                      size={14}
+                      color="var(--security-blue)"
+                      style={{ flexShrink: 0, marginTop: 4 }}
+                    />
                   )}
                 </button>
               );
@@ -145,7 +155,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
                 type="button"
               >
                 <FileSpreadsheet size={13} />
-                <span>Xem bảng phân quyền (Matrix)</span>
+                <span>{t.roleSwitcher.matrixBtn}</span>
               </button>
             </div>
           </div>

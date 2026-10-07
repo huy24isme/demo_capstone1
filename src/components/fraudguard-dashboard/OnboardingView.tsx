@@ -4,6 +4,7 @@ import { useState } from "react";
 import styles from "./SecurityDashboard.module.css";
 import { ShieldCheck, Building2, Key, Lock } from "lucide-react";
 import { useToast } from "./ToastProvider";
+import { useLanguage } from "./i18n/LanguageContext";
 
 interface OnboardingViewProps {
   onActivateWorkspace?: (workspaceName: string) => void;
@@ -18,6 +19,7 @@ interface OnboardingStep {
 }
 
 export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"in-progress" | "new" | "completed">("in-progress");
   const [currentStep, setCurrentStep] = useState(7); // Currently at Step 7/8 for ABC Fashion
@@ -26,64 +28,91 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
   const steps: OnboardingStep[] = [
     {
       step: 1,
-      title: "SME gửi đặc tả",
-      description: "ABC Fashion cung cấp nghiệp vụ giám sát đơn COD và mẫu giao dịch 100 dòng.",
+      title: language === "vi" ? "SME gửi đặc tả" : "SME Submits Specification",
+      description:
+        language === "vi"
+          ? "ABC Fashion cung cấp nghiệp vụ giám sát đơn COD và mẫu giao dịch 100 dòng."
+          : "ABC Fashion supplies COD monitoring rules and 100 sample transactions.",
       status: currentStep > 1 ? "completed" : currentStep === 1 ? "current" : "upcoming",
       actor: "SME Admin",
     },
     {
       step: 2,
-      title: "Platform Admin Review",
-      description: "Xác nhận các trường dữ liệu: COD channel, device ID, address hash, fail count.",
+      title: language === "vi" ? "Platform Admin Review" : "Platform Admin Review",
+      description:
+        language === "vi"
+          ? "Xác nhận các trường dữ liệu: COD channel, device ID, address hash, fail count."
+          : "Validate data fields: COD channel, device ID, address hash, fail count.",
       status: currentStep > 2 ? "completed" : currentStep === 2 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 3,
-      title: "Create Workspace / Project",
-      description: "Khởi tạo workspace tenant 'ABC Fashion' và dự án 'COD Order Monitoring' (proj-abc-cod).",
+      title: language === "vi" ? "Create Workspace / Project" : "Create Workspace / Project",
+      description:
+        language === "vi"
+          ? "Khởi tạo workspace tenant 'ABC Fashion' và dự án 'COD Order Monitoring' (proj-abc-cod)."
+          : "Initialize tenant workspace 'ABC Fashion' and 'COD Order Monitoring' project (proj-abc-cod).",
       status: currentStep > 3 ? "completed" : currentStep === 3 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 4,
-      title: "Setup Transaction Schema",
-      description: "Cấu hình custom schema cho đơn hàng thương mại điện tử giao nhận COD.",
+      title: language === "vi" ? "Setup Transaction Schema" : "Setup Transaction Schema",
+      description:
+        language === "vi"
+          ? "Cấu hình custom schema cho đơn hàng thương mại điện tử giao nhận COD."
+          : "Configure custom schema for e-commerce COD cash-on-delivery orders.",
       status: currentStep > 4 ? "completed" : currentStep === 4 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 5,
-      title: "Setup Detection Rules",
-      description: "Thiết lập 4 rules cốt lõi: High Amount, New Device, Failed Tx, Address Reuse.",
+      title: language === "vi" ? "Setup Detection Rules" : "Setup Detection Rules",
+      description:
+        language === "vi"
+          ? "Thiết lập 4 rules cốt lõi: High Amount, New Device, Failed Tx, Address Reuse."
+          : "Configure 4 core rules: High Amount, New Device, Failed Tx, Address Reuse.",
       status: currentStep > 5 ? "completed" : currentStep === 5 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 6,
-      title: "Setup Data Integration",
-      description: "Cấp API Key live/staging và thiết lập Webhook endpoint https://api.abcfashion.vn/fraudguard/webhook.",
+      title: language === "vi" ? "Setup Data Integration" : "Setup Data Integration",
+      description:
+        language === "vi"
+          ? "Cấp API Key live/staging và thiết lập Webhook endpoint https://api.abcfashion.vn/fraudguard/webhook."
+          : "Provision live/staging API keys and configure webhook endpoint https://api.abcfashion.vn/fraudguard/webhook.",
       status: currentStep > 6 ? "completed" : currentStep === 6 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 7,
-      title: "Test with Sample Data",
-      description: "Chạy thử 26 giao dịch mẫu qua Sandbox Rule Engine để đánh giá độ chuẩn xác.",
+      title: language === "vi" ? "Test with Sample Data" : "Test with Sample Data",
+      description:
+        language === "vi"
+          ? "Chạy thử 26 giao dịch mẫu qua Sandbox Rule Engine để đánh giá độ chuẩn xác."
+          : "Run 26 sample transactions through Sandbox Rule Engine to calibrate precision.",
       status: currentStep > 7 ? "completed" : currentStep === 7 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 8,
-      title: "Review Result & Validate",
-      description: "Xác nhận rule trigger chuẩn xác (TX-83912 đạt điểm 82/100 Anomaly).",
+      title: language === "vi" ? "Review Result & Validate" : "Review Result & Validate",
+      description:
+        language === "vi"
+          ? "Xác nhận rule trigger chuẩn xác (TX-83912 đạt điểm 82/100 Anomaly)."
+          : "Confirm correct rule triggers (TX-83912 scored 82/100 Anomaly).",
       status: currentStep > 8 ? "completed" : currentStep === 8 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
     {
       step: 9,
-      title: "Handover & Activate",
-      description: "Bàn giao tài khoản SME Admin, khóa quyền truy cập dữ liệu nội bộ của Platform Admin.",
+      title: language === "vi" ? "Handover & Activate" : "Handover & Activate",
+      description:
+        language === "vi"
+          ? "Bàn giao tài khoản SME Admin, khóa quyền truy cập dữ liệu nội bộ của Platform Admin."
+          : "Handover credentials to SME Admin and restrict Platform Admin access to private records.",
       status: isHandedOver ? "completed" : currentStep === 9 ? "current" : "upcoming",
       actor: "Platform Admin & SME",
     },
@@ -92,17 +121,32 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
   const handleAdvanceStep = () => {
     if (currentStep < 8) {
       setCurrentStep((prev) => prev + 1);
-      toast("success", `Đã hoàn thành Bước ${currentStep}: Chuyển sang Bước ${currentStep + 1}`);
+      toast(
+        "success",
+        language === "vi"
+          ? `Đã hoàn thành Bước ${currentStep}: Chuyển sang Bước ${currentStep + 1}`
+          : `Step ${currentStep} completed: Advanced to Step ${currentStep + 1}`,
+      );
     } else if (currentStep === 8) {
       setCurrentStep(9);
-      toast("info", "Đã xác nhận kết quả kiểm thử. Sẵn sàng bàn giao Workspace.");
+      toast(
+        "info",
+        language === "vi"
+          ? "Đã xác nhận kết quả kiểm thử. Sẵn sàng bàn giao Workspace."
+          : "Validation confirmed. Ready for workspace handover.",
+      );
     }
   };
 
   const handleHandover = () => {
     setIsHandedOver(true);
     setCurrentStep(9);
-    toast("success", "Đã hoàn thành bàn giao Workspace cho ABC Fashion! Ranh giới Handover Boundary đã được kích hoạt.");
+    toast(
+      "success",
+      language === "vi"
+        ? "Đã hoàn thành bàn giao Workspace cho ABC Fashion! Ranh giới Handover Boundary đã được kích hoạt."
+        : "Workspace handover to ABC Fashion complete! Handover Boundary activated.",
+    );
     if (onActivateWorkspace) {
       onActivateWorkspace("ABC Fashion");
     }
@@ -112,35 +156,39 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>Enterprise Onboarding & Workspace Handover</h1>
-          <p>
-            Quy trình tiếp nhận đặc tả doanh nghiệp, cấu hình schema, kiểm thử rule ban đầu và bàn giao vận hành.
-          </p>
+          <h1>{t.onboardingView.title}</h1>
+          <p>{t.onboardingView.subtitle}</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className={styles.tabs} style={{ marginTop: 20, borderBottom: "1px solid var(--security-border)" }}>
+      <div
+        className={styles.tabs}
+        style={{
+          marginTop: 20,
+          borderBottom: "1px solid var(--security-border)",
+        }}
+      >
         <button
           className={`${styles.tab} ${activeTab === "in-progress" ? styles.tabActive : ""}`}
           onClick={() => setActiveTab("in-progress")}
           type="button"
         >
-          Đang triển khai (ABC Fashion)
+          {t.onboardingView.tabs.inProgress}
         </button>
         <button
           className={`${styles.tab} ${activeTab === "completed" ? styles.tabActive : ""}`}
           onClick={() => setActiveTab("completed")}
           type="button"
         >
-          Đã bàn giao (Production Workspaces)
+          {t.onboardingView.tabs.completed}
         </button>
         <button
           className={`${styles.tab} ${activeTab === "new" ? styles.tabActive : ""}`}
           onClick={() => setActiveTab("new")}
           type="button"
         >
-          Yêu cầu mới (Inbound Pipeline)
+          {t.onboardingView.tabs.newReqs}
         </button>
       </div>
 
@@ -150,31 +198,67 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           marginTop: 18,
           padding: "16px 20px",
           borderRadius: 6,
-          background: isHandedOver ? "rgba(120, 201, 172, 0.08)" : "rgba(217, 119, 6, 0.08)",
+          background: isHandedOver
+            ? "rgba(120, 201, 172, 0.08)"
+            : "rgba(217, 119, 6, 0.08)",
           border: `1px solid ${isHandedOver ? "#3f665a" : "#715139"}`,
           display: "flex",
           alignItems: "flex-start",
           gap: 16,
         }}
       >
-        <div style={{ padding: 6, borderRadius: 4, background: isHandedOver ? "rgba(120, 201, 172, 0.2)" : "rgba(217, 119, 6, 0.2)" }}>
-          {isHandedOver ? <Lock size={22} color="var(--security-green)" /> : <ShieldCheck size={22} color="var(--security-orange)" />}
+        <div
+          style={{
+            padding: 6,
+            borderRadius: 4,
+            background: isHandedOver
+              ? "rgba(120, 201, 172, 0.2)"
+              : "rgba(217, 119, 6, 0.2)",
+          }}
+        >
+          {isHandedOver ? (
+            <Lock size={22} color="var(--security-green)" />
+          ) : (
+            <ShieldCheck size={22} color="var(--security-orange)" />
+          )}
         </div>
         <div style={{ flex: 1 }}>
-          <strong style={{ fontSize: 14, color: isHandedOver ? "var(--security-green)" : "var(--security-orange)" }}>
-            Handover Boundary (Ranh giới Bàn giao Doanh nghiệp): {isHandedOver ? "AFTER HANDOVER (PRODUCTION)" : "BEFORE HANDOVER (STAGING / SETUP)"}
-          </strong>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--security-text-secondary)", lineHeight: 1.6 }}>
+          <strong
+            style={{
+              fontSize: 14,
+              color: isHandedOver ? "var(--security-green)" : "var(--security-orange)",
+            }}
+          >
+            {t.onboardingView.boundary.title}{" "}
             {isHandedOver
-              ? "Workspace đã trở thành môi trường vận hành riêng của SME. Platform Admin bị giới hạn, không truy cập trực tiếp vào hồ sơ giao dịch hay đóng case của khách hàng. Mọi thay đổi Rule về sau phải qua Change Request và kiểm thử tại Rule Testing Sandbox."
-              : "Workspace đang trong giai đoạn triển khai kỹ thuật. Platform Admin có toàn quyền cấu hình schema, thiết lập detection rule, nạp sample data và chạy thử nghiệm để tinh chỉnh ngưỡng trước khi bàn giao."}
+              ? t.onboardingView.boundary.afterTitle
+              : t.onboardingView.boundary.beforeTitle}
+          </strong>
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: 12,
+              color: "var(--security-text-secondary)",
+              lineHeight: 1.6,
+            }}
+          >
+            {isHandedOver
+              ? t.onboardingView.boundary.afterDesc
+              : t.onboardingView.boundary.beforeDesc}
           </p>
         </div>
       </div>
 
       {/* Case Study Card */}
       <div className={styles.panel} style={{ marginTop: 20, padding: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div
               style={{
@@ -191,10 +275,12 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
-                ABC Fashion — COD Order Monitoring
+                {t.onboardingView.caseStudy.title}
               </h2>
               <span style={{ fontSize: 11, color: "var(--security-muted)" }}>
-                Mã dự án: <code>proj-abc-cod</code> · Gói: Enterprise · Tenant ID: <code>tnt-abc-0921</code>
+                {t.onboardingView.caseStudy.projectCode
+                  .replace("{code}", "proj-abc-cod")
+                  .replace("{tenant}", "tnt-abc-0921")}
               </span>
             </div>
           </div>
@@ -203,20 +289,34 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
             <span
               className={styles.badge}
               style={{
-                background: isHandedOver ? "rgba(120, 201, 172, 0.15)" : "rgba(237, 167, 101, 0.15)",
+                background: isHandedOver
+                  ? "rgba(120, 201, 172, 0.15)"
+                  : "rgba(237, 167, 101, 0.15)",
                 color: isHandedOver ? "var(--security-green)" : "var(--security-orange)",
                 borderColor: isHandedOver ? "#3f665a" : "#715139",
                 fontSize: 11,
                 padding: "4px 10px",
               }}
             >
-              {isHandedOver ? "COMPLETED & ACTIVATED" : `ONBOARDING STEP ${currentStep}/9`}
+              {isHandedOver
+                ? t.onboardingView.caseStudy.badgeCompleted
+                : t.onboardingView.caseStudy.badgeStep.replace(
+                    "{step}",
+                    String(currentStep),
+                  )}
             </span>
           </div>
         </div>
 
         {/* 9 Steps Visual Pipeline */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            marginTop: 16,
+          }}
+        >
           {steps.map((st) => (
             <div
               key={st.step}
@@ -226,7 +326,10 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
                 gap: 16,
                 padding: "12px 16px",
                 borderRadius: 6,
-                background: st.status === "current" ? "rgba(113, 185, 244, 0.08)" : "var(--security-control)",
+                background:
+                  st.status === "current"
+                    ? "rgba(113, 185, 244, 0.08)"
+                    : "var(--security-control)",
                 border: `1px solid ${st.status === "current" ? "var(--security-blue)" : "var(--security-border)"}`,
                 opacity: st.status === "upcoming" ? 0.6 : 1,
               }}
@@ -254,26 +357,68 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 2,
+                  }}
+                >
                   <strong style={{ fontSize: 13, color: "var(--security-text)" }}>
                     Step {st.step}: {st.title}
                   </strong>
-                  <span style={{ fontSize: 10, color: "var(--security-subtle)", textTransform: "uppercase" }}>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: "var(--security-subtle)",
+                      textTransform: "uppercase",
+                    }}
+                  >
                     ({st.actor})
                   </span>
                 </div>
-                <p style={{ margin: 0, fontSize: 11, color: "var(--security-muted)" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 11,
+                    color: "var(--security-muted)",
+                  }}
+                >
                   {st.description}
                 </p>
               </div>
 
               <div style={{ flexShrink: 0 }}>
                 {st.status === "completed" ? (
-                  <span style={{ fontSize: 11, color: "var(--security-green)", fontWeight: 600 }}>Hoàn thành</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--security-green)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t.onboardingView.caseStudy.stepCompleted}
+                  </span>
                 ) : st.status === "current" ? (
-                  <span style={{ fontSize: 11, color: "var(--security-blue)", fontWeight: 600 }}>Đang thực hiện</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--security-blue)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t.onboardingView.caseStudy.stepCurrent}
+                  </span>
                 ) : (
-                  <span style={{ fontSize: 11, color: "var(--security-subtle)" }}>Chờ</span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--security-subtle)",
+                    }}
+                  >
+                    {t.onboardingView.caseStudy.stepUpcoming}
+                  </span>
                 )}
               </div>
             </div>
@@ -293,18 +438,22 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
         >
           <div style={{ fontSize: 12, color: "var(--security-muted)" }}>
             {isHandedOver ? (
-              <span>Doanh nghiệp đã chính thức nhận bàn giao và đang tự vận hành hồ sơ rủi ro.</span>
+              <span>{t.onboardingView.actions.descCompleted}</span>
             ) : currentStep < 9 ? (
-              <span>Đang trong giai đoạn chuẩn bị kỹ thuật. Bấm nút để tiến hành kiểm thử và chuyển bước.</span>
+              <span>{t.onboardingView.actions.descInProgress}</span>
             ) : (
-              <span>Đã hoàn thành kiểm thử. Sẵn sàng bàn giao hệ thống cho ABC Fashion.</span>
+              <span>{t.onboardingView.actions.descReady}</span>
             )}
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
             {!isHandedOver && currentStep < 9 && (
-              <button className={styles.button} onClick={handleAdvanceStep} type="button">
-                Chuyển bước kế tiếp →
+              <button
+                className={styles.button}
+                onClick={handleAdvanceStep}
+                type="button"
+              >
+                {t.onboardingView.actions.btnAdvance}
               </button>
             )}
 
@@ -322,7 +471,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
                 }}
               >
                 <Key size={14} />
-                Bàn giao & Kích hoạt Workspace (Handover)
+                {t.onboardingView.actions.btnHandover}
               </button>
             )}
           </div>

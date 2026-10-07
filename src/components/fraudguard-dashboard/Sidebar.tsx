@@ -20,6 +20,9 @@ import {
 import styles from "./SecurityDashboard.module.css";
 import type { SecondaryView, UserProfile } from "./types";
 
+import { useLanguage } from "./i18n/LanguageContext";
+import type { TranslationKey } from "./i18n/translations";
+
 interface NavItem {
   label: string;
   id: SecondaryView;
@@ -32,22 +35,23 @@ interface NavSection {
   items: NavItem[];
 }
 
-function getSectionsForRole(role?: string): NavSection[] {
+function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
+  const nav = t?.nav;
   if (role === "Platform Admin") {
     return [
       {
-        title: "PLATFORM SYSTEM",
+        title: nav?.sections.platformSystem || "PLATFORM SYSTEM",
         items: [
-          { id: "platform-health", label: "Platform Health & Tenants", icon: Server },
-          { id: "onboarding", label: "Onboarding & Handover", icon: FolderKanban },
-          { id: "audit-trail", label: "Global Audit Trail", icon: History },
+          { id: "platform-health", label: nav?.items.platformHealth || "Platform Health & Tenants", icon: Server },
+          { id: "onboarding", label: nav?.items.onboarding || "Onboarding & Handover", icon: FolderKanban },
+          { id: "audit-trail", label: nav?.items.auditTrail || "Global Audit Trail", icon: History },
         ],
       },
       {
-        title: "RULE LIFECYCLE & SANDBOX",
+        title: nav?.sections.ruleLifecycle || "RULE LIFECYCLE & SANDBOX",
         items: [
-          { id: "rule-testing", label: "Rule Testing Sandbox", icon: TestTube2 },
-          { id: "rule-templates", label: "Published Rules", icon: Sliders },
+          { id: "rule-testing", label: nav?.items.ruleTesting || "Rule Testing Sandbox", icon: TestTube2 },
+          { id: "rule-templates", label: nav?.items.ruleTemplates || "Published Rules", icon: Sliders },
         ],
       },
     ];
@@ -56,18 +60,18 @@ function getSectionsForRole(role?: string): NavSection[] {
   if (role === "Operation") {
     return [
       {
-        title: "OPERATION QUEUE",
+        title: nav?.sections.operationQueue || "OPERATION QUEUE",
         items: [
-          { id: "risk-overview", label: "Risk Dashboard", icon: Activity },
-          { id: "recent-alerts", label: "Alert Queue", icon: AlertTriangle },
-          { id: "active-cases", label: "Case Queue", icon: Briefcase },
+          { id: "risk-overview", label: nav?.items.riskOverview || "Risk Dashboard", icon: Activity },
+          { id: "recent-alerts", label: nav?.items.recentAlerts || "Alert Queue", icon: AlertTriangle },
+          { id: "active-cases", label: nav?.items.activeCases || "Case Queue", icon: Briefcase },
         ],
       },
       {
-        title: "ANALYTICS & AUDIT",
+        title: nav?.sections.analyticsAudit || "ANALYTICS & AUDIT",
         items: [
-          { id: "reports", label: "Reports & Performance", icon: FileText },
-          { id: "audit-trail", label: "Audit Trail", icon: History },
+          { id: "reports", label: nav?.items.reports || "Reports & Performance", icon: FileText },
+          { id: "audit-trail", label: nav?.items.auditTrail || "Audit Trail", icon: History },
         ],
       },
     ];
@@ -76,10 +80,10 @@ function getSectionsForRole(role?: string): NavSection[] {
   if (role === "Investigator") {
     return [
       {
-        title: "INVESTIGATION PORTAL",
+        title: nav?.sections.investigationPortal || "INVESTIGATION PORTAL",
         items: [
-          { id: "active-cases", label: "My Cases (Hồ sơ được giao)", icon: Briefcase },
-          { id: "reports", label: "Investigation History", icon: FileText },
+          { id: "active-cases", label: nav?.items.myCases || "My Cases", icon: Briefcase },
+          { id: "reports", label: nav?.items.investigationHistory || "Investigation History", icon: FileText },
         ],
       },
     ];
@@ -88,18 +92,18 @@ function getSectionsForRole(role?: string): NavSection[] {
   if (role === "Viewer") {
     return [
       {
-        title: "MONITORING (READ-ONLY)",
+        title: nav?.sections.monitoring || "MONITORING (READ-ONLY)",
         items: [
-          { id: "risk-overview", label: "Risk Overview", icon: Activity },
-          { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
-          { id: "active-cases", label: "Active Cases", icon: Briefcase },
+          { id: "risk-overview", label: nav?.items.riskOverview || "Risk Overview", icon: Activity },
+          { id: "recent-alerts", label: nav?.items.recentAlerts || "Recent Alerts", icon: AlertTriangle },
+          { id: "active-cases", label: nav?.items.activeCases || "Active Cases", icon: Briefcase },
         ],
       },
       {
-        title: "ANALYTICS & COMPLIANCE",
+        title: nav?.sections.analyticsAudit || "ANALYTICS & COMPLIANCE",
         items: [
-          { id: "reports", label: "Reports & Metrics", icon: FileText },
-          { id: "audit-trail", label: "Audit Trail", icon: History },
+          { id: "reports", label: nav?.items.reports || "Reports & Metrics", icon: FileText },
+          { id: "audit-trail", label: nav?.items.auditTrail || "Audit Trail", icon: History },
         ],
       },
     ];
@@ -108,25 +112,25 @@ function getSectionsForRole(role?: string): NavSection[] {
   // Default: SME Admin
   return [
     {
-      title: "MONITORING",
+      title: nav?.sections.monitoring || "MONITORING",
       items: [
-        { id: "risk-overview", label: "Executive Overview", icon: Activity },
-        { id: "recent-alerts", label: "Recent Alerts", icon: AlertTriangle },
-        { id: "active-cases", label: "Active Cases", icon: Briefcase },
+        { id: "risk-overview", label: nav?.items.riskOverview || "Executive Overview", icon: Activity },
+        { id: "recent-alerts", label: nav?.items.recentAlerts || "Recent Alerts", icon: AlertTriangle },
+        { id: "active-cases", label: nav?.items.activeCases || "Active Cases", icon: Briefcase },
       ],
     },
     {
-      title: "CONFIGURATION",
+      title: nav?.sections.configuration || "CONFIGURATION",
       items: [
-        { id: "rule-templates", label: "Rule Templates", icon: Sliders },
-        { id: "projects", label: "Projects & Integrations", icon: FolderKanban },
+        { id: "rule-templates", label: nav?.items.ruleTemplates || "Rule Templates", icon: Sliders },
+        { id: "projects", label: nav?.items.projects || "Projects & Integrations", icon: FolderKanban },
       ],
     },
     {
-      title: "ANALYTICS & COMPLIANCE",
+      title: nav?.sections.analyticsAudit || "ANALYTICS & COMPLIANCE",
       items: [
-        { id: "reports", label: "Reports & Performance", icon: FileText },
-        { id: "audit-trail", label: "Audit Trail", icon: History },
+        { id: "reports", label: nav?.items.reports || "Reports & Performance", icon: FileText },
+        { id: "audit-trail", label: nav?.items.auditTrail || "Audit Trail", icon: History },
       ],
     },
   ];
@@ -147,9 +151,10 @@ export function Sidebar({
   isCollapsed = false,
   onToggleCollapse,
 }: SidebarProps) {
+  const { t, language } = useLanguage();
   const navSections = useMemo(
-    () => getSectionsForRole(currentUser?.role),
-    [currentUser?.role],
+    () => getSectionsForRole(currentUser?.role, t),
+    [currentUser?.role, t],
   );
 
   return (
@@ -164,29 +169,29 @@ export function Sidebar({
             <Shield size={20} />
           </div>
           <div className={styles.logoText}>
-            <span className={styles.logoTitle}>FraudGuard</span>
+            <span className={styles.logoTitle}>{t.brandName}</span>
             <span className={styles.logoSub}>
               {currentUser?.role === "Platform Admin"
-                ? "Platform Admin"
+                ? t.roles.platformAdmin
                 : currentUser?.role === "Viewer"
-                ? "Auditor View"
+                ? t.roles.viewer
                 : currentUser?.role === "Operation"
-                ? "Operations Lead"
+                ? t.roles.operation
                 : currentUser?.role === "Investigator"
-                ? "Field Investigator"
-                : "SME Admin"}
+                ? t.roles.investigator
+                : t.roles.smeAdmin}
             </span>
           </div>
           <span className={styles.planBadge}>
             {currentUser?.role === "Platform Admin"
-              ? "Super"
+              ? t.roles.superBadge
               : currentUser?.role === "Viewer"
-              ? "Audit"
+              ? t.roles.auditBadge
               : currentUser?.role === "Operation"
-              ? "Ops"
+              ? t.roles.opsBadge
               : currentUser?.role === "Investigator"
-              ? "Field"
-              : "SME"}
+              ? t.roles.fieldBadge
+              : t.roles.smeBadge}
           </span>
         </div>
 
@@ -194,8 +199,24 @@ export function Sidebar({
           <button
             className={styles.sidebarCollapseBtn}
             onClick={onToggleCollapse}
-            title={isCollapsed ? "Mở rộng sidebar (Ctrl+B)" : "Thu gọn sidebar (Ctrl+B)"}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={
+              isCollapsed
+                ? language === "vi"
+                  ? "Mở rộng sidebar (Ctrl+B)"
+                  : "Expand sidebar (Ctrl+B)"
+                : language === "vi"
+                  ? "Thu gọn sidebar (Ctrl+B)"
+                  : "Collapse sidebar (Ctrl+B)"
+            }
+            aria-label={
+              isCollapsed
+                ? language === "vi"
+                  ? "Mở rộng thanh bên"
+                  : "Expand sidebar"
+                : language === "vi"
+                  ? "Thu gọn thanh bên"
+                  : "Collapse sidebar"
+            }
             type="button"
           >
             {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
@@ -240,19 +261,23 @@ export function Sidebar({
       <div className={styles.sidebarBottom}>
         <div
           className={styles.systemStatus}
-          title="Tất cả hệ thống hoạt động bình thường - AI & Rule Engine: Online"
+          title={language === "vi" ? "AI & Rule Engine: Trực tuyến" : "AI & Rule Engine: Online"}
         >
           <div className={styles.statusItem}>
             <span className={styles.statusDot} />
-            <span>Systems operational</span>
+            <span>{t.nav.systemOperational}</span>
           </div>
-          <div className={styles.statusSub}>AI & Rule Engine: Online</div>
+          <div className={styles.statusSub}>{t.nav.engineOnline}</div>
         </div>
 
         <a
           href="/login"
           className={styles.sidebarUserCard}
-          title={`Tài khoản: ${currentUser ? currentUser.name : "SME Admin"} (${currentUser ? currentUser.role : "Security Lead"}) - Click để Đăng xuất / Login`}
+          title={
+            language === "vi"
+              ? `Tài khoản: ${currentUser ? currentUser.name : "SME Admin"} (${currentUser ? currentUser.role : "Security Lead"}) - Bấm để Đăng xuất`
+              : `Account: ${currentUser ? currentUser.name : "SME Admin"} (${currentUser ? currentUser.role : "Security Lead"}) - Click to Log out`
+          }
         >
           <div
             className={styles.avatar}

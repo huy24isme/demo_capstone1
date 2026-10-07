@@ -5,6 +5,7 @@ import { Download, FileSpreadsheet } from "lucide-react";
 import type { FraudGuardFilters, TransactionRisk } from "./types";
 import { exportTransactionsCSV, downloadCSVTemplate } from "@/lib/export-csv";
 import { DataIngestionModal } from "./DataIngestionModal";
+import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface ToolbarProps {
@@ -43,6 +44,7 @@ export function DashboardToolbar({
   onChange,
   visibleTransactions,
 }: ToolbarProps) {
+  const { t } = useLanguage();
   const [ingestionModalOpen, setIngestionModalOpen] = useState(false);
 
   const patch = (next: Partial<FraudGuardFilters>) =>
@@ -54,11 +56,11 @@ export function DashboardToolbar({
         <div className={styles.toolbarGroup}>
           <select
             className={styles.control}
-            aria-label="Project"
+            aria-label={t.table.columns.projectType}
             value={filters.projectId}
             onChange={(event) => patch({ projectId: event.target.value })}
           >
-            <option value="all">Tất cả dự án</option>
+            <option value="all">{t.toolbar.allProjects}</option>
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.name}
@@ -68,13 +70,13 @@ export function DashboardToolbar({
 
           <select
             className={styles.control}
-            aria-label="Transaction type"
+            aria-label={t.toolbar.allTypes}
             value={filters.transactionType}
             onChange={(event) =>
               patch({ transactionType: event.target.value })
             }
           >
-            <option value="all">Tất cả loại giao dịch</option>
+            <option value="all">{t.toolbar.allTypes}</option>
             {transactionTypes.map((type) => (
               <option key={type}>{type}</option>
             ))}
@@ -82,7 +84,7 @@ export function DashboardToolbar({
 
           <select
             className={styles.control}
-            aria-label="Scoring source"
+            aria-label={t.toolbar.allSources}
             value={filters.scoringSource}
             onChange={(event) =>
               patch({
@@ -91,10 +93,10 @@ export function DashboardToolbar({
               })
             }
           >
-            <option value="all">Tất cả nguồn chấm điểm</option>
-            <option value="AI">AI Scoring (Paid)</option>
-            <option value="RULE">Rule Engine (Free)</option>
-            <option value="RULE_FALLBACK">Rule Fallback</option>
+            <option value="all">{t.toolbar.allSources}</option>
+            <option value="AI">{t.toolbar.aiPaid}</option>
+            <option value="RULE">{t.toolbar.ruleFree}</option>
+            <option value="RULE_FALLBACK">{t.toolbar.ruleFallback}</option>
           </select>
 
           {hasActiveFilters(filters) && (
@@ -103,47 +105,47 @@ export function DashboardToolbar({
               onClick={() => onChange(initialFilters)}
               type="button"
             >
-              Clear filters
+              {t.toolbar.clearFilters}
             </button>
           )}
         </div>
 
         <div className={styles.toolbarGroup}>
-          {/* Download CSV Template (Review 1 Feedback 1) */}
+          {/* Download CSV Template */}
           <button
             className={styles.button}
             onClick={downloadCSVTemplate}
-            title="Tải tệp CSV mẫu chuẩn theo đặc tả hệ thống"
+            title={t.toolbar.downloadCsvTemplateTitle}
             type="button"
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             <Download size={13} style={{ color: "var(--security-green)" }} />
-            Tải CSV Template
+            {t.toolbar.downloadCsvTemplate}
           </button>
 
           {/* Data Ingestion Spec & Upload Modal */}
           <button
             className={styles.button}
             onClick={() => setIngestionModalOpen(true)}
-            title="Xem đặc tả lược đồ dữ liệu và kiểm tra file đầu vào"
+            title={t.toolbar.dataIngestionSpecTitle}
             type="button"
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
             <FileSpreadsheet size={13} style={{ color: "var(--security-blue)" }} />
-            Data Ingestion Spec
+            {t.toolbar.dataIngestionSpec}
           </button>
 
           <select
             className={styles.control}
-            aria-label="Time range"
+            aria-label={t.toolbar.last30Days}
             value={filters.range}
             onChange={(event) =>
               patch({ range: Number(event.target.value) as 7 | 30 | 90 })
             }
           >
-            <option value={7}>7 ngày qua</option>
-            <option value={30}>30 ngày qua</option>
-            <option value={90}>90 ngày qua</option>
+            <option value={7}>{t.toolbar.last7Days}</option>
+            <option value={30}>{t.toolbar.last30Days}</option>
+            <option value={90}>{t.toolbar.last90Days}</option>
           </select>
 
           <button
@@ -151,7 +153,7 @@ export function DashboardToolbar({
             onClick={() => exportTransactionsCSV(visibleTransactions)}
             type="button"
           >
-            Xuất dữ liệu ({visibleTransactions.length})
+            {t.toolbar.exportData} ({visibleTransactions.length})
           </button>
         </div>
       </div>
