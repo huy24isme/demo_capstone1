@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import type { RuleLifecycleStatus, RuleTemplate } from "./types";
+import { useEffect, useState } from "react";
+import type { RuleTemplate } from "./types";
+import { evaluateSandboxRule, nextSandboxVersion } from "@/lib/rule-sandbox";
 import styles from "./SecurityDashboard.module.css";
 import { Play, Check, Sliders } from "lucide-react";
 import { useToast } from "./ToastProvider";
@@ -19,7 +20,7 @@ interface TestSampleTx {
   channel: string;
   deviceId: string;
   failCount: number;
-  addressReused: boolean;
+  addressReuseCount: number;
   expectedAnomaly: boolean;
   actualScore?: number;
   actualAnomaly?: boolean;
@@ -35,7 +36,7 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     channel: "COD",
     deviceId: "DEV_A291 (New)",
     failCount: 4,
-    addressReused: true,
+    addressReuseCount: 3,
     expectedAnomaly: true,
   },
   {
@@ -45,7 +46,7 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     channel: "COD",
     deviceId: "DEV_REGULAR_01",
     failCount: 0,
-    addressReused: false,
+    addressReuseCount: 1,
     expectedAnomaly: false,
   },
   {
@@ -55,7 +56,7 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     channel: "COD",
     deviceId: "DEV_A998 (New)",
     failCount: 5,
-    addressReused: true,
+    addressReuseCount: 3,
     expectedAnomaly: true,
   },
   {
@@ -65,7 +66,7 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     channel: "Online",
     deviceId: "DEV_KNOWN_55",
     failCount: 1,
-    addressReused: false,
+    addressReuseCount: 1,
     expectedAnomaly: false,
   },
   {
@@ -75,7 +76,7 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     channel: "COD",
     deviceId: "DEV_KNOWN_90",
     failCount: 0,
-    addressReused: true,
+    addressReuseCount: 3,
     expectedAnomaly: false,
   },
 ];
@@ -88,85 +89,86 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
   const [selectedRuleId, setSelectedRuleId] = useState(
     rules[0]?.id || "rule-cod-001",
   );
-  const [testDataset, setTestDataset] = useState<TestSampleTx[]>(SAMPLE_DATASET);
-  const [isRunning, setIsRunning] = useState(false);
-  const [hasRun, setHasRun] = useState(false);
-  const [riskPoints, setRiskPoints] = useState(25);
-  const [threshold, setThreshold] = useState(25);
+  const [results, setResults] = useState<TestSampleTx[]>([]);
+  const [testedSignature, setTestedSignature] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [riskPoints, setRiskPoints] = useState(rules[0]?.riskPoints ?? 25);
+  const [threshold, setThreshold] = useState(rules[0]?.threshold ?? 25);
 
   const selectedRule = rules.find((r) => r.id === selectedRuleId) || rules[0];
+  const signature = JSON.stringify({ selectedRule, riskPoints, threshold });
+  const hasRun = testedSignature === signature;
+  const testDataset = hasRun ? results : SAMPLE_DATASET;
+  const passedCount = hasRun ? results.filter((tx) => tx.status === "PASSED").length : 0;
+  const nextVersion = selectedRule ? nextSandboxVersion(selectedRule.version) : null;
+  const canPublish = !!onPublishRule && !!selectedRule && !!nextVersion && hasRun && results.length > 0 && passedCount === results.length;
+
+  useEffect(() => {
+    setRiskPoints(selectedRule?.riskPoints ?? 25);
+    setThreshold(selectedRule?.threshold ?? 25);
+    setTestedSignature(null);
+    setError("");
+  }, [selectedRule]);
 
   const handleRunSandboxTest = () => {
-    setIsRunning(true);
-    setTimeout(() => {
-      const evaluated = testDataset.map((item) => {
-        let score = 10;
-        const triggered: string[] = [];
-
-        if (item.amount > 10000000 && item.channel === "COD") {
-          score += riskPoints;
-          triggered.push("High Transaction Amount");
-        }
-        if (item.deviceId.includes("New")) {
-          score += 20;
-          triggered.push("New Device");
-        }
-        if (item.failCount >= 4) {
-          score += 30;
-          triggered.push("4 Failed Transactions in 24 Hours");
-        }
-        if (item.addressReused) {
-          score += 15;
-          triggered.push("Address Reuse");
-        }
-
-        const isAnomaly = score >= 75;
-        const passed = isAnomaly === item.expectedAnomaly;
-
+    if (!selectedRule) return;
+    setError("");
+    setTestedSignature(null);
+    try {
+      const evaluated = SAMPLE_DATASET.map((item): TestSampleTx => {
+        const result = evaluateSandboxRule(selectedRule, {
+          projectId: "proj-abc-cod",
+          transactionType: "payment",
+          fields: {
+            amount: item.amount,
+            currency: "VND",
+            channel: item.channel,
+            "device.is_new": item.deviceId.includes("(New)"),
+            "velocity.failed_tx.24h": item.failCount,
+            "identity.address_reuse_count": item.addressReuseCount,
+          },
+        }, riskPoints, threshold);
         return {
           ...item,
-          actualScore: score,
-          actualAnomaly: isAnomaly,
-          triggered,
-          status: passed ? ("PASSED" as const) : ("FAILED" as const),
+          ...result,
+          status: result.actualAnomaly === item.expectedAnomaly ? "PASSED" : "FAILED",
         };
       });
-
-      setTestDataset(evaluated);
-      setIsRunning(false);
-      setHasRun(true);
+      const passed = evaluated.filter((item) => item.status === "PASSED").length;
+      setResults(evaluated);
+      setTestedSignature(signature);
       toast(
-        "success",
+        passed === evaluated.length ? "success" : "error",
         language === "vi"
-          ? "Đã hoàn thành kiểm thử Sandbox trên 5 giao dịch mẫu. 100% test cases khớp expected result!"
-          : "Sandbox testing complete on 5 samples. 100% match expected results!",
+          ? `${passed}/${evaluated.length} mẫu khớp kỳ vọng (${Math.round(passed / evaluated.length * 100)}%).`
+          : `${passed}/${evaluated.length} samples match expectations (${Math.round(passed / evaluated.length * 100)}%).`,
       );
-    }, 600);
+    } catch (cause) {
+      setResults([]);
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
   };
 
   const handlePublishVersion = () => {
-    if (!selectedRule) return;
+    if (!canPublish || !selectedRule || !nextVersion || !onPublishRule) return;
     const updatedRule: RuleTemplate = {
       ...selectedRule,
-      version: "v2.0",
-      status: "Published" as RuleLifecycleStatus,
+      version: nextVersion,
+      status: "Published",
       riskPoints,
       threshold,
       publishedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    if (onPublishRule) {
-      onPublishRule(updatedRule);
-    }
+    onPublishRule(updatedRule);
+    setTestedSignature(null);
     toast(
       "success",
       language === "vi"
-        ? `Đã phát hành phiên bản ${updatedRule.version} lên môi trường Production của ABC Fashion!`
-        : `Published version ${updatedRule.version} to ABC Fashion Production!`,
+        ? `Đã cập nhật ${selectedRule.name} lên ${updatedRule.version} trong bản demo.`
+        : `Updated ${selectedRule.name} to ${updatedRule.version} in this demo.`,
     );
   };
-
-  const passedCount = testDataset.filter((tx) => tx.status === "PASSED").length;
 
   return (
     <>
@@ -212,7 +214,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
             className={styles.statValue}
             style={{ fontSize: 22, color: "var(--security-orange)" }}
           >
-            v2.0 (Testing)
+            {nextVersion ?? "-"} (Testing)
           </strong>
           <span className={styles.statDescription}>
             {t.ruleTestingView.kpis.sandboxVersionDesc}
@@ -224,10 +226,10 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
           </div>
           <strong
             className={styles.statValue}
-            style={{ color: "var(--security-green)" }}
+            style={{ color: hasRun && passedCount !== testDataset.length ? "var(--security-red)" : "var(--security-green)" }}
           >
             {hasRun
-              ? `${(passedCount / testDataset.length) * 100}%`
+              ? `${Math.round((passedCount / testDataset.length) * 100)}%`
               : t.ruleTestingView.kpis.validationWaiting}
           </strong>
           <span className={styles.statDescription}>
@@ -261,7 +263,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
             <button
               className={styles.button}
               onClick={handleRunSandboxTest}
-              disabled={isRunning}
+              disabled={!selectedRule}
               type="button"
               style={{
                 background: "rgba(113, 185, 244, 0.15)",
@@ -274,15 +276,13 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               }}
             >
               <Play size={14} />
-              {isRunning
-                ? t.ruleTestingView.controls.running
-                : t.ruleTestingView.controls.btnRun}
+              {t.ruleTestingView.controls.btnRun}
             </button>
 
             <button
               className={styles.drawerPrimaryBtn}
               onClick={handlePublishVersion}
-              disabled={!hasRun || isRunning}
+              disabled={!canPublish}
               type="button"
               style={{
                 background: "linear-gradient(135deg, #059669, #10b981)",
@@ -292,7 +292,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               }}
             >
               <Check size={16} />
-              {t.ruleTestingView.controls.btnPublish.replace("{version}", "v2.0")}
+              {t.ruleTestingView.controls.btnPublish.replace("{version}", nextVersion ?? "?")}
             </button>
           </div>
         </div>
@@ -307,16 +307,19 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
         >
           <div>
             <label
+              htmlFor="sandbox-rule"
               className={styles.drawerLabel}
               style={{ display: "block", marginBottom: 6 }}
             >
               {t.ruleTestingView.controls.selectRule}
             </label>
             <select
+              id="sandbox-rule"
               className={styles.control}
               style={{ width: "100%" }}
-              value={selectedRuleId}
-              onChange={(e) => setSelectedRuleId(e.target.value)}
+              value={selectedRule?.id ?? ""}
+              disabled={!rules.length}
+              onChange={(e) => { setSelectedRuleId(e.target.value); setTestedSignature(null); setError(""); }}
             >
               {rules.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -328,6 +331,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
 
           <div>
             <label
+              htmlFor="sandbox-points"
               className={styles.drawerLabel}
               style={{ display: "block", marginBottom: 6 }}
             >
@@ -337,18 +341,20 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               )}
             </label>
             <input
+              id="sandbox-points"
               type="range"
-              min="10"
-              max="50"
-              step="5"
+              min="1"
+              max="100"
+              step="1"
               value={riskPoints}
-              onChange={(e) => setRiskPoints(Number(e.target.value))}
+              onChange={(e) => { setRiskPoints(Number(e.target.value)); setTestedSignature(null); setError(""); }}
               style={{ width: "100%", accentColor: "var(--security-orange)" }}
             />
           </div>
 
           <div>
             <label
+              htmlFor="sandbox-threshold"
               className={styles.drawerLabel}
               style={{ display: "block", marginBottom: 6 }}
             >
@@ -358,17 +364,29 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               )}
             </label>
             <input
+              id="sandbox-threshold"
               type="range"
-              min="10"
-              max="60"
-              step="5"
+              min="1"
+              max="100"
+              step="1"
               value={threshold}
-              onChange={(e) => setThreshold(Number(e.target.value))}
+              onChange={(e) => { setThreshold(Number(e.target.value)); setTestedSignature(null); setError(""); }}
               style={{ width: "100%", accentColor: "var(--security-blue)" }}
             />
           </div>
         </div>
       </div>
+
+      <p className={styles.muted}>
+        {language === "vi"
+          ? "Thử riêng rule đã chọn trên 5 giao dịch thanh toán mẫu của ABC Fashion, kể cả rule đang tắt. Điểm bằng điểm rule khi khớp, bằng 0 khi không khớp; so với ngưỡng đang chọn. Nhãn kỳ vọng được giữ nguyên. Chỉ phát hành trong demo khi tất cả mẫu đạt."
+          : "Test only the selected rule on 5 sample ABC Fashion payments, including disabled rules. A match contributes the rule points; otherwise the score is 0. Compare with the selected threshold. Expected labels stay fixed. Publishing in the demo requires all samples to pass."}
+      </p>
+      {!selectedRule && <p role="status">{language === "vi" ? "Chưa có rule để kiểm thử." : "No rules available to test."}</p>}
+      {selectedRule && !nextVersion && <p role="alert">{language === "vi" ? "Phiên bản rule không hợp lệ. Không thể phát hành." : "Invalid rule version. Publishing is unavailable."}</p>}
+      {error && <p role="alert" style={{ color: "var(--security-red)" }}>
+        {language === "vi" ? "Không thể kiểm thử. Kiểm tra trường dữ liệu mẫu và điều kiện rule: " : "Cannot run the test. Check sample fields and rule conditions: "}{error}
+      </p>}
 
       {/* Test Results Table */}
       <section
