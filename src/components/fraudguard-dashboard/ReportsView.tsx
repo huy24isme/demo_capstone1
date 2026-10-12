@@ -151,19 +151,18 @@ export function ReportsView({
     return transactions.filter(
       (tx) =>
         tx.caseId &&
-        (tx.assignedInvestigator === investigatorName ||
-          tx.assignedInvestigator === "Nguyễn Văn An"),
+        (tx.assignedInvestigator === investigatorName),
     );
   }, [transactions, isInvestigator, investigatorName]);
 
   const filteredInvestigatorCases = useMemo(() => {
-    const now = new Date("2026-09-17T16:00:00Z");
+    const now = new Date();
     const cutoff = new Date(now.getTime() - range * 24 * 60 * 60 * 1000);
 
     return investigatorCases
       .filter((tx) => {
         const d = new Date(tx.processedAt);
-        if (d < cutoff) return false;
+        if (!Number.isFinite(d.getTime()) || d < cutoff || d > now) return false;
         if (filterProject !== "all" && tx.projectId !== filterProject) return false;
         if (filterStatus !== "all" && tx.caseStatus !== filterStatus) return false;
         if (filterFinding !== "all") {
@@ -179,31 +178,31 @@ export function ReportsView({
   }, [investigatorCases, range, filterProject, filterStatus, filterFinding]);
 
   const investigatorStats = useMemo(() => {
-    const total = investigatorCases.length;
-    const reported = investigatorCases.filter(
+    const total = filteredInvestigatorCases.length;
+    const reported = filteredInvestigatorCases.filter(
       (tx) => tx.caseStatus === "Reported",
     ).length;
-    const confirmedFraud = investigatorCases.filter(
+    const confirmedFraud = filteredInvestigatorCases.filter(
       (tx) => tx.caseStatus === "Confirmed Fraud",
     ).length;
-    const falseAlarm = investigatorCases.filter(
+    const falseAlarm = filteredInvestigatorCases.filter(
       (tx) => tx.caseStatus === "False Alarm",
     ).length;
-    const investigating = investigatorCases.filter(
+    const investigating = filteredInvestigatorCases.filter(
       (tx) => tx.caseStatus === "Investigating",
     ).length;
-    const resolved = investigatorCases.filter(
+    const resolved = filteredInvestigatorCases.filter(
       (tx) => tx.caseStatus === "Resolved",
     ).length;
 
     // Finding breakdown
-    const suspiciousFindings = investigatorCases.filter(
+    const suspiciousFindings = filteredInvestigatorCases.filter(
       (tx) => tx.investigationReport?.finding === "Suspicious",
     ).length;
-    const legitimateFindings = investigatorCases.filter(
+    const legitimateFindings = filteredInvestigatorCases.filter(
       (tx) => tx.investigationReport?.finding === "Legitimate",
     ).length;
-    const needMoreInfoFindings = investigatorCases.filter(
+    const needMoreInfoFindings = filteredInvestigatorCases.filter(
       (tx) => tx.investigationReport?.finding === "Need More Info",
     ).length;
 
@@ -218,7 +217,7 @@ export function ReportsView({
       legitimateFindings,
       needMoreInfoFindings,
     };
-  }, [investigatorCases]);
+  }, [filteredInvestigatorCases]);
 
   /* ─────────────────────────────────────────────────────────────
      EXECUTIVE / MACRO DATA & LOGIC (Non-Investigator roles)
@@ -231,12 +230,12 @@ export function ReportsView({
   }, [transactions, investigatorCases, isInvestigator]);
 
   const filteredMacro = useMemo(() => {
-    const now = new Date("2026-09-17T16:00:00Z");
+    const now = new Date();
     const cutoff = new Date(now.getTime() - range * 24 * 60 * 60 * 1000);
 
     return transactions.filter((tx) => {
       const d = new Date(tx.processedAt);
-      if (d < cutoff) return false;
+      if (!Number.isFinite(d.getTime()) || d < cutoff || d > now) return false;
       if (filterProject !== "all" && tx.projectId !== filterProject) return false;
       return true;
     });
@@ -295,12 +294,13 @@ export function ReportsView({
       {
         name: t.reportsView.execCharts.legendOpen,
         count: filteredMacro.filter(
-          (tx) => !tx.caseStatus || tx.caseStatus === "Open",
+          (tx) => !!tx.caseId && tx.caseStatus === "Open",
         ).length,
         color: "#ad8af3",
       },
+      { name: language === "vi" ? "Đã xử lý" : "Resolved", count: filteredMacro.filter(tx => !!tx.caseId && tx.caseStatus === "Resolved").length, color: "#71b9f4" },
     ].filter((d) => d.count > 0);
-  }, [filteredMacro, t]);
+  }, [filteredMacro, t, language]);
 
   const scoringData = useMemo(() => {
     return [

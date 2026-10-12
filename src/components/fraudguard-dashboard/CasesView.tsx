@@ -140,8 +140,7 @@ export function CasesView({
   const myAssignedCases = useMemo(() => {
     return allCases.filter(
       (t) =>
-        t.assignedInvestigator === investigatorName ||
-        t.assignedInvestigator === "Nguyễn Văn An",
+        t.assignedInvestigator === investigatorName,
     );
   }, [allCases, investigatorName]);
 
@@ -195,6 +194,7 @@ export function CasesView({
   }, [myAssignedCases, invTab, filterProject]);
 
   const handleAcceptCase = (tx: TransactionRisk) => {
+    if (tx.assignedInvestigator !== investigatorName || tx.caseStatus !== "Assigned") return;
     const updated: TransactionRisk = {
       ...tx,
       caseStatus: "Investigating",

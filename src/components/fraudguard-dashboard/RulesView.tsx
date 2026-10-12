@@ -7,7 +7,9 @@ import type {
   RolePermissions,
   RuleConditionNode,
   RuleTemplate,
+  TransactionRisk,
 } from "./types";
+import { candidateRule, saveRuleDraft } from "@/lib/rule-lifecycle";
 import { RuleBuilder } from "./RuleBuilder";
 import { RuleDetailDrawer } from "./RuleDetailDrawer";
 import { useToast } from "./ToastProvider";
@@ -15,6 +17,7 @@ import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RulesViewProps {
+  transactions?: TransactionRisk[];
   initialRules: RuleTemplate[];
   onRulesChange: React.Dispatch<React.SetStateAction<RuleTemplate[]>>;
   permissions?: RolePermissions;
@@ -84,7 +87,7 @@ function renderConditions(
   );
 }
 
-export function RulesView({ initialRules, onRulesChange, permissions }: RulesViewProps) {
+export function RulesView({ initialRules, onRulesChange, permissions, onNavigateToTesting, transactions }: RulesViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const canManage = permissions ? permissions.canManageRules : true;
@@ -99,27 +102,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
   const [ruleTierTab, setRuleTierTab] = useState<"all" | "system" | "custom">("all");
   const isSystemRule = (r: RuleTemplate) => r.category !== "custom";
 
-  // Dry-run Simulation state
-  const [dryRunOpen, setDryRunOpen] = useState(false);
-  const [dryRunLoading, setDryRunLoading] = useState(false);
-
-  const handleStartDryRun = () => {
-    setDryRunOpen(true);
-    setDryRunLoading(true);
-    setTimeout(() => {
-      setDryRunLoading(false);
-    }, 700);
-  };
-
-  // Escape key handler for dry-run modal
-  useEffect(() => {
-    if (!dryRunOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDryRunOpen(false);
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dryRunOpen]);
+  const handleStartDryRun = () => { if (permissions?.canAccessRuleTesting) onNavigateToTesting?.(); };
 
   // Detail Drawer state
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
@@ -145,6 +128,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
   });
 
   const handleToggle = (ruleId: string) => {
+    if (!canManage || rules.find(r => r.id === ruleId)?.status !== "Published") return;
     setRules((prev) =>
       prev.map((r) =>
         r.id === ruleId
@@ -174,7 +158,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
   };
 
   const handleEdit = (rule: RuleTemplate) => {
-    setEditingRule(rule);
+    setEditingRule({ ...candidateRule(rule), status: "Draft" });
     setBuilderOpen(true);
   };
 
@@ -184,6 +168,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
       id: `rule-${Date.now()}`,
       name: `${rule.name} (Copy)`,
       enabled: false,
+      status: "Draft", version: "v1.0", draft: undefined, history: [], publishedAt: undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -211,25 +196,26 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
 
   const handleSave = useCallback(
     (saved: RuleTemplate) => {
+      if (!canManage) return;
       setRules((prev) => {
         const exists = prev.find((r) => r.id === saved.id);
         if (exists) {
-          return prev.map((r) => (r.id === saved.id ? saved : r));
+          return prev.map((r) => (r.id === saved.id ? saveRuleDraft(r, saved) : r));
         }
-        return [...prev, saved];
+        return [...prev, saveRuleDraft(undefined, saved)];
       });
       toast(
         "success",
         editingRule
           ? language === "vi"
-            ? `Đã cập nhật quy tắc "${saved.name}"`
-            : `Rule "${saved.name}" updated`
+            ? `Đã lưu bản nháp quy tắc "${saved.name}"`
+            : `Rule "${saved.name}" draft saved`
           : language === "vi"
           ? `Đã tạo quy tắc "${saved.name}"`
           : `Rule "${saved.name}" created`,
       );
     },
-    [editingRule, toast, language, setRules],
+    [editingRule, toast, language, setRules, canManage],
   );
 
   const systemRulesCount = rules.filter(isSystemRule).length;
@@ -251,6 +237,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
         <div style={{ display: "flex", gap: 10 }}>
           <button
             className={styles.btnSecondary}
+            disabled={!permissions?.canAccessRuleTesting}
             onClick={handleStartDryRun}
             type="button"
             style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
@@ -261,7 +248,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
             className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
             onClick={() => canManage && handleCreate()}
             disabled={!canManage}
-            title={!canManage ? "SME Admin permission required" : undefined}
+            title={!canManage ? "Platform Admin permission required" : undefined}
             type="button"
           >
             {t.rulesView.btnNewRule}
@@ -408,7 +395,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
                         borderColor: "#2d5a7b",
                       }}
                     >
-                      {rule.version || "v1.0"}
+                      {rule.version || "v1.0"}{rule.draft ? (language === "vi" ? " · Có bản nháp" : " · Draft pending") : ""}
                     </span>
                     <span
                       style={{
@@ -486,7 +473,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
                   <button
                     className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                     onClick={() => canManage && handleToggle(rule.id)}
-                    disabled={!canManage}
+                    disabled={!canManage || rule.status !== "Published"}
                     title={!canManage ? "SME Admin permission required" : undefined}
                     style={{ minWidth: 70 }}
                     type="button"
@@ -598,6 +585,7 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
 
       {/* Rule Detail Drawer */}
       <RuleDetailDrawer
+        transactions={transactions}
         rule={selectedRuleForDetail}
         open={detailDrawerOpen}
         onClose={() => setDetailDrawerOpen(false)}
@@ -617,250 +605,6 @@ export function RulesView({ initialRules, onRulesChange, permissions }: RulesVie
       />
 
       {/* Dry-run Simulation Modal */}
-      {dryRunOpen && (
-        <div
-          className={styles.builderOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setDryRunOpen(false);
-          }}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Dry-run Test Results"
-        >
-          <div
-            className={styles.builderModal}
-            style={{ maxWidth: 660 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.builderHeader}>
-              <h2 className={styles.builderTitle}>
-                {t.rulesView.dryRunModal.title}
-              </h2>
-              <button
-                className={styles.drawerCloseBtn}
-                onClick={() => setDryRunOpen(false)}
-                aria-label="Close"
-                type="button"
-              >
-                ✕
-              </button>
-            </div>
-            <div className={styles.builderBody}>
-              {dryRunLoading ? (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "36px 20px",
-                    color: "var(--security-blue)",
-                  }}
-                >
-                  <div style={{ fontSize: 13, marginBottom: 12 }}>
-                    {t.rulesView.dryRunModal.scanning}
-                  </div>
-                  <div
-                    className="skeleton"
-                    style={{
-                      height: 6,
-                      borderRadius: 3,
-                      width: "65%",
-                      margin: "0 auto",
-                    }}
-                  />
-                </div>
-              ) : (
-                <div>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(3, 1fr)",
-                      gap: 12,
-                      marginBottom: 16,
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: "var(--security-control)",
-                        padding: 12,
-                        borderRadius: 6,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{ fontSize: 11, color: "var(--security-muted)" }}
-                      >
-                        {t.rulesView.dryRunModal.statAudited}
-                      </div>
-                      <div style={{ fontSize: 20, fontWeight: 700 }}>100</div>
-                    </div>
-                    <div
-                      style={{
-                        background: "rgba(237, 103, 117, 0.15)",
-                        border: "1px solid var(--critical-border)",
-                        padding: 12,
-                        borderRadius: 6,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--critical-text)",
-                        }}
-                      >
-                        {t.rulesView.dryRunModal.statAnomaly}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 700,
-                          color: "var(--critical-text)",
-                        }}
-                      >
-                        8 (8.0%)
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        background: "rgba(120, 201, 172, 0.15)",
-                        border: "1px solid #3f665a",
-                        padding: 12,
-                        borderRadius: 6,
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--security-green)",
-                        }}
-                      >
-                        {t.rulesView.dryRunModal.statNormal}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 700,
-                          color: "var(--security-green)",
-                        }}
-                      >
-                        92 (92.0%)
-                      </div>
-                    </div>
-                  </div>
-
-                  <h4
-                    style={{
-                      fontSize: 11,
-                      color: "var(--security-text-secondary)",
-                      marginBottom: 8,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {t.rulesView.dryRunModal.topTriggered}
-                  </h4>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "8px 12px",
-                        background: "var(--security-control)",
-                        borderRadius: 4,
-                      }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 500 }}>
-                        Velocity Check
-                      </span>
-                      <span
-                        className={styles.badge}
-                        style={{
-                          background: "rgba(237, 103, 117, 0.2)",
-                          color: "#ed6775",
-                          borderColor: "#ed6775",
-                        }}
-                      >
-                        {t.rulesView.dryRunModal.timesTriggered.replace("{count}", "4")}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "8px 12px",
-                        background: "var(--security-control)",
-                        borderRadius: 4,
-                      }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 500 }}>
-                        Amount Threshold
-                      </span>
-                      <span
-                        className={styles.badge}
-                        style={{
-                          background: "rgba(237, 103, 117, 0.2)",
-                          color: "#ed6775",
-                          borderColor: "#ed6775",
-                        }}
-                      >
-                        {t.rulesView.dryRunModal.timesTriggered.replace("{count}", "3")}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "8px 12px",
-                        background: "var(--security-control)",
-                        borderRadius: 4,
-                      }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 500 }}>
-                        EdTech Excessive Refund
-                      </span>
-                      <span
-                        className={styles.badge}
-                        style={{
-                          background: "rgba(237, 103, 117, 0.2)",
-                          color: "#ed6775",
-                          borderColor: "#ed6775",
-                        }}
-                      >
-                        {t.rulesView.dryRunModal.timesTriggered.replace("{count}", "1")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 14,
-                      padding: "10px 14px",
-                      background: "rgba(113, 185, 244, 0.1)",
-                      border: "1px solid var(--security-blue)",
-                      borderRadius: 6,
-                      fontSize: 12,
-                    }}
-                  >
-                    {t.rulesView.dryRunModal.evaluationNote.replace("{rate}", "8.0")}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className={styles.builderFooter}>
-              <button
-                className={styles.btnSecondary}
-                onClick={() => setDryRunOpen(false)}
-                type="button"
-              >
-                {t.rulesView.dryRunModal.btnClose}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

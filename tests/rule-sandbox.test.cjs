@@ -17,6 +17,7 @@ function load(relative, imports = {}) {
 }
 const engine = load('src/lib/rule-sandbox.ts');
 const { evaluateSandboxRule: evaluate, nextSandboxVersion } = engine;
+const lifecycle = load('src/lib/rule-lifecycle.ts', { './rule-sandbox': engine });
 const rules = load('src/data/fraudguard-rules.ts').fraudGuardRules;
 const condition = (field, operator, value) => ({ type: 'condition', id: field, field, operator, value });
 const group = (logic, children) => ({ type: 'group', id: 'group', logic, children });
@@ -87,7 +88,7 @@ function harness(initialRules = rules, withPublisher = true) {
   };
   const translations = load('src/components/fraudguard-dashboard/i18n/translations.ts').translations;
   const component = load('src/components/fraudguard-dashboard/RuleTestingView.tsx', {
-    react, '@/lib/rule-sandbox': engine, './SecurityDashboard.module.css': { default: {} },
+    react, '@/lib/rule-sandbox': engine, '@/lib/rule-lifecycle': lifecycle, './SecurityDashboard.module.css': { default: {} },
     'lucide-react': { Play: 'icon', Check: 'icon', Sliders: 'icon' },
     './ToastProvider': { useToast: () => ({ toast: (...args) => toasts.push(args) }) },
     './i18n/LanguageContext': { useLanguage: () => ({ language: 'en', t: translations.en }) },
@@ -106,7 +107,7 @@ function harness(initialRules = rules, withPublisher = true) {
 }
 
 test('publish requires a passing current test; changing rules invalidates even if reverted', () => {
-  const ui = harness();
+  const ui = harness(rules.map(r => lifecycle.saveRuleDraft(r, { ...r, description: r.description + " revised" })));
   assert.equal(ui.action('handlePublishVersion').props.disabled, true);
   ui.click('handleRunSandboxTest');
   assert.match(ui.toasts.at(-1)[1], /5\/5/);
@@ -177,4 +178,78 @@ test('CSV exports classification, source and explanation without a score', async
   assert.match(csv, /"Abnormal"/);
   assert.match(csv, /"rule-a; rule-b"/);
   assert.match(csv, /"Matched ""amount"", review required"/);
+});
+
+test('draft edits never overwrite the active definition; publication preserves history and activation', () => {
+  const live = rules[0];
+  const edited = { ...live, name: 'Changed', conditionGroup: group('AND', [condition('amount', '>', 15000000)]) };
+  const saved = lifecycle.saveRuleDraft(live, edited);
+  assert.equal(saved.name, live.name);
+  assert.equal(saved.conditionGroup, live.conditionGroup);
+  assert.equal(saved.draft.name, 'Changed');
+  const published = lifecycle.publishRuleDraft(saved);
+  assert.equal(published.name, 'Changed');
+  assert.equal(published.version, 'v1.1');
+  assert.equal(published.history[0].name, live.name);
+  assert.equal(published.enabled, live.enabled);
+  assert.throws(() => lifecycle.publishRuleDraft(published), /No draft/);
+});
+test('new rule first publication is v1.0 and disabled; forged lifecycle fields are discarded on save', () => {
+  const saved = lifecycle.saveRuleDraft(undefined, { ...rules[0], version: 'v99.9', enabled: true });
+  assert.equal(saved.status, 'Draft');
+  assert.equal(saved.enabled, false);
+  assert.equal(saved.version, 'v1.0');
+  const published = lifecycle.publishRuleDraft(saved);
+  assert.equal(published.version, 'v1.0');
+  assert.equal(published.enabled, false);
+});
+test('unchanged published rule cannot be republished after a passing sandbox run', () => {
+  const ui = harness(); ui.click('handleRunSandboxTest');
+  assert.equal(ui.action('handlePublishVersion').props.disabled, true);
+});
+
+const ingestion = load('src/lib/ingestion-validation.ts');
+test('CSV and JSON validation reads content and rejects incomplete transactions', () => {
+  const row = { timestamp: '2026-10-12T01:00:00Z', amount: 100, currency: 'VND', transaction_type: 'payment', user_hash: 'user,one' };
+  assert.equal(ingestion.validateIngestion(JSON.stringify([row]), 'sample.json'), 1);
+  assert.equal(ingestion.validateIngestion('timestamp,amount,currency,transaction_type,user_hash\r\n2026-10-12T01:00:00Z,100,VND,payment,"user,one"', 'sample.csv'), 1);
+  assert.throws(() => ingestion.validateIngestion(JSON.stringify([{ ...row, amount: -1 }]), 'sample.json'), /Invalid/);
+  assert.throws(() => ingestion.validateIngestion(JSON.stringify([{}]), 'sample.json'), /Missing/);
+  assert.throws(() => ingestion.validateIngestion('timestamp,amount\n"unfinished', 'sample.csv'), /Unclosed/);
+  assert.throws(() => ingestion.validateIngestion('[]', 'sample.xlsx'), /CSV/);
+});
+test('saving an unchanged published definition does not create a publishable draft', () => {
+  assert.equal(lifecycle.saveRuleDraft(rules[0], { ...rules[0] }).draft, undefined);
+});
+
+test('custom dataset supports new rules, rejects out-of-scope samples, and edits invalidate publication', () => {
+  const draft = lifecycle.saveRuleDraft(undefined, { ...rules[0], id: 'custom-qa', appliesTo: { projects: ['qa'], transactionTypes: ['payment'] }, conditionGroup: group('AND', [condition('amount', '>', 10)]) });
+  const ui = harness([draft]);
+  const sample = { id: 'one', ref: 'QA-1', projectId: 'qa', transactionType: 'payment', fields: { amount: 11 }, expectedAnomaly: true };
+  ui.change('sandbox-dataset', JSON.stringify([sample])); ui.click('handleRunSandboxTest');
+  assert.equal(ui.action('handlePublishVersion').props.disabled, false);
+  ui.change('sandbox-dataset', JSON.stringify([{ ...sample, projectId: 'wrong' }]));
+  assert.equal(ui.action('handlePublishVersion').props.disabled, true);
+  ui.click('handleRunSandboxTest');
+  assert.ok(ui.nodes().some(n => n.props.role === 'alert' && JSON.stringify(n.props.children).includes('scope')));
+});
+
+const cases = load('src/lib/case-workflow.ts');
+test('case mutations require the assigned investigator and nonempty authored findings', () => {
+  const previous = { id: 'tx', caseId: 'case', caseStatus: 'Investigating', assignedInvestigator: 'Owner', riskLevel: 'Abnormal' };
+  const owner = { role: 'Investigator', name: 'Owner' };
+  const report = { ...previous, caseStatus: 'Reported', investigationReport: { notes: 'Observed evidence', submittedBy: 'Owner' } };
+  assert.equal(cases.canUpdateCase(previous, report, owner), true);
+  assert.equal(cases.canUpdateCase(previous, report, { ...owner, name: 'Other' }), false);
+  assert.equal(cases.canUpdateCase(previous, { ...report, investigationReport: { notes: ' ', submittedBy: 'Owner' } }, owner), false);
+  for (const role of ['Viewer', 'Platform Admin']) assert.equal(cases.canUpdateCase(previous, report, { role, name: 'Owner' }), false);
+});
+test('final case decisions need a reason; closed cases and normal transactions cannot be mutated', () => {
+  const previous = { id: 'tx', caseId: 'case', caseStatus: 'Open', riskLevel: 'Abnormal' };
+  const actor = { role: 'Operation', name: 'Lead' };
+  const final = { ...previous, caseStatus: 'Confirmed Fraud', caseDecision: { directive: 'Reviewed evidence' } };
+  assert.equal(cases.canUpdateCase(previous, final, actor), true);
+  assert.equal(cases.canUpdateCase(previous, { ...final, caseDecision: { directive: '' } }, actor), false);
+  assert.equal(cases.canUpdateCase(final, { ...final, caseStatus: 'Assigned', assignedInvestigator: 'Owner' }, actor), false);
+  assert.equal(cases.canUpdateCase({ id: 'tx', riskLevel: 'Normal' }, previous, actor), false);
 });

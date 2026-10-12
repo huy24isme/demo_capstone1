@@ -141,6 +141,8 @@ export interface RuleTemplate {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  draft?: Omit<RuleTemplate, "draft" | "history">;
+  history?: Omit<RuleTemplate, "draft" | "history">[];
 }
 
 /* ── View types ── */
@@ -181,6 +183,8 @@ export interface ProjectItem {
 
 export type AuditAction =
   | "CASE_STATUS_UPDATED"
+  | "RULE_UPDATED"
+  | "PROJECT_UPDATED"
   | "RULE_CREATED"
   | "RULE_TOGGLED"
   | "RULE_DELETED"

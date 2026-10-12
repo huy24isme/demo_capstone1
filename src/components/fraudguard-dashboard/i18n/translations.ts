@@ -367,6 +367,8 @@ const rawTranslations = {
     "actions": {
       "caseStatusUpdated": "Cập nhật trạng thái ca",
       "ruleCreated": "Tạo quy tắc mới",
+      "ruleUpdated": "Cập nhật quy tắc",
+      "projectUpdated": "Cập nhật dự án",
       "ruleToggled": "Bật/Tắt quy tắc",
       "ruleDeleted": "Xóa quy tắc",
       "apiKeyGenerated": "Tạo khóa API",
@@ -1121,6 +1123,8 @@ const rawTranslations = {
     "actions": {
       "caseStatusUpdated": "Case Status Updated",
       "ruleCreated": "Rule Created",
+      "ruleUpdated": "Rule Updated",
+      "projectUpdated": "Project Updated",
       "ruleToggled": "Rule Toggled",
       "ruleDeleted": "Rule Deleted",
       "apiKeyGenerated": "API Key Generated",

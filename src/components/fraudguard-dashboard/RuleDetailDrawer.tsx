@@ -14,12 +14,14 @@ import type {
   RolePermissions,
   RuleConditionNode,
   RuleTemplate,
+  TransactionRisk,
 } from "./types";
 import { fraudGuardTransactions } from "@/data/fraudguard-transactions";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RuleDetailDrawerProps {
+  transactions?: TransactionRisk[];
   rule: RuleTemplate | null;
   open: boolean;
   onClose: () => void;
@@ -102,6 +104,7 @@ function renderConditionHierarchy(
 
 export function RuleDetailDrawer({
   rule,
+  transactions = fraudGuardTransactions,
   open,
   onClose,
   onEdit,
@@ -129,12 +132,14 @@ export function RuleDetailDrawer({
   // Derived Performance Metrics for this Rule
   const metrics = useMemo(() => {
     if (!rule) return null;
-    const seed = rule.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    const triggers = 28 + (seed % 65);
-    const falsePositives = Math.max(1, Math.round(triggers * (0.04 + (seed % 6) * 0.01)));
-    const confirmedFraud = triggers - falsePositives;
-    const precision = Math.round((confirmedFraud / triggers) * 100);
-    const blockedAmountVND = (triggers * (3500000 + (seed % 5000000))).toLocaleString(dateLocale);
+    const aliases = [rule.id, rule.name, rule.name.toLowerCase().replaceAll(' ', '_')];
+    const matched = transactions.filter(tx => tx.triggeredRules.some(name => aliases.some(alias => alias.toLowerCase() === name.toLowerCase())));
+    const triggers = matched.length;
+    const falsePositives = matched.filter(tx => tx.caseStatus === 'False Alarm').length;
+    const confirmedFraud = matched.filter(tx => tx.caseStatus === 'Confirmed Fraud').length;
+    const reviewed = confirmedFraud + falsePositives;
+    const precision = reviewed ? Math.round(confirmedFraud / reviewed * 100) : '—';
+    const blockedAmountVND = matched.filter(tx => tx.currency === 'VND').reduce((total, tx) => total + (tx.amount ?? 0), 0).toLocaleString(dateLocale);
 
     return {
       triggers,
@@ -143,14 +148,14 @@ export function RuleDetailDrawer({
       precision,
       blockedAmountVND,
     };
-  }, [rule, dateLocale]);
+  }, [rule, dateLocale, transactions]);
 
   // Sample transactions that triggered this rule or category
   const matchedTransactions = useMemo(() => {
     if (!rule) return [];
     const aliases = [rule.id, rule.name, rule.name.toLowerCase().replaceAll(" ", "_")];
 
-    return fraudGuardTransactions
+    return transactions
       .filter((tx) => {
         if (!tx.triggeredRules || tx.triggeredRules.length === 0) return false;
         return (
@@ -158,7 +163,7 @@ export function RuleDetailDrawer({
         );
       })
       .slice(0, 4);
-  }, [rule]);
+  }, [rule, transactions]);
 
   if (!open || !rule) return null;
 
@@ -273,7 +278,7 @@ export function RuleDetailDrawer({
                   color: rule.enabled ? "var(--security-green)" : "var(--security-muted)",
                 }}
                 onClick={() => canManage && onToggle(rule.id)}
-                disabled={!canManage}
+                disabled={!canManage || rule.status !== "Published"}
                 title={!canManage ? (language === "vi" ? "Yêu cầu quyền Quản trị Doanh nghiệp" : "SME Admin permission required") : undefined}
                 type="button"
               >
@@ -338,13 +343,13 @@ export function RuleDetailDrawer({
             </div>
           </div>
 
-          {/* 30-Day Performance & Impact Metrics */}
+          {/* Current demo data metrics Metrics */}
           {metrics && (
             <div className={styles.drawerSection}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
                 <TrendingUp size={16} color="var(--security-green)" />
                 <h3 className={styles.drawerSectionTitle} style={{ margin: 0 }}>
-                  {language === "vi" ? "Hiệu năng thực tế 30 ngày qua" : "30-Day Performance & Impact"}
+                  {language === "vi" ? "Thống kê trên dữ liệu demo hiện tại" : "30-Day Performance & Impact"}
                 </h3>
               </div>
 
@@ -396,7 +401,7 @@ export function RuleDetailDrawer({
                 }}
               >
                 <span style={{ color: "var(--security-text-secondary)" }}>
-                  {language === "vi" ? "Tổng tiền rủi ro bị chặn lại:" : "Guarded transaction volume:"}
+                  {language === "vi" ? "Tổng giá trị giao dịch khớp trong demo:" : "Matched transaction value in demo:"}
                 </span>
                 <strong style={{ color: "var(--security-green)", fontSize: 13 }}>
                   {metrics.blockedAmountVND} VND

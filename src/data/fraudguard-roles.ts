@@ -59,8 +59,8 @@ export function getRolePermissions(role: UserRole): RolePermissions {
       return {
         canManageProjects: true,
         canManageRules: true,
-        canManageCases: true,
-        canInvestigateCases: true,
+        canManageCases: false,
+        canInvestigateCases: false,
         canViewAllCases: true,
         canViewAudit: true,
         canExport: true,
@@ -72,7 +72,7 @@ export function getRolePermissions(role: UserRole): RolePermissions {
     case "SME Admin":
       return {
         canManageProjects: true,
-        canManageRules: true,
+        canManageRules: false,
         canManageCases: true,
         canInvestigateCases: false,
         canViewAllCases: true,

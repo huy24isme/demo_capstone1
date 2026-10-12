@@ -17,12 +17,14 @@ import styles from "./SecurityDashboard.module.css";
 
 interface ProjectsViewProps {
   initialProjects: ProjectItem[];
+  onProjectsChange: React.Dispatch<React.SetStateAction<ProjectItem[]>>;
   permissions?: RolePermissions;
 
 }
 
 export function ProjectsView({
   initialProjects,
+  onProjectsChange,
   permissions,
 
 }: ProjectsViewProps) {
@@ -30,7 +32,8 @@ export function ProjectsView({
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const canManage = permissions ? permissions.canManageProjects : true;
   const { toast } = useToast();
-  const [projects, setProjects] = useState<ProjectItem[]>(initialProjects);
+  const projects = initialProjects;
+  const setProjects = onProjectsChange;
   const [filterEnv, setFilterEnv] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
   const [showKey, setShowKey] = useState<Record<string, boolean>>({});
@@ -91,7 +94,8 @@ export function ProjectsView({
   };
 
   const handleRegenerateKey = (project: ProjectItem) => {
-    const prefix = project.environment === "Production" ? "fg_live_" : "fg_test_";
+    if (!canManage) return;
+    const prefix = project.environment === "Production" ? "fg_demo_live_" : "fg_demo_test_";
     const newKey =
       prefix +
       Array.from({ length: 24 }, () =>
@@ -115,7 +119,11 @@ export function ProjectsView({
   };
 
   const handleSaveWebhook = () => {
-    if (!editingWebhookProject) return;
+    if (!canManage || !editingWebhookProject) return;
+    if (webhookInput.trim()) {
+      try { const url = new URL(webhookInput.trim()); if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error(); }
+      catch { toast('error', language === 'vi' ? 'Webhook phải là URL HTTP/HTTPS hợp lệ, không chứa mật khẩu.' : 'Enter a valid HTTP/HTTPS URL without credentials.'); return; }
+    }
     setProjects((prev) =>
       prev.map((p) =>
         p.id === editingWebhookProject.id
@@ -133,6 +141,8 @@ export function ProjectsView({
   };
 
   const handleCreateProject = () => {
+    if (!canManage) return;
+    if (projects.some(p => p.code.toUpperCase() === newProjectCode.trim().toUpperCase())) { toast('error', language === 'vi' ? 'Mã dự án đã tồn tại.' : 'Project code already exists.'); return; }
     if (!newProjectName.trim() || !newProjectCode.trim()) {
       toast(
         "error",

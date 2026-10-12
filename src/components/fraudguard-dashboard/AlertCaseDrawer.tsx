@@ -183,16 +183,17 @@ export function AlertCaseDrawer({
   // Role permissions
   const isPlatformAdmin = currentRole === "Platform Admin";
   const isSMEAdmin = currentRole === "SME Admin";
-  const isOperation = currentRole === "Operation" || isSMEAdmin || isPlatformAdmin;
+  const isOperation = (currentRole === "Operation" || isSMEAdmin) && permissions?.canManageCases !== false;
   const isInvestigator = currentRole === "Investigator";
-  const isViewer = currentRole === "Viewer" || permissions?.isReadOnly;
+  const isViewer = currentRole === "Viewer" || isPlatformAdmin || permissions?.isReadOnly;
 
   const currentStep = getWorkflowStepIndex(transaction.caseStatus);
 
   // Handlers
   const handleCreateCase = () => {
+    if (!isOperation || transaction.caseId || transaction.riskLevel !== "Abnormal") return;
     setIsMutating(true);
-    setTimeout(() => {
+    {
       const updated: TransactionRisk = {
         ...transaction,
         caseId: `CASE-${Date.now().toString().slice(-6)}`,
@@ -206,13 +207,13 @@ export function AlertCaseDrawer({
           ? `Đã tạo Hồ sơ ${updated.caseId} cho giao dịch ${transaction.transactionReference}`
           : `Created Case ${updated.caseId} for transaction ${transaction.transactionReference}`,
       );
-    }, 350);
+    }
   };
 
   const handleAssignInvestigator = () => {
-    if (!selectedInvestigator) return;
+    if (!isOperation || !selectedInvestigator || ["Confirmed Fraud", "False Alarm", "Resolved"].includes(transaction.caseStatus || "")) return;
     setIsMutating(true);
-    setTimeout(() => {
+    {
       const updated: TransactionRisk = {
         ...transaction,
         caseId: transaction.caseId || `CASE-${Date.now().toString().slice(-6)}`,
@@ -228,19 +229,20 @@ export function AlertCaseDrawer({
           ? `Đã phân công hồ sơ cho Điều tra viên ${selectedInvestigator}`
           : `Assigned case to Investigator ${selectedInvestigator}`,
       );
-    }, 350);
+    }
   };
 
   // Investigator: Accept case & start field investigation
   const handleStartInvestigating = () => {
+    if (!isInvestigator || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Assigned") return;
     setIsMutating(true);
-    setTimeout(() => {
+    {
       const startNote: CaseNote = {
         text:
           language === "vi"
             ? "Điều tra viên đã tiếp nhận hồ sơ và bắt đầu quy trình thẩm định thực địa."
             : "Investigator accepted the case and started field investigation.",
-        time: new Date().toLocaleTimeString(numLocale, { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toISOString(),
         author: currentUserName || "Nguyễn Văn An",
       };
       const updated: TransactionRisk = {
@@ -256,15 +258,15 @@ export function AlertCaseDrawer({
           ? `Đã tiếp nhận hồ sơ. Trạng thái chuyển sang: Đang xác minh`
           : `Case accepted. Status updated to: Investigating`,
       );
-    }, 300);
+    }
   };
 
   // Add field notes
   const handleAddInvestigatorNote = () => {
-    if (!investigatorNote.trim()) return;
+    if (!investigatorNote.trim() || !isInvestigator || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Investigating") return;
     const newNote: CaseNote = {
       text: investigatorNote.trim(),
-      time: new Date().toLocaleTimeString(numLocale, { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toISOString(),
       author:
         currentUserName ||
         (isInvestigator
@@ -287,21 +289,15 @@ export function AlertCaseDrawer({
 
   // Investigator: Submit official investigation report
   const handleSubmitInvestigationReport = () => {
+    if (!isInvestigator || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Investigating" || !reportNote.trim()) {
+      toast("error", language === "vi" ? "Hãy nhập kết quả điều tra cho hồ sơ được giao." : "Enter findings for your assigned case."); return;
+    }
     setIsMutating(true);
-    setTimeout(() => {
-      const defaultNotes =
-        language === "vi"
-          ? "Đã thu thập đầy đủ tài liệu và chứng cứ giao vận liên quan."
-          : "Collected all relevant courier documentation and ground evidence.";
-      const defaultEvidence =
-        language === "vi"
-          ? "Ghi nhận thông tin bất thường về người nhận và địa chỉ đơn hàng."
-          : "Observed anomalous discrepancies regarding recipient identity and address.";
-
+    {
       const report: InvestigationReport = {
         finding: selectedFinding,
-        notes: reportNote.trim() || defaultNotes,
-        evidenceNotes: evidenceNotes.trim() || defaultEvidence,
+        notes: reportNote.trim(),
+        evidenceNotes: evidenceNotes.trim() || undefined,
         submittedAt: new Date().toISOString(),
         submittedBy: currentUserName || transaction.assignedInvestigator || "Nguyễn Văn An",
       };
@@ -310,7 +306,7 @@ export function AlertCaseDrawer({
           language === "vi"
             ? `[Nộp Báo cáo]: Đã hoàn thành thẩm định với kết luận đề xuất: ${selectedFinding.toUpperCase()}.`
             : `[Report Submitted]: Completed verification with proposed finding: ${selectedFinding.toUpperCase()}.`,
-        time: new Date().toLocaleTimeString(numLocale, { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toISOString(),
         author: currentUserName || "Nguyễn Văn An",
       };
       const updated: TransactionRisk = {
@@ -327,15 +323,16 @@ export function AlertCaseDrawer({
           ? `Đã gửi Báo cáo điều tra tới Trưởng nhóm Vận hành`
           : `Investigation report submitted to Operations Lead`,
       );
-    }, 450);
+    }
   };
 
   // Operation: Final Authority Decision
   const handleOperationDecision = (
     newStatus: "Confirmed Fraud" | "False Alarm" | "Resolved" | "Investigating",
   ) => {
+    if (!isOperation || !transaction.caseId || !operationFeedback.trim()) { toast("error", language === "vi" ? "Nhập lý do trước khi quyết định." : "Enter a reason before deciding."); return; }
     setIsMutating(true);
-    setTimeout(() => {
+    {
       const isReinvestigate = newStatus === "Investigating";
       const decision: CaseDecision = {
         status: newStatus,
@@ -355,7 +352,7 @@ export function AlertCaseDrawer({
           text: isReinvestigate
             ? `[${language === "vi" ? "Yêu cầu Thẩm tra lại từ Lãnh đạo" : "Re-investigation Request from Lead"}]: ${operationFeedback.trim()}`
             : `[${language === "vi" ? "Chỉ đạo Phê duyệt Vận hành" : "Operations Verdict Directive"}]: ${operationFeedback.trim()}`,
-          time: new Date().toLocaleTimeString(numLocale, { hour: "2-digit", minute: "2-digit" }),
+          time: new Date().toISOString(),
           author: `${currentUserName || "Trần Mai Anh"} (${language === "vi" ? "Trưởng nhóm Vận hành" : "Operations Lead"})`,
         };
         updated.investigationNotes = [...(updated.investigationNotes || []), feedbackNote];
@@ -376,7 +373,7 @@ export function AlertCaseDrawer({
           ? `Hồ sơ ${transaction.caseId} đã chuyển sang: ${labelMap[newStatus]}`
           : `Case ${transaction.caseId} transitioned to: ${labelMap[newStatus]}`,
       );
-    }, 450);
+    }
   };
 
   const getStatusBadgeStyle = (status?: CaseStatus) => {

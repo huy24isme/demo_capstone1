@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { RuleTemplate } from "./types";
 import { evaluateSandboxRule, nextSandboxVersion } from "@/lib/rule-sandbox";
+import { candidateRule, publishRuleDraft } from "@/lib/rule-lifecycle";
 import styles from "./SecurityDashboard.module.css";
 import { Play, Check, Sliders } from "lucide-react";
 import { useToast } from "./ToastProvider";
@@ -15,6 +16,9 @@ interface RuleTestingViewProps {
 
 interface TestSampleTx {
   id: string;
+  projectId?: string;
+  transactionType?: string;
+  fields?: Record<string, string | number | boolean>;
   ref: string;
   amount: number;
   channel: string;
@@ -94,15 +98,18 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
   const [results, setResults] = useState<TestSampleTx[]>([]);
   const [testedSignature, setTestedSignature] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [customDataset, setCustomDataset] = useState("");
 
-  const selectedRule = rules.find((r) => r.id === selectedRuleId) || rules[0];
-  const signature = JSON.stringify(selectedRule);
+  const storedRule = rules.find((r) => r.id === selectedRuleId) || rules[0];
+  const selectedRule = storedRule ? candidateRule(storedRule) : undefined;
+  const [expectations, setExpectations] = useState<Record<string, boolean[]>>({});
+  const signature = JSON.stringify([selectedRule, expectations[selectedRuleId], customDataset]);
   const hasRun = testedSignature === signature;
-  const samples = SAMPLE_DATASET.map((item, index) => ({ ...item, expectedAnomaly: EXPECTED_BY_RULE[selectedRule?.id ?? ""]?.[index] }));
+  const samples = SAMPLE_DATASET.map((item, index) => ({ ...item, expectedAnomaly: (expectations[selectedRuleId] ?? EXPECTED_BY_RULE[selectedRule?.id ?? ""])?.[index] }));
   const testDataset = hasRun ? results : samples;
   const passedCount = hasRun ? results.filter((tx) => tx.status === "PASSED").length : 0;
-  const nextVersion = selectedRule ? nextSandboxVersion(selectedRule.version) : null;
-  const canPublish = !!onPublishRule && !!selectedRule && !!nextVersion && hasRun && results.length > 0 && passedCount === results.length;
+  const nextVersion = storedRule?.status === "Published" ? nextSandboxVersion(storedRule.version) : "v1.0";
+  const canPublish = !!storedRule && (storedRule.status !== "Published" || !!storedRule.draft) && !!onPublishRule && !!selectedRule && !!nextVersion && hasRun && results.length > 0 && passedCount === results.length;
 
   useEffect(() => {
     setTestedSignature(null);
@@ -114,15 +121,19 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
     setError("");
     setTestedSignature(null);
     try {
-      const evaluated = samples.map((item): TestSampleTx => {
+      const dataset: TestSampleTx[] = customDataset.trim() ? JSON.parse(customDataset) : samples;
+      if (!Array.isArray(dataset) || !dataset.length || dataset.length > 1000 || dataset.some(item => !item || typeof item.id !== 'string' || (!!customDataset.trim() && typeof item.expectedAnomaly !== 'boolean'))) throw new Error('Provide 1–1000 samples with id and boolean expectedAnomaly.');
+      if (new Set(dataset.map(item => item.id)).size !== dataset.length) throw new Error('Sample IDs must be unique.');
+      if (!dataset.some(item => (selectedRule.appliesTo.projects.includes('*') || selectedRule.appliesTo.projects.includes(item.projectId ?? 'proj-abc-cod')) && (selectedRule.appliesTo.transactionTypes.includes('*') || selectedRule.appliesTo.transactionTypes.includes(item.transactionType ?? 'payment')))) throw new Error('No samples belong to this rule scope.');
+      const evaluated = dataset.map((item): TestSampleTx => {
         const result = evaluateSandboxRule(selectedRule, {
-          projectId: "proj-abc-cod",
-          transactionType: "payment",
-          fields: {
+          projectId: item.projectId ?? "proj-abc-cod",
+          transactionType: item.transactionType ?? "payment",
+          fields: item.fields ?? {
             amount: item.amount,
             currency: "VND",
             channel: item.channel,
-            "device.is_new": item.deviceId.includes("(New)"),
+            "device.is_new": item.deviceId?.includes("(New)") ?? false,
             "velocity.failed_tx.24h": item.failCount,
             "identity.address_reuse_count": item.addressReuseCount,
           },
@@ -150,13 +161,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
 
   const handlePublishVersion = () => {
     if (!canPublish || !selectedRule || !nextVersion || !onPublishRule) return;
-    const updatedRule: RuleTemplate = {
-      ...selectedRule,
-      version: nextVersion,
-      status: "Published",
-      publishedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const updatedRule = publishRuleDraft(storedRule!);
     onPublishRule(updatedRule);
     setTestedSignature(null);
     toast(
@@ -239,6 +244,22 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
         </article>
       </div>
 
+      <div className={styles.panel} style={{ padding: 16, marginTop: 14 }}>
+        <p>{language === "vi" ? "Kỳ vọng do người kiểm thử xác định trước khi chạy. Demo yêu cầu mọi mẫu khớp kỳ vọng; phát hành không tự bật rule mới." : "Set expected outcomes before running. Demo publication requires every sample to match; new rules remain disabled."}</p>
+        {samples.map((sample, index) => <label key={sample.id} style={{ display: "inline-flex", gap: 8, marginRight: 16 }}>
+          {sample.ref}
+          <select aria-label={sample.ref + " expected"} value={sample.expectedAnomaly == null ? "" : String(sample.expectedAnomaly)} onChange={event => {
+            const next = [...(expectations[selectedRuleId] ?? EXPECTED_BY_RULE[selectedRuleId] ?? [])];
+            next[index] = event.target.value === "true";
+            setExpectations(previous => ({ ...previous, [selectedRuleId]: next })); setTestedSignature(null);
+          }}><option value="" disabled>—</option><option value="false">Normal</option><option value="true">Abnormal</option></select>
+        </label>)}
+      </div>
+      <details className={styles.panel} style={{ padding: 16, marginTop: 12 }}>
+        <summary>{language === 'vi' ? 'Dữ liệu kiểm thử tùy chỉnh (JSON)' : 'Custom test dataset (JSON)'}</summary>
+        <p>{language === 'vi' ? 'Để trống để dùng 5 mẫu có sẵn. Mỗi mẫu gồm id, ref, projectId, transactionType, fields và expectedAnomaly.' : 'Leave empty for the five default samples. Each sample has id, ref, projectId, transactionType, fields and expectedAnomaly.'}</p>
+        <textarea id="sandbox-dataset" aria-label="Custom sandbox dataset" className={styles.control} rows={8} style={{ width: '100%' }} value={customDataset} placeholder={'[{"id":"sample-1","ref":"TX-1","projectId":"proj-abc-cod","transactionType":"payment","fields":{"amount":100},"expectedAnomaly":false}]'} onChange={e => { setCustomDataset(e.target.value); setTestedSignature(null); setError(''); }} />
+      </details>
       {/* Sandbox Controls Panel */}
       <div className={styles.panel} style={{ marginTop: 14, padding: 20 }}>
         <div
@@ -329,7 +350,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
 
       <p className={styles.muted}>
         {language === "vi"
-          ? "Thử riêng rule đã chọn trên 5 giao dịch thanh toán mẫu của ABC Fashion, kể cả rule đang tắt. Rule khớp trả về bất thường; không khớp trả về bình thường. Nhãn kỳ vọng riêng cho từng rule được giữ cố định; dấu — nghĩa là chưa có nhãn kiểm chứng. Chỉ phát hành trong demo khi tất cả mẫu đạt."
+          ? "Thử riêng rule đã chọn trên dữ liệu mẫu, kể cả rule đang tắt. Rule khớp trả về bất thường; không khớp trả về bình thường. Nhãn kỳ vọng do người kiểm thử xác định; dấu — nghĩa là chưa có nhãn kiểm chứng. Chỉ phát hành trong demo khi tất cả mẫu đạt."
           : "Test only the selected rule on 5 sample ABC Fashion payments, including disabled rules. A matching rule returns Abnormal; otherwise Normal. Expected labels are fixed per rule; — means no verification label is available. Publishing in the demo requires all samples to pass."}
       </p>
       {!selectedRule && <p role="status">{language === "vi" ? "Chưa có rule để kiểm thử." : "No rules available to test."}</p>}
@@ -383,7 +404,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
                   </td>
                   <td>
                     <div style={{ fontSize: 11 }}>
-                      {item.amount.toLocaleString(dateLocale)} VND · {item.channel}
+                      {item.fields ? JSON.stringify(item.fields) : `${item.amount.toLocaleString(dateLocale)} VND · ${item.channel}`}
                     </div>
                     <div
                       style={{

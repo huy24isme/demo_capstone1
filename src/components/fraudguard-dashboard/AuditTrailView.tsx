@@ -18,6 +18,8 @@ function formatAuditTime(iso: string, locale: string): string {
 const ACTION_CLASSES: Record<AuditAction, string> = {
   CASE_STATUS_UPDATED: styles.auditActionUpdate,
   RULE_CREATED: styles.auditActionCreate,
+  RULE_UPDATED: styles.auditActionUpdate,
+  PROJECT_UPDATED: styles.auditActionUpdate,
   RULE_TOGGLED: styles.auditActionSecurity,
   RULE_DELETED: styles.auditActionDelete,
   API_KEY_GENERATED: styles.auditActionSecurity,
@@ -32,6 +34,8 @@ const ACTION_KEY_MAP: Record<
 > = {
   CASE_STATUS_UPDATED: "caseStatusUpdated",
   RULE_CREATED: "ruleCreated",
+  RULE_UPDATED: "ruleUpdated",
+  PROJECT_UPDATED: "projectUpdated",
   RULE_TOGGLED: "ruleToggled",
   RULE_DELETED: "ruleDeleted",
   API_KEY_GENERATED: "apiKeyGenerated",
@@ -43,7 +47,7 @@ const ACTION_KEY_MAP: Record<
 export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
-  const [logs] = useState<AuditLogEntry[]>(initialLogs);
+  const logs = initialLogs;
   const [query, setQuery] = useState("");
   const [actionCategory, setActionCategory] = useState("all");
   const [page, setPage] = useState(1);
@@ -58,7 +62,7 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
       }
       if (
         actionCategory === "rules" &&
-        !["RULE_CREATED", "RULE_TOGGLED", "RULE_DELETED"].includes(log.action)
+        !["RULE_CREATED", "RULE_UPDATED", "RULE_TOGGLED", "RULE_DELETED"].includes(log.action)
       ) {
         return false;
       }
@@ -97,7 +101,7 @@ export function AuditTrailView({ initialLogs }: AuditTrailViewProps) {
       total: logs.length,
       cases: logs.filter((l) => l.action === "CASE_STATUS_UPDATED").length,
       rules: logs.filter((l) =>
-        ["RULE_CREATED", "RULE_TOGGLED", "RULE_DELETED"].includes(l.action),
+        ["RULE_CREATED", "RULE_UPDATED", "RULE_TOGGLED", "RULE_DELETED"].includes(l.action),
       ).length,
       security: logs.filter((l) =>
         ["API_KEY_GENERATED", "WEBHOOK_UPDATED"].includes(l.action),

@@ -118,46 +118,15 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
     },
   ];
 
-  const handleAdvanceStep = () => {
-    if (currentStep < 8) {
-      setCurrentStep((prev) => prev + 1);
-      toast(
-        "success",
-        language === "vi"
-          ? `Đã hoàn thành Bước ${currentStep}: Chuyển sang Bước ${currentStep + 1}`
-          : `Step ${currentStep} completed: Advanced to Step ${currentStep + 1}`,
-      );
-    } else if (currentStep === 8) {
-      setCurrentStep(9);
-      toast(
-        "info",
-        language === "vi"
-          ? "Đã xác nhận kết quả kiểm thử. Sẵn sàng bàn giao Workspace."
-          : "Validation confirmed. Ready for workspace handover.",
-      );
-    }
-  };
-
-  const handleHandover = () => {
-    setIsHandedOver(true);
-    setCurrentStep(9);
-    toast(
-      "success",
-      language === "vi"
-        ? "Đã hoàn thành bàn giao Workspace cho ABC Fashion! Ranh giới Handover Boundary đã được kích hoạt."
-        : "Workspace handover to ABC Fashion complete! Handover Boundary activated.",
-    );
-    if (onActivateWorkspace) {
-      onActivateWorkspace("ABC Fashion");
-    }
-  };
+  const handleAdvanceStep = () => toast('info', language === 'vi' ? 'Đây là quy trình minh họa. Chưa có API lưu đặc tả, duyệt schema và xác nhận kiểm thử để chuyển bước.' : 'Workflow preview only. Specification, schema review and test approval APIs are not connected.');
+  const handleHandover = () => toast('info', language === 'vi' ? 'Chưa thể bàn giao: cần backend xác nhận cấu hình và quyền truy cập tenant.' : 'Handover requires backend configuration approval and tenant access controls.');
 
   return (
     <>
       <div className={styles.pageHeading}>
         <div>
           <h1>{t.onboardingView.title}</h1>
-          <p>{t.onboardingView.subtitle}</p>
+          <p>{language === 'vi' ? 'Quy trình minh họa — các mốc bên dưới không phải trạng thái bàn giao thực tế.' : 'Workflow preview — the steps below are not actual handover records.'}</p>
         </div>
       </div>
 

@@ -13,6 +13,7 @@ import type {
   AuditLogEntry,
   UserProfile,
 } from "./types";
+import { canUpdateCase } from "@/lib/case-workflow";
 import { Sidebar } from "./Sidebar";
 import { ProductHeader } from "./ProductHeader";
 import { DashboardToolbar } from "./DashboardToolbar";
@@ -64,7 +65,28 @@ function FraudGuardDashboardContent({
   const { t, language } = useLanguage();
   // Data state (mutable for case management)
   const [transactions, setTransactions] = useState(initialTransactions);
+  const [auditLogs, setAuditLogs] = useState(defaultAuditLogs);
   const [rules, setRules] = useState(initialRules);
+  const [projects, setProjects] = useState(defaultProjects);
+  const [restored, setRestored] = useState(false);
+  const [storageError, setStorageError] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fraudguard-demo-workspace-v2') || 'null');
+      if (saved && Array.isArray(saved.rules) && saved.rules.every((r: RuleTemplate) => r.id && r.conditionGroup?.children && r.appliesTo?.projects)) {
+        setRules(saved.rules);
+        if (Array.isArray(saved.transactions) && saved.transactions.every((tx: TransactionRisk) => tx.id && tx.processedAt && Array.isArray(tx.triggeredRules))) setTransactions(saved.transactions);
+        if (Array.isArray(saved.auditLogs) && saved.auditLogs.every((log: AuditLogEntry) => log.id && log.actor && log.action)) setAuditLogs(saved.auditLogs);
+        if (Array.isArray(saved.projects) && saved.projects.every((p: ProjectItem) => p.id && p.quota)) setProjects(saved.projects);
+      }
+    } catch { setStorageError(true); }
+    setRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    try { localStorage.setItem('fraudguard-demo-workspace-v2', JSON.stringify({ rules, projects, transactions, auditLogs })); }
+    catch { setStorageError(true); }
+  }, [rules, projects, transactions, auditLogs, restored]);
 
   // RBAC state (defaults to SME Admin: DEMO_USERS[1])
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_USERS[1]);
@@ -75,6 +97,8 @@ function FraudGuardDashboardContent({
 
   const handleSwitchUser = useCallback((user: UserProfile) => {
     setCurrentUser(user);
+    setDrawerOpen(false);
+    setSelectedTransaction(null);
     if (user.role === "Platform Admin") {
       setActiveNavItem("platform-health");
     } else if (user.role === "Investigator") {
@@ -87,6 +111,23 @@ function FraudGuardDashboardContent({
       setActiveNavItem("risk-overview");
     }
   }, []);
+
+  const recordAudit = (action: AuditLogEntry['action'], target: string, details: string) => {
+    setAuditLogs(logs => [{ id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: { name: currentUser.name, email: currentUser.email, role: currentUser.role }, action, target, details, ipAddress: 'Demo' }, ...logs]);
+  };
+  const changeRules: React.Dispatch<React.SetStateAction<RuleTemplate[]>> = action => {
+    if (!permissions.canManageRules) return;
+    const next = typeof action === 'function' ? action(rules) : action;
+    for (const rule of next) { const old = rules.find(r => r.id === rule.id); if (JSON.stringify(old) !== JSON.stringify(rule)) recordAudit(old ? 'RULE_UPDATED' : 'RULE_CREATED', rule.id, JSON.stringify({ version: rule.version, status: rule.status, draft: !!rule.draft, enabled: rule.enabled })); }
+    for (const old of rules) if (!next.some(r => r.id === old.id)) recordAudit('RULE_DELETED', old.id, old.name);
+    setRules(next);
+  };
+  const changeProjects: React.Dispatch<React.SetStateAction<ProjectItem[]>> = action => {
+    if (!permissions.canManageProjects) return;
+    const next = typeof action === 'function' ? action(projects) : action;
+    for (const project of next) if (JSON.stringify(projects.find(p => p.id === project.id)) !== JSON.stringify(project)) recordAudit('PROJECT_UPDATED', project.id, project.name);
+    setProjects(next);
+  };
 
   // Filter state
   const [filters, setFilters] = useState(initialFilters);
@@ -158,14 +199,14 @@ function FraudGuardDashboardContent({
 
   // Date range filtering + search + filters
   const visibleTransactions = useMemo(() => {
-    const now = new Date("2026-09-17T16:00:00Z");
+    const now = new Date();
     const cutoff = new Date(
       now.getTime() - filters.range * 24 * 60 * 60 * 1000,
     );
 
     return transactions.filter((transaction) => {
       const processedDate = new Date(transaction.processedAt);
-      if (processedDate < cutoff) return false;
+      if (!Number.isFinite(processedDate.getTime()) || processedDate < cutoff || processedDate > now) return false;
 
       const searchTarget = [
         transaction.transactionReference,
@@ -223,11 +264,12 @@ function FraudGuardDashboardContent({
   }, [visibleTransactions]);
 
   // Dynamic project/type options
-  const projects = useMemo(() => {
+  const projectOptions = useMemo(() => {
     const map = new Map<string, string>();
+    projects.forEach(p => map.set(p.id, p.name));
     transactions.forEach((t) => map.set(t.projectId, t.projectName));
     return Array.from(map, ([id, name]) => ({ id, name }));
-  }, [transactions]);
+  }, [transactions, projects]);
 
   const transactionTypes = useMemo(() => {
     return [...new Set(transactions.map((t) => t.transactionType))];
@@ -245,12 +287,17 @@ function FraudGuardDashboardContent({
 
   const handleUpdateTransaction = useCallback(
     (updated: TransactionRisk) => {
+      if (currentUser.role === 'Viewer' || currentUser.role === 'Platform Admin') return;
+      const previous = transactions.find(tx => tx.id === updated.id);
+      if (!previous || !canUpdateCase(previous, updated, currentUser)) return;
+      if (currentUser.role === 'Investigator' && (previous.assignedInvestigator !== currentUser.name || !['Assigned', 'Investigating'].includes(previous.caseStatus || '') || !['Investigating', 'Reported'].includes(updated.caseStatus || ''))) return;
+      setAuditLogs(logs => [{ id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: { name: currentUser.name, email: currentUser.email, role: currentUser.role }, action: 'CASE_STATUS_UPDATED', target: updated.caseId || updated.id, ipAddress: 'Demo', details: JSON.stringify({ before: previous.caseStatus, after: updated.caseStatus, report: updated.investigationReport, decision: updated.caseDecision }) }, ...logs]);
       setTransactions((prev) =>
         prev.map((t) => (t.id === updated.id ? updated : t)),
       );
       setSelectedTransaction(updated);
     },
-    [],
+    [currentUser, transactions],
   );
 
   // Reset pagination when filters change
@@ -276,7 +323,7 @@ function FraudGuardDashboardContent({
           <RuleTestingView
             rules={rules}
             onPublishRule={(publishedRule) => {
-              setRules((prev) => [publishedRule, ...prev.filter((r) => r.id !== publishedRule.id)]);
+              changeRules((prev) => [publishedRule, ...prev.filter((r) => r.id !== publishedRule.id)]);
             }}
           />
         );
@@ -303,7 +350,8 @@ function FraudGuardDashboardContent({
       case "rule-templates":
         return (
           <RulesView
-            onRulesChange={setRules}
+            transactions={transactions}
+            onRulesChange={changeRules}
             initialRules={rules}
             permissions={permissions}
             onNavigateToTesting={() => setActiveNavItem("rule-testing")}
@@ -312,7 +360,8 @@ function FraudGuardDashboardContent({
       case "projects":
         return (
           <ProjectsView
-            initialProjects={defaultProjects}
+            initialProjects={projects}
+            onProjectsChange={changeProjects}
             permissions={permissions}
 
           />
@@ -328,7 +377,7 @@ function FraudGuardDashboardContent({
           />
         );
       case "audit-trail":
-        return <AuditTrailView initialLogs={defaultAuditLogs} />;
+        return <AuditTrailView initialLogs={auditLogs} />;
       case "platform-health":
         return <PlatformHealthView />;
       case "risk-overview":
@@ -344,7 +393,7 @@ function FraudGuardDashboardContent({
 
             <DashboardToolbar
               filters={filters}
-              projects={projects}
+              projects={projectOptions}
               transactionTypes={transactionTypes}
               onChange={handleFiltersChange}
               visibleTransactions={visibleTransactions}
@@ -528,6 +577,7 @@ function FraudGuardDashboardContent({
             onNavigate={setActiveNavItem}
           />
           <main className={styles.main}>
+            <p className={styles.muted} role="status">{language === 'vi' ? 'Môi trường demo: dữ liệu, phân quyền và API key chưa kết nối backend.' : 'Demo: data, permissions and API keys are not connected to a backend.'}{storageError && (language === 'vi' ? ' Không thể lưu thay đổi trên trình duyệt.' : ' Browser storage is unavailable.')}</p>
             {renderView()}
           </main>
         </div>

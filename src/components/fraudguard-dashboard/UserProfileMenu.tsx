@@ -29,7 +29,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
   const [audioAlert, setAudioAlert] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState<"off" | "15s" | "30s">("30s");
+  const [refreshInterval, setRefreshInterval] = useState<"off" | "15s" | "30s">("off");
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click or Escape key
@@ -217,6 +217,8 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                     <button
                       key={interval}
                       type="button"
+                      disabled={interval !== "off"}
+                      title="Demo: live refresh is not connected"
                       className={`${styles.refreshIntervalBtn} ${refreshInterval === interval ? styles.refreshIntervalBtnActive : ""}`}
                       onClick={() => setRefreshInterval(interval)}
                     >

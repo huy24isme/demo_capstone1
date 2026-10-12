@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, Upload, CheckCircle2, FileText, X } from "lucide-react";
 import { downloadCSVTemplate } from "@/lib/export-csv";
 import { useLanguage } from "./i18n/LanguageContext";
+import { validateIngestion } from "@/lib/ingestion-validation";
 import styles from "./SecurityDashboard.module.css";
 
 interface DataIngestionModalProps {
@@ -12,21 +13,24 @@ interface DataIngestionModalProps {
 }
 
 export function DataIngestionModal({ open, onClose }: DataIngestionModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<"spec" | "upload">("spec");
   const [isSimulatingUpload, setIsSimulatingUpload] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const [rowCount, setRowCount] = useState(0);
 
   if (!open) return null;
 
-  const handleSimulateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setIsSimulatingUpload(true);
-      setTimeout(() => {
-        setIsSimulatingUpload(false);
-        setUploadSuccess(true);
-      }, 1000);
-    }
+  const handleSimulateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploadSuccess(false); setValidationError(''); setIsSimulatingUpload(true);
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('Maximum file size: 5 MB');
+      const count = validateIngestion(await file.text(), file.name);
+      setRowCount(count); setUploadSuccess(true);
+    } catch (error) { setValidationError(error instanceof Error ? error.message : String(error)); }
+    finally { setIsSimulatingUpload(false); e.target.value = ''; }
   };
 
   return (
@@ -293,6 +297,7 @@ export function DataIngestionModal({ open, onClose }: DataIngestionModalProps) {
                 >
                   {t.dataIngestionModal.btnChooseFile}
                   <input
+                    disabled={isSimulatingUpload}
                     type="file"
                     accept=".csv,.json"
                     onChange={handleSimulateUpload}
@@ -310,10 +315,11 @@ export function DataIngestionModal({ open, onClose }: DataIngestionModalProps) {
                     color: "var(--security-blue)",
                   }}
                 >
-                  {t.dataIngestionModal.simulatingMsg}
+                  {language === 'vi' ? 'Đang kiểm tra dữ liệu…' : 'Validating data…'}
                 </div>
               )}
 
+              {validationError && <p role="alert">{validationError}</p>}
               {uploadSuccess && (
                 <div
                   style={{
@@ -332,7 +338,7 @@ export function DataIngestionModal({ open, onClose }: DataIngestionModalProps) {
                     style={{ color: "var(--security-green)", flexShrink: 0 }}
                   />
                   <div style={{ fontSize: 12 }}>
-                    {t.dataIngestionModal.successMsg}
+                    {language === 'vi' ? rowCount + ' dòng hợp lệ. Chưa import hoặc chạy phát hiện gian lận; cần kết nối API tiếp nhận.' : rowCount + ' valid rows. Not imported or analyzed; an ingestion API is required.'}
                   </div>
                 </div>
               )}

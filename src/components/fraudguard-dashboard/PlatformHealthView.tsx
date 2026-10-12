@@ -34,16 +34,7 @@ export function PlatformHealthView() {
     setMounted(true);
   }, []);
 
-  const handlePing = (service: MicroserviceHealth) => {
-    setIsPinging((prev) => ({ ...prev, [service.id]: true }));
-    setTimeout(() => {
-      setIsPinging((prev) => ({ ...prev, [service.id]: false }));
-      toast(
-        "success",
-        `[Ping OK] ${service.name} (${service.latencyMs}ms). Status: ${service.status}`,
-      );
-    }, 450);
-  };
+  const handlePing = (service: MicroserviceHealth) => toast('info', language === 'vi' ? service.name + ': dữ liệu mẫu, chưa kết nối health-check API.' : service.name + ': sample data; health-check API is not connected.');
 
   const getPlanBadgeClass = (plan: string) => {
     switch (plan) {
@@ -62,12 +53,12 @@ export function PlatformHealthView() {
       <div className={styles.pageHeading}>
         <div>
           <h1>{t.platformHealthView.title}</h1>
-          <p>{t.platformHealthView.subtitle}</p>
+          <p>{language === 'vi' ? 'Số liệu minh họa; chưa có giám sát hoặc đo độ trễ trực tiếp.' : 'Sample metrics; live monitoring and latency measurements are not connected.'}</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button
             className={styles.button}
-            onClick={() => toast("info", t.platformHealthView.toastRefreshed)}
+            onClick={() => toast("info", language === 'vi' ? 'Đang hiển thị dữ liệu mẫu; chưa có API để làm mới.' : 'Showing sample data; no refresh API is connected.')}
             type="button"
           >
             <RefreshCw size={13} style={{ marginRight: 6 }} />

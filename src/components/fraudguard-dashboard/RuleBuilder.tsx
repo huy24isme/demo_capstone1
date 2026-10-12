@@ -271,7 +271,7 @@ function emptyRule(category: RuleCategory = "velocity"): Omit<RuleTemplate, "id"
     version: "v1.0",
     status: "Draft",
     conditionGroup: emptyGroupForCategory(category),
-    enabled: true,
+    enabled: false,
     appliesTo: { transactionTypes: ["*"], projects: ["*"] },
   };
 }
@@ -375,7 +375,8 @@ function ConditionGroupEditor({
           );
         }
 
-        const meta = getFieldMeta(child.field);
+        const meta = FIELDS.find(field => field.value === child.field) ?? { ...getFieldMeta(child.field), valueType: typeof child.value as "number" | "string" | "boolean" };
+        const listOperator = ["in", "not_in", "between"].includes(child.operator);
 
         return (
           <div key={child.id} className={styles.conditionRow}>
@@ -394,6 +395,7 @@ function ConditionGroupEditor({
                 });
               }}
             >
+              {!FIELDS.some(field => field.value === child.field) && <option value={child.field}>{child.field}</option>}
               {selectedCategory !== "custom" && categoryFields.length > 0 && (
                 <optgroup
                   label={
@@ -439,6 +441,7 @@ function ConditionGroupEditor({
                 updateChild(i, { ...child, operator: e.target.value as ConditionOperator })
               }
             >
+              {!OPERATORS.some(op => op.value === child.operator) && <option value={child.operator}>{child.operator}</option>}
               {OPERATORS.map((op) => (
                 <option key={op.value} value={op.value}>
                   {op.label}
@@ -447,7 +450,7 @@ function ConditionGroupEditor({
             </select>
 
             {/* Value input: smart boolean switch or text/number input */}
-            {meta.valueType === "boolean" ? (
+            {meta.valueType === "boolean" && !listOperator ? (
               <select
                 className={styles.conditionValue}
                 value={String(child.value)}
@@ -459,7 +462,7 @@ function ConditionGroupEditor({
             ) : (
               <input
                 className={styles.conditionValue}
-                type={meta.valueType === "number" ? "number" : "text"}
+                type={meta.valueType === "number" && !listOperator ? "number" : "text"}
                 value={String(child.value)}
                 placeholder={meta.placeholder || "Value"}
                 onChange={(e) => {
@@ -467,7 +470,7 @@ function ConditionGroupEditor({
                   const num = Number(raw);
                   updateChild(i, {
                     ...child,
-                    value: meta.valueType === "number" ? (isNaN(num) || raw === "" ? raw : num) : raw,
+                    value: meta.valueType === "number" && !listOperator ? (isNaN(num) || raw === "" ? raw : num) : raw,
                   });
                 }}
               />
@@ -560,7 +563,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
   const handleCategoryChange = (newCategory: RuleCategory) => {
     setForm((prev) => {
       const isUntouchedSingleCondition =
-        prev.conditionGroup.children.length === 1 &&
+        !rule && prev.conditionGroup.children.length === 1 &&
         prev.conditionGroup.children[0].type === "condition";
 
       return {
@@ -611,7 +614,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
               <input
                 className={styles.formInput}
                 value={form.version}
-                onChange={(e) => patch("version", e.target.value)}
+                readOnly
                 placeholder="v1.0"
               />
             </div>
@@ -622,7 +625,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
               <select
                 className={styles.formInput}
                 value={form.status}
-                onChange={(e) => patch("status", e.target.value as RuleLifecycleStatus)}
+                disabled
               >
                 {LIFECYCLE_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
