@@ -12,8 +12,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "USER_39AA",
     amount: 12500000,
     currency: "VND",
-    riskScore: 82,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.91,
     scoringSource: "AI",
     triggeredRules: [
@@ -39,8 +39,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-a1b2c3",
     amount: 45000000,
     currency: "VND",
-    riskScore: 95,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.96,
     scoringSource: "AI",
     triggeredRules: ["velocity_check", "amount_threshold", "device_fingerprint"],
@@ -57,11 +57,11 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-9f8a1c",
     amount: 28000000,
     currency: "VND",
-    riskScore: 88,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE_FALLBACK",
     triggeredRules: ["velocity_check", "geo_anomaly", "unusual_hour"],
-    explanation: "Scoring service timeout fallback. Triggered critical velocity and overseas geo anomaly rules during off-peak hours.",
+    explanation: "AI service timeout fallback. Triggered critical velocity and overseas geo anomaly rules during off-peak hours.",
     alertId: "ALT-20260917-002",
     processedAt: "2026-09-17T02:45:00Z",
   },
@@ -74,8 +74,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-3b7c2d",
     amount: 15400000,
     currency: "VND",
-    riskScore: 78,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.89,
     scoringSource: "AI",
     triggeredRules: ["amount_threshold", "dormant_account_reactivated"],
@@ -103,8 +103,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-7e4d8f",
     amount: 2490000,
     currency: "VND",
-    riskScore: 82,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE",
     triggeredRules: ["amount_threshold", "suspicious_user_agent", "first_time_high_value"],
     explanation: "Đăng ký gói hội viên năm lần đầu với thiết bị lạ và thông tin thẻ quốc tế bất thường.",
@@ -120,7 +120,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-2c9b4e",
     amount: 3200000,
     currency: "VND",
-    riskScore: 58,
+
     riskLevel: "Normal",
     confidence: 0.74,
     scoringSource: "AI",
@@ -149,12 +149,13 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-8d1a5b",
     amount: 5000000,
     currency: "VND",
-    riskScore: 48,
-    riskLevel: "Normal",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE",
     triggeredRules: ["unusual_hour", "velocity_check"],
     explanation: "P2P transfer executed at 3:15 AM following consecutive failed PIN attempts.",
     processedAt: "2026-09-17T03:15:10Z",
+    alertId: "ALT-DEMO-tx-006",
   },
   {
     id: "tx-007",
@@ -165,7 +166,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-5f6e3a",
     amount: 850000,
     currency: "VND",
-    riskScore: 18,
+
     riskLevel: "Normal",
     confidence: 0.94,
     scoringSource: "AI",
@@ -182,8 +183,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-4a8c9e",
     amount: 4990000,
     currency: "VND",
-    riskScore: 91,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.98,
     scoringSource: "AI",
     triggeredRules: ["amount_threshold", "geo_anomaly", "device_fingerprint"],
@@ -211,8 +212,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-6d2f1b",
     amount: 24500000,
     currency: "VND",
-    riskScore: 68,
-    riskLevel: "Normal",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE_FALLBACK",
     triggeredRules: ["amount_threshold", "device_fingerprint"],
     explanation: "Primary AI pipeline latency exceeded 250ms threshold. Fallback rule matched blacklisted device fingerprint.",
@@ -228,7 +229,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-1e3c5d",
     amount: 1200000,
     currency: "VND",
-    riskScore: 24,
+
     riskLevel: "Normal",
     scoringSource: "RULE",
     triggeredRules: [],
@@ -244,7 +245,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-9c4a7e",
     amount: 6200000,
     currency: "VND",
-    riskScore: 62,
+
     riskLevel: "Normal",
     confidence: 0.81,
     scoringSource: "AI",
@@ -273,7 +274,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-7b1f3c",
     amount: 450000,
     currency: "VND",
-    riskScore: 12,
+
     riskLevel: "Normal",
     confidence: 0.97,
     scoringSource: "AI",
@@ -290,8 +291,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-3a5d8b",
     amount: 35000000,
     currency: "VND",
-    riskScore: 89,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.93,
     scoringSource: "AI",
     triggeredRules: ["velocity_check", "amount_threshold", "rapid_ip_change"],
@@ -312,8 +313,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-8f2c6a",
     amount: 499000,
     currency: "VND",
-    riskScore: 52,
-    riskLevel: "Normal",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE",
     triggeredRules: ["device_fingerprint", "unusual_hour"],
     explanation: "Thanh toán gia hạn định kỳ gói học trực tuyến trong khung giờ bảo trì hệ thống.",
@@ -340,7 +341,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-2a8e4f",
     amount: 72000000,
     currency: "VND",
-    riskScore: 74,
+
     riskLevel: "Normal",
     confidence: 0.85,
     scoringSource: "AI",
@@ -360,12 +361,13 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-6c9d1e",
     amount: 2100000,
     currency: "VND",
-    riskScore: 28,
-    riskLevel: "Normal",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE_FALLBACK",
     triggeredRules: ["unusual_hour"],
-    explanation: "Scoring timeout triggered fallback evaluation. Only non-critical off-peak hour rule matched.",
+    explanation: "AI timeout triggered fallback evaluation. Off-peak hour rule matched; classified as abnormal.",
     processedAt: "2026-09-14T03:40:12Z",
+    alertId: "ALT-DEMO-tx-016",
   },
   {
     id: "tx-017",
@@ -376,7 +378,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-5d7a2c",
     amount: 9500000,
     currency: "VND",
-    riskScore: 64,
+
     riskLevel: "Normal",
     confidence: 0.76,
     scoringSource: "AI",
@@ -396,7 +398,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-1b4e9f",
     amount: 299000,
     currency: "VND",
-    riskScore: 22,
+
     riskLevel: "Normal",
     confidence: 0.92,
     scoringSource: "AI",
@@ -414,7 +416,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-4c7e2a",
     amount: 31000000,
     currency: "VND",
-    riskScore: 72,
+
     riskLevel: "Normal",
     confidence: 0.82,
     scoringSource: "AI",
@@ -432,11 +434,12 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-9a3b1d",
     amount: 7500000,
     currency: "VND",
-    riskScore: 44,
-    riskLevel: "Normal",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE",
     triggeredRules: ["unusual_hour"],
     processedAt: "2026-09-01T02:45:30Z",
+    alertId: "ALT-DEMO-tx-020",
   },
   {
     id: "tx-021",
@@ -447,8 +450,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-6d8f3c",
     amount: 14200000,
     currency: "VND",
-    riskScore: 66,
-    riskLevel: "Normal",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE_FALLBACK",
     triggeredRules: ["velocity_check", "amount_threshold"],
     alertId: "ALT-20260828-021",
@@ -465,8 +468,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-2e5a8c",
     amount: 3500000,
     currency: "VND",
-    riskScore: 85,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.91,
     scoringSource: "AI",
     triggeredRules: ["amount_threshold", "suspicious_user_agent"],
@@ -485,7 +488,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-7f1c4b",
     amount: 1500000,
     currency: "VND",
-    riskScore: 15,
+
     riskLevel: "Normal",
     confidence: 0.95,
     scoringSource: "AI",
@@ -502,8 +505,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-3b9e7d",
     amount: 42000000,
     currency: "VND",
-    riskScore: 79,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     confidence: 0.87,
     scoringSource: "AI",
     triggeredRules: ["amount_threshold", "geo_anomaly", "rapid_ip_change"],
@@ -522,7 +525,7 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-8a2d6f",
     amount: 950000,
     currency: "VND",
-    riskScore: 19,
+
     riskLevel: "Normal",
     scoringSource: "RULE",
     triggeredRules: [],
@@ -538,8 +541,8 @@ export const fraudGuardTransactions: TransactionRisk[] = [
     entityReference: "ent-5c1b9a",
     amount: 2800000,
     currency: "VND",
-    riskScore: 92,
-    riskLevel: "Anomaly",
+
+    riskLevel: "Abnormal",
     scoringSource: "RULE_FALLBACK",
     triggeredRules: ["amount_threshold", "device_fingerprint", "first_time_high_value"],
     alertId: "ALT-20260705-026",

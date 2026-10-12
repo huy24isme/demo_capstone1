@@ -16,6 +16,7 @@ import styles from "./SecurityDashboard.module.css";
 
 interface RulesViewProps {
   initialRules: RuleTemplate[];
+  onRulesChange: React.Dispatch<React.SetStateAction<RuleTemplate[]>>;
   permissions?: RolePermissions;
   onNavigateToTesting?: () => void;
 }
@@ -83,12 +84,13 @@ function renderConditions(
   );
 }
 
-export function RulesView({ initialRules, permissions }: RulesViewProps) {
+export function RulesView({ initialRules, onRulesChange, permissions }: RulesViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const canManage = permissions ? permissions.canManageRules : true;
   const { toast } = useToast();
-  const [rules, setRules] = useState(initialRules);
+  const rules = initialRules;
+  const setRules = onRulesChange;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterEnabled, setFilterEnabled] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -96,11 +98,6 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
   // 2-Tier Rule Architecture state (Review 1 Feedback 3)
   const [ruleTierTab, setRuleTierTab] = useState<"all" | "system" | "custom">("all");
   const isSystemRule = (r: RuleTemplate) => r.category !== "custom";
-
-  // Sync state if parent initialRules updates
-  useEffect(() => {
-    setRules(initialRules);
-  }, [initialRules]);
 
   // Dry-run Simulation state
   const [dryRunOpen, setDryRunOpen] = useState(false);
@@ -232,7 +229,7 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
           : `Rule "${saved.name}" created`,
       );
     },
-    [editingRule, toast, language],
+    [editingRule, toast, language, setRules],
   );
 
   const systemRulesCount = rules.filter(isSystemRule).length;
@@ -376,11 +373,6 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {filteredRules.map((rule) => {
           const isExpanded = expandedId === rule.id;
-          const multiplier =
-            rule.multiplier ??
-            (rule.riskPoints
-              ? Math.max(1, Math.round(rule.threshold / rule.riskPoints))
-              : 1);
 
           return (
             <article
@@ -471,38 +463,6 @@ export function RulesView({ initialRules, permissions }: RulesViewProps) {
                     flexShrink: 0,
                   }}
                 >
-                  <div style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: "var(--security-orange)",
-                      }}
-                    >
-                      +{rule.riskPoints}
-                    </div>
-                    <div style={{ fontSize: 9, color: "var(--security-subtle)" }}>
-                      {t.rulesView.card.penalty}
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: "var(--security-blue)",
-                      }}
-                    >
-                      {rule.threshold}
-                    </div>
-                    <div style={{ fontSize: 9, color: "var(--security-subtle)" }}>
-                      {t.rulesView.card.threshold.replace(
-                        "{multiplier}",
-                        String(multiplier),
-                      )}
-                    </div>
-                  </div>
 
                   <button
                     className={styles.button}

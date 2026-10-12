@@ -32,7 +32,7 @@ interface CasesViewProps {
   permissions?: RolePermissions;
   currentRole?: UserRole;
   currentUserName?: string;
-  threshold?: number;
+
 }
 
 const STATUS_BADGE_STYLE: Record<
@@ -93,7 +93,7 @@ export function CasesView({
   permissions,
   currentRole = "Operation",
   currentUserName = "Trần Mai Anh",
-  threshold = 75,
+
 }: CasesViewProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
@@ -159,7 +159,7 @@ export function CasesView({
     const urgent = myAssignedCases.filter(
       (t) =>
         (t.caseStatus === "Assigned" || t.caseStatus === "Investigating") &&
-        t.riskScore >= 80,
+        t.riskLevel === "Abnormal",
     ).length;
 
     return { total, assigned, investigating, reported, completed, urgent };
@@ -465,8 +465,7 @@ export function CasesView({
 
                         <RiskLevelBadge
                           riskLevel={tx.riskLevel}
-                          score={tx.riskScore}
-                          threshold={threshold}
+
                         />
 
                         <span
@@ -915,8 +914,7 @@ export function CasesView({
 
                       <RiskLevelBadge
                         riskLevel={tx.riskLevel}
-                        score={tx.riskScore}
-                        threshold={threshold}
+
                       />
 
                       <span
@@ -976,7 +974,7 @@ export function CasesView({
                       {tx.transactionType}
                       {tx.channel && ` · ${t.risk.channel}: ${tx.channel}`}
                       {tx.deviceId && ` · ${t.risk.device}: ${tx.deviceId}`}
-                      {` · ${t.risk.riskScore}: ${tx.riskScore}/100`}
+
                       {tx.amount != null &&
                         ` · ${tx.amount.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} ${tx.currency || "VND"}`}
                       {` · Entity: ${tx.entityReference}`}

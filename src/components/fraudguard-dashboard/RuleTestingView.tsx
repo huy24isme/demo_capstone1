@@ -21,8 +21,7 @@ interface TestSampleTx {
   deviceId: string;
   failCount: number;
   addressReuseCount: number;
-  expectedAnomaly: boolean;
-  actualScore?: number;
+  expectedAnomaly?: boolean;
   actualAnomaly?: boolean;
   triggered?: string[];
   status?: "PASSED" | "FAILED" | "PENDING";
@@ -37,7 +36,6 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     deviceId: "DEV_A291 (New)",
     failCount: 4,
     addressReuseCount: 3,
-    expectedAnomaly: true,
   },
   {
     id: "stx-02",
@@ -47,7 +45,6 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     deviceId: "DEV_REGULAR_01",
     failCount: 0,
     addressReuseCount: 1,
-    expectedAnomaly: false,
   },
   {
     id: "stx-03",
@@ -57,7 +54,6 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     deviceId: "DEV_A998 (New)",
     failCount: 5,
     addressReuseCount: 3,
-    expectedAnomaly: true,
   },
   {
     id: "stx-04",
@@ -67,7 +63,6 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     deviceId: "DEV_KNOWN_55",
     failCount: 1,
     addressReuseCount: 1,
-    expectedAnomaly: false,
   },
   {
     id: "stx-05",
@@ -77,9 +72,16 @@ const SAMPLE_DATASET: TestSampleTx[] = [
     deviceId: "DEV_KNOWN_90",
     failCount: 0,
     addressReuseCount: 3,
-    expectedAnomaly: false,
   },
 ];
+
+const EXPECTED_BY_RULE: Record<string, boolean[]> = {
+  "rule-cod-001": [true, false, true, false, false],
+  "rule-cod-002": [true, false, true, false, false],
+  "rule-cod-003": [true, false, true, false, false],
+  "rule-cod-004": [true, false, true, false, true],
+  "rule-002": [false, false, false, false, false],
+};
 
 export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) {
   const { t, language } = useLanguage();
@@ -92,20 +94,17 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
   const [results, setResults] = useState<TestSampleTx[]>([]);
   const [testedSignature, setTestedSignature] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [riskPoints, setRiskPoints] = useState(rules[0]?.riskPoints ?? 25);
-  const [threshold, setThreshold] = useState(rules[0]?.threshold ?? 25);
 
   const selectedRule = rules.find((r) => r.id === selectedRuleId) || rules[0];
-  const signature = JSON.stringify({ selectedRule, riskPoints, threshold });
+  const signature = JSON.stringify(selectedRule);
   const hasRun = testedSignature === signature;
-  const testDataset = hasRun ? results : SAMPLE_DATASET;
+  const samples = SAMPLE_DATASET.map((item, index) => ({ ...item, expectedAnomaly: EXPECTED_BY_RULE[selectedRule?.id ?? ""]?.[index] }));
+  const testDataset = hasRun ? results : samples;
   const passedCount = hasRun ? results.filter((tx) => tx.status === "PASSED").length : 0;
   const nextVersion = selectedRule ? nextSandboxVersion(selectedRule.version) : null;
   const canPublish = !!onPublishRule && !!selectedRule && !!nextVersion && hasRun && results.length > 0 && passedCount === results.length;
 
   useEffect(() => {
-    setRiskPoints(selectedRule?.riskPoints ?? 25);
-    setThreshold(selectedRule?.threshold ?? 25);
     setTestedSignature(null);
     setError("");
   }, [selectedRule]);
@@ -115,7 +114,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
     setError("");
     setTestedSignature(null);
     try {
-      const evaluated = SAMPLE_DATASET.map((item): TestSampleTx => {
+      const evaluated = samples.map((item): TestSampleTx => {
         const result = evaluateSandboxRule(selectedRule, {
           projectId: "proj-abc-cod",
           transactionType: "payment",
@@ -127,11 +126,11 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
             "velocity.failed_tx.24h": item.failCount,
             "identity.address_reuse_count": item.addressReuseCount,
           },
-        }, riskPoints, threshold);
+        });
         return {
           ...item,
           ...result,
-          status: result.actualAnomaly === item.expectedAnomaly ? "PASSED" : "FAILED",
+          status: item.expectedAnomaly == null ? "PENDING" : result.actualAnomaly === item.expectedAnomaly ? "PASSED" : "FAILED",
         };
       });
       const passed = evaluated.filter((item) => item.status === "PASSED").length;
@@ -155,8 +154,6 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
       ...selectedRule,
       version: nextVersion,
       status: "Published",
-      riskPoints,
-      threshold,
       publishedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -296,12 +293,10 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
             </button>
           </div>
         </div>
-
-        {/* Rule selector & threshold adjusters */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "1fr",
             gap: 16,
           }}
         >
@@ -329,58 +324,13 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
             </select>
           </div>
 
-          <div>
-            <label
-              htmlFor="sandbox-points"
-              className={styles.drawerLabel}
-              style={{ display: "block", marginBottom: 6 }}
-            >
-              {t.ruleTestingView.controls.riskPoints.replace(
-                "{points}",
-                String(riskPoints),
-              )}
-            </label>
-            <input
-              id="sandbox-points"
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value={riskPoints}
-              onChange={(e) => { setRiskPoints(Number(e.target.value)); setTestedSignature(null); setError(""); }}
-              style={{ width: "100%", accentColor: "var(--security-orange)" }}
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="sandbox-threshold"
-              className={styles.drawerLabel}
-              style={{ display: "block", marginBottom: 6 }}
-            >
-              {t.ruleTestingView.controls.threshold.replace(
-                "{val}",
-                String(threshold),
-              )}
-            </label>
-            <input
-              id="sandbox-threshold"
-              type="range"
-              min="1"
-              max="100"
-              step="1"
-              value={threshold}
-              onChange={(e) => { setThreshold(Number(e.target.value)); setTestedSignature(null); setError(""); }}
-              style={{ width: "100%", accentColor: "var(--security-blue)" }}
-            />
-          </div>
         </div>
       </div>
 
       <p className={styles.muted}>
         {language === "vi"
-          ? "Thử riêng rule đã chọn trên 5 giao dịch thanh toán mẫu của ABC Fashion, kể cả rule đang tắt. Điểm bằng điểm rule khi khớp, bằng 0 khi không khớp; so với ngưỡng đang chọn. Nhãn kỳ vọng được giữ nguyên. Chỉ phát hành trong demo khi tất cả mẫu đạt."
-          : "Test only the selected rule on 5 sample ABC Fashion payments, including disabled rules. A match contributes the rule points; otherwise the score is 0. Compare with the selected threshold. Expected labels stay fixed. Publishing in the demo requires all samples to pass."}
+          ? "Thử riêng rule đã chọn trên 5 giao dịch thanh toán mẫu của ABC Fashion, kể cả rule đang tắt. Rule khớp trả về bất thường; không khớp trả về bình thường. Nhãn kỳ vọng riêng cho từng rule được giữ cố định; dấu — nghĩa là chưa có nhãn kiểm chứng. Chỉ phát hành trong demo khi tất cả mẫu đạt."
+          : "Test only the selected rule on 5 sample ABC Fashion payments, including disabled rules. A matching rule returns Abnormal; otherwise Normal. Expected labels are fixed per rule; — means no verification label is available. Publishing in the demo requires all samples to pass."}
       </p>
       {!selectedRule && <p role="status">{language === "vi" ? "Chưa có rule để kiểm thử." : "No rules available to test."}</p>}
       {selectedRule && !nextVersion && <p role="alert">{language === "vi" ? "Phiên bản rule không hợp lệ. Không thể phát hành." : "Invalid rule version. Publishing is unavailable."}</p>}
@@ -457,11 +407,11 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
                           : "var(--security-green)",
                       }}
                     >
-                      {item.expectedAnomaly ? t.risk.anomaly : t.risk.normal}
+                      {item.expectedAnomaly == null ? "—" : item.expectedAnomaly ? t.risk.anomaly : t.risk.normal}
                     </span>
                   </td>
                   <td>
-                    {item.actualScore != null ? (
+                    {item.actualAnomaly != null ? (
                       <div>
                         <strong
                           style={{
@@ -471,17 +421,9 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
                             fontSize: 13,
                           }}
                         >
-                          {item.actualScore}/100
+                          {item.actualAnomaly ? t.risk.anomaly : t.risk.normal}
                         </strong>
-                        <span
-                          style={{
-                            fontSize: 10,
-                            color: "var(--security-muted)",
-                            marginLeft: 6,
-                          }}
-                        >
-                          ({item.actualAnomaly ? t.risk.anomaly : t.risk.normal})
-                        </span>
+
                       </div>
                     ) : (
                       <span

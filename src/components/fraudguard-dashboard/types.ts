@@ -1,5 +1,5 @@
-export type AnomalyStatus = "Anomaly" | "Normal";
-export type RiskLevel = "Anomaly" | "Normal";
+export type AnomalyStatus = "Abnormal" | "Normal";
+export type RiskLevel = "Abnormal" | "Normal";
 export type ScoringSource = "AI" | "RULE" | "RULE_FALLBACK";
 export type CaseStatus =
   | "Open"
@@ -44,11 +44,12 @@ export interface TransactionRisk {
   currency?: string;
   channel?: string;
   deviceId?: string;
-  riskScore: number;
+
   riskLevel: RiskLevel;
   confidence?: number;
   scoringSource: ScoringSource;
   triggeredRules: string[];
+  ruleEvidence?: Array<{ code: string; name: string; observed: string; condition: string }>;
   explanation?: string;
   alertId?: string;
   caseId?: string;
@@ -77,7 +78,6 @@ export type TableTab = "all" | "alerts" | "cases";
 
 export type SortField =
   | "riskLevel"
-  | "riskScore"
   | "processedAt"
   | "projectName"
   | "transactionType";
@@ -132,9 +132,7 @@ export interface RuleTemplate {
   version: string;
   status: RuleLifecycleStatus;
   conditionGroup: ConditionGroupNode;
-  riskPoints: number;
-  multiplier?: number;
-  threshold: number;
+
   enabled: boolean;
   appliesTo: {
     transactionTypes: string[];
@@ -262,7 +260,7 @@ export interface SmeTenantItem {
   name: string;
   code: string;
   plan: "Free Tier" | "Growth" | "Enterprise";
-  scoringEngine: "Dynamic Rules" | "AI Scoring + Fallback";
+  scoringEngine: "Dynamic Rules" | "AI Detection + Fallback";
   totalTransactions: number;
   quotaLimit: number;
   quotaUsed: number;

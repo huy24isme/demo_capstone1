@@ -8,8 +8,7 @@ import {
   Globe,
   Plus,
   RefreshCw,
-  Sliders,
-  Check,
+   Check,
 } from "lucide-react";
 import type { ProjectItem, RolePermissions } from "./types";
 import { useToast } from "./ToastProvider";
@@ -19,15 +18,13 @@ import styles from "./SecurityDashboard.module.css";
 interface ProjectsViewProps {
   initialProjects: ProjectItem[];
   permissions?: RolePermissions;
-  threshold?: number;
-  onThresholdChange?: (newThreshold: number) => void;
+
 }
 
 export function ProjectsView({
   initialProjects,
   permissions,
-  threshold = 75,
-  onThresholdChange,
+
 }: ProjectsViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
@@ -440,104 +437,6 @@ export function ProjectsView({
                   </div>
                 </div>
 
-                {/* Risk Policy Decision Threshold */}
-                <div
-                  style={{
-                    padding: "9px 12px",
-                    background: "rgba(255,255,255,0.02)",
-                    borderRadius: 4,
-                    border: "1px solid var(--security-border)",
-                    marginTop: 6,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <Sliders size={13} style={{ color: "var(--security-orange)" }} />
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: "var(--security-text-secondary)",
-                        }}
-                      >
-                        {t.projectsView.card.thresholdLabel}
-                      </span>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "var(--security-orange)",
-                      }}
-                    >
-                      {threshold} / 100
-                    </span>
-                  </div>
-                  {canManage && onThresholdChange && (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginTop: 8,
-                      }}
-                    >
-                      <input
-                        type="range"
-                        min={50}
-                        max={95}
-                        step={5}
-                        value={threshold}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          onThresholdChange(val);
-                          toast(
-                            "info",
-                            language === "vi"
-                              ? `Đã cập nhật ngưỡng phát hiện rủi ro dự án: τ = ${val}`
-                              : `Updated project detection threshold: τ = ${val}`,
-                          );
-                        }}
-                        style={{
-                          flex: 1,
-                          accentColor: "var(--security-orange)",
-                          height: 4,
-                          cursor: "pointer",
-                        }}
-                        aria-label="Adjust project threshold"
-                      />
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: "var(--security-text-secondary)",
-                          minWidth: 42,
-                          textAlign: "right",
-                        }}
-                      >
-                        &tau; = {threshold}
-                      </span>
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: "var(--security-muted)",
-                      marginTop: 4,
-                    }}
-                  >
-                    {t.projectsView.card.thresholdDesc.replace(
-                      "{threshold}",
-                      String(threshold),
-                    )}
-                  </div>
-                </div>
               </article>
             );
           })

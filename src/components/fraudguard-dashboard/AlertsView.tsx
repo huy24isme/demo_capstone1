@@ -34,7 +34,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
   const stats = useMemo(
     () => ({
       total: alerts.length,
-      anomaly: alerts.filter((t) => t.riskLevel === "Anomaly" || t.riskScore >= 75).length,
+      anomaly: alerts.filter((t) => t.riskLevel === "Abnormal").length,
       withoutCase: alerts.filter((t) => !t.caseId).length,
     }),
     [alerts],
@@ -101,7 +101,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
             onChange={(e) => setFilterRisk(e.target.value)}
           >
             <option value="all">{t.alertsView.filterAllAlerts}</option>
-            <option value="Anomaly">{t.alertsView.filterAnomaly}</option>
+            <option value="Abnormal">{t.alertsView.filterAnomaly}</option>
             <option value="Normal">{t.alertsView.filterNormal}</option>
           </select>
           <select
@@ -182,10 +182,8 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
                     </p>
                   )}
                   <div style={{ marginTop: 8, fontSize: 10, color: "var(--security-subtle)" }}>
-                    {t.alertsView.scoreLabel} {alert.riskScore}/100
-                    {alert.confidence != null &&
-                      ` · ${t.alertsView.confidenceLabel} ${(alert.confidence * 100).toFixed(0)}%`}
-                    {` · ${new Date(alert.processedAt).toLocaleString(numLocale)}`}
+                    {alert.confidence != null && `${t.alertsView.confidenceLabel} ${(alert.confidence * 100).toFixed(0)}% · `}
+                    {new Date(alert.processedAt).toLocaleString(numLocale)}
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>

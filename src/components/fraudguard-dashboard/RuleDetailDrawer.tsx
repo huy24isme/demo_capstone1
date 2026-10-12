@@ -148,19 +148,13 @@ export function RuleDetailDrawer({
   // Sample transactions that triggered this rule or category
   const matchedTransactions = useMemo(() => {
     if (!rule) return [];
-    const cat = rule.category.toLowerCase();
-    const ruleKey = rule.id.toLowerCase();
+    const aliases = [rule.id, rule.name, rule.name.toLowerCase().replaceAll(" ", "_")];
 
     return fraudGuardTransactions
       .filter((tx) => {
         if (!tx.triggeredRules || tx.triggeredRules.length === 0) return false;
         return (
-          tx.triggeredRules.some(
-            (r) =>
-              r.toLowerCase().includes(ruleKey) ||
-              r.toLowerCase().includes(cat) ||
-              rule.name.toLowerCase().includes(r.toLowerCase()),
-          ) || tx.riskScore >= rule.threshold
+          tx.triggeredRules.some((name) => aliases.some((alias) => alias.toLowerCase() === name.toLowerCase()))
         );
       })
       .slice(0, 4);
@@ -289,51 +283,10 @@ export function RuleDetailDrawer({
               </button>
             </div>
           </div>
-
-          {/* Risk Scoring & Thresholds */}
           <div className={styles.drawerSection}>
             <h3 className={styles.drawerSectionTitle}>
-              {language === "vi" ? "Cấu hình Điểm số & Ngưỡng Kích hoạt" : "Scoring & Threshold Configuration"}
+              {language === "vi" ? "Phạm vi áp dụng" : "Application scope"}
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-              <div
-                style={{
-                  background: "var(--security-control)",
-                  borderRadius: 6,
-                  padding: "12px 14px",
-                  border: "1px solid var(--security-border)",
-                }}
-              >
-                <div className={styles.drawerLabel} style={{ marginBottom: 4 }}>
-                  {language === "vi" ? "Điểm phạt rủi ro" : "Risk Points Penalty"}
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--security-orange)" }}>
-                  +{rule.riskPoints} {language === "vi" ? "điểm" : "pts"}
-                </div>
-                <span style={{ fontSize: 10, color: "var(--security-subtle)" }}>
-                  {language === "vi" ? "Cộng trực tiếp vào Risk Score Gateway (0–100)" : "Direct addition to Risk Score Gateway (0–100)"}
-                </span>
-              </div>
-
-              <div
-                style={{
-                  background: "var(--security-control)",
-                  borderRadius: 6,
-                  padding: "12px 14px",
-                  border: "1px solid var(--security-border)",
-                }}
-              >
-                <div className={styles.drawerLabel} style={{ marginBottom: 4 }}>
-                  {language === "vi" ? "Ngưỡng quyết định" : "Decision Threshold"}
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "var(--security-blue)" }}>
-                  {rule.threshold}
-                </div>
-                <span style={{ fontSize: 10, color: "var(--security-subtle)" }}>
-                  {language === "vi" ? `Tự động kích hoạt Alert nếu điểm ≥ ${rule.threshold}` : `Auto-triggers alert when score ≥ ${rule.threshold}`}
-                </span>
-              </div>
-            </div>
 
             <div className={styles.drawerRow}>
               <span className={styles.drawerLabel}>
@@ -495,10 +448,10 @@ export function RuleDetailDrawer({
                       <span
                         style={{
                           fontWeight: 700,
-                          color: tx.riskLevel === "Anomaly" ? "var(--critical-text)" : "var(--security-green)",
+                          color: tx.riskLevel === "Abnormal" ? "var(--critical-text)" : "var(--security-green)",
                         }}
                       >
-                        {language === "vi" ? "Điểm" : "Score"}: {tx.riskScore}/100
+                        {tx.riskLevel}
                       </span>
                       <div style={{ fontSize: 9, color: "var(--security-subtle)" }}>
                         {new Date(tx.processedAt).toLocaleDateString(dateLocale)}

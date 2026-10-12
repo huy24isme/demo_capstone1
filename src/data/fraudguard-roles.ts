@@ -168,7 +168,7 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     viewer: "Có (Read-only)",
   },
   {
-    capability: "Xem danh sách giao dịch & AI Scoring Explanation",
+    capability: "Xem danh sách giao dịch & AI Detection Explanation",
     category: "Monitoring",
     platformAdmin: "Theo support scope",
     smeAdmin: "Có",

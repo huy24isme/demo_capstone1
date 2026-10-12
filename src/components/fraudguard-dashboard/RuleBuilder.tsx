@@ -271,20 +271,10 @@ function emptyRule(category: RuleCategory = "velocity"): Omit<RuleTemplate, "id"
     version: "v1.0",
     status: "Draft",
     conditionGroup: emptyGroupForCategory(category),
-    riskPoints: 25,
-    multiplier: 1,
-    threshold: 25,
     enabled: true,
     appliesTo: { transactionTypes: ["*"], projects: ["*"] },
   };
 }
-
-const MULTIPLIER_OPTIONS = [
-  { value: 1, label: "1x - Kích hoạt ngay (Điểm đơn lẻ đủ ngưỡng)", desc: "1 hit trigger" },
-  { value: 2, label: "2x - Phối hợp 2 lần vi phạm (Cộng dồn)", desc: "2 hits to trigger" },
-  { value: 3, label: "3x - Phối hợp 3 lần vi phạm (Nghiêm ngặt)", desc: "3 hits to trigger" },
-  { value: 4, label: "4x - Tích lũy chuỗi hành vi bất thường", desc: "4 hits to trigger" },
-];
 
 /* ── Condition Group Recursive Editor ── */
 
@@ -525,9 +515,6 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
 
   useEffect(() => {
     if (rule) {
-      const rp = rule.riskPoints ?? 25;
-      const mult = rule.multiplier ?? (rule.threshold ? Math.max(1, Math.round(rule.threshold / (rp || 1))) : 1);
-      const th = rule.threshold ?? Math.min(100, rp * mult);
       setForm({
         name: rule.name,
         description: rule.description,
@@ -535,9 +522,6 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
         version: rule.version || "v1.0",
         status: rule.status || "Draft",
         conditionGroup: rule.conditionGroup,
-        riskPoints: rp,
-        multiplier: mult,
-        threshold: th,
         enabled: rule.enabled,
         appliesTo: rule.appliesTo,
       });
@@ -571,26 +555,6 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
 
   const patch = <K extends keyof typeof form>(key: K, val: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: val }));
-
-  const handleRiskPointsChange = (val: number) => {
-    const points = Math.max(1, Math.min(100, isNaN(val) ? 0 : val));
-    setForm((prev) => {
-      const mult = prev.multiplier || 1;
-      return {
-        ...prev,
-        riskPoints: points,
-        threshold: Math.min(100, points * mult),
-      };
-    });
-  };
-
-  const handleMultiplierChange = (mult: number) => {
-    setForm((prev) => ({
-      ...prev,
-      multiplier: mult,
-      threshold: Math.min(100, (prev.riskPoints || 25) * mult),
-    }));
-  };
 
   // Handle category change: auto-update default condition if building new rule
   const handleCategoryChange = (newCategory: RuleCategory) => {
@@ -693,44 +657,6 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
               onChange={(e) => patch("description", e.target.value)}
               placeholder={language === "vi" ? "Mô tả mục đích của rule này..." : "Describe the purpose of this rule..."}
             />
-          </div>
-
-          {/* Risk Points + Multiplier Threshold Row */}
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                {language === "vi" ? "Điểm phạt (Risk Points: 1-100)" : "Risk Points (1-100)"}
-              </label>
-              <input
-                className={styles.formInput}
-                type="number"
-                min={1}
-                max={100}
-                value={form.riskPoints}
-                onChange={(e) => handleRiskPointsChange(Number(e.target.value))}
-                placeholder="e.g. 25"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
-                {language === "vi" ? "Ngưỡng kích hoạt Cảnh báo (Multiplier)" : "Activation Multiplier"}
-              </label>
-              <select
-                className={styles.formInput}
-                value={form.multiplier || 1}
-                onChange={(e) => handleMultiplierChange(Number(e.target.value))}
-              >
-                {MULTIPLIER_OPTIONS.map((opt) => {
-                  const calculatedPoints = Math.min(100, (form.riskPoints || 0) * opt.value);
-                  return (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.value}x - {opt.label.split(" - ")[1]} ({calculatedPoints} pts)
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
           </div>
 
           {/* Conditions - Smartly linked with selectedCategory */}

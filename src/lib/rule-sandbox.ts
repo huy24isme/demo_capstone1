@@ -68,16 +68,12 @@ function matches(node: ConditionGroupNode | RuleConditionNode, fields: SandboxTr
   }
 }
 
-export function evaluateSandboxRule(rule: RuleTemplate, transaction: SandboxTransaction, riskPoints: number, threshold: number) {
-  if (!Number.isFinite(riskPoints) || riskPoints < 0 || !Number.isFinite(threshold) || threshold < 1 || threshold > 100) {
-    throw new Error("Invalid risk points or threshold");
-  }
+export function evaluateSandboxRule(rule: RuleTemplate, transaction: SandboxTransaction) {
   const inScope = (rule.appliesTo.projects.includes("*") || rule.appliesTo.projects.includes(transaction.projectId)) &&
     (rule.appliesTo.transactionTypes.includes("*") || rule.appliesTo.transactionTypes.includes(transaction.transactionType));
   // A sandbox explicitly tests the selected rule, including disabled drafts.
   const triggered = inScope && matches(rule.conditionGroup, transaction.fields);
-  const actualScore = triggered ? Math.min(100, riskPoints) : 0;
-  return { actualScore, actualAnomaly: actualScore >= threshold, triggered: triggered ? [rule.name] : [] };
+  return { actualAnomaly: triggered, triggered: triggered ? [rule.name] : [] };
 }
 
 export function nextSandboxVersion(version: string): string | null {

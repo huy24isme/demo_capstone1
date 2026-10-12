@@ -55,7 +55,6 @@ const initialFilters: FraudGuardFilters = {
   range: 30,
 };
 
-
 function FraudGuardDashboardContent({
   initialTransactions,
   initialRules,
@@ -143,7 +142,7 @@ function FraudGuardDashboardContent({
   // Table state
   const [activeTab, setActiveTab] = useState<TableTab>("all");
   const [sort, setSort] = useState<SortState>({
-    field: "riskScore",
+    field: "processedAt",
     direction: "desc",
   });
   const [pagination, setPagination] = useState<PaginationState>({
@@ -151,8 +150,6 @@ function FraudGuardDashboardContent({
     pageSize: 10,
   });
 
-  // Dynamic Tenant Risk Threshold (τ_k) for Binary Anomaly (TAR-TAD-R Module M8)
-  const [tenantThreshold, setTenantThreshold] = useState<number>(75);
 
   // Drawer state
   const [selectedTransaction, setSelectedTransaction] =
@@ -181,10 +178,10 @@ function FraudGuardDashboardContent({
 
       const matchesRisk =
         filters.riskLevel === "all" ||
-        (filters.riskLevel === "Anomaly"
-          ? transaction.riskScore >= tenantThreshold
+        (filters.riskLevel === "Abnormal"
+          ? transaction.riskLevel === "Abnormal"
           : filters.riskLevel === "Normal"
-            ? transaction.riskScore < tenantThreshold
+            ? transaction.riskLevel === "Normal"
             : transaction.riskLevel === filters.riskLevel);
 
       return (
@@ -200,12 +197,12 @@ function FraudGuardDashboardContent({
           transaction.caseStatus === filters.caseStatus)
       );
     });
-  }, [deferredQuery, filters, transactions, tenantThreshold]);
+  }, [deferredQuery, filters, transactions]);
 
   // KPIs from filtered data
   const metrics = useMemo(() => {
     const anomalies = visibleTransactions.filter(
-      (transaction) => transaction.riskScore >= tenantThreshold,
+      (transaction) => transaction.riskLevel === "Abnormal",
     );
 
     return {
@@ -223,7 +220,7 @@ function FraudGuardDashboardContent({
           transaction.caseStatus === "Reported",
       ).length,
     };
-  }, [visibleTransactions, tenantThreshold]);
+  }, [visibleTransactions]);
 
   // Dynamic project/type options
   const projects = useMemo(() => {
@@ -300,12 +297,13 @@ function FraudGuardDashboardContent({
             permissions={permissions}
             currentRole={currentUser.role}
             currentUserName={currentUser.name}
-            threshold={tenantThreshold}
+
           />
         );
       case "rule-templates":
         return (
           <RulesView
+            onRulesChange={setRules}
             initialRules={rules}
             permissions={permissions}
             onNavigateToTesting={() => setActiveNavItem("rule-testing")}
@@ -316,15 +314,14 @@ function FraudGuardDashboardContent({
           <ProjectsView
             initialProjects={defaultProjects}
             permissions={permissions}
-            threshold={tenantThreshold}
-            onThresholdChange={setTenantThreshold}
+
           />
         );
       case "reports":
         return (
           <ReportsView
             transactions={transactions}
-            threshold={tenantThreshold}
+
             currentUser={currentUser}
             permissions={permissions}
             onReview={handleReview}
@@ -370,13 +367,13 @@ function FraudGuardDashboardContent({
                 <StatCard
                   label={t.riskOverview.kpis.anomaly}
                   value={metrics.highRisk}
-                  description={`${t.riskOverview.kpis.anomalyDescExceeded} (≥ ${tenantThreshold})`}
+                  description={t.riskOverview.kpis.anomalyDescExceeded}
                   tone="critical"
                 />
                 <StatCard
                   label={t.riskOverview.kpis.normal}
                   value={metrics.normals}
-                  description={`${t.riskOverview.kpis.normalDescSafe} (< ${tenantThreshold})`}
+                  description={t.riskOverview.kpis.normalDescSafe}
                 />
               </section>
             ) : currentUser.role === "Viewer" ? (
@@ -433,13 +430,13 @@ function FraudGuardDashboardContent({
                 <StatCard
                   label={t.riskOverview.kpis.anomaly}
                   value={metrics.highRisk}
-                  description={`${t.riskOverview.kpis.anomalyDescExceeded} (≥ ${tenantThreshold})`}
+                  description={t.riskOverview.kpis.anomalyDescExceeded}
                   tone="critical"
                 />
                 <StatCard
                   label={t.riskOverview.kpis.normal}
                   value={metrics.normals}
-                  description={`${t.riskOverview.kpis.normalDescSafe} (< ${tenantThreshold})`}
+                  description={t.riskOverview.kpis.normalDescSafe}
                 />
                 <StatCard
                   label={t.riskOverview.kpis.activeCases}
@@ -457,16 +454,16 @@ function FraudGuardDashboardContent({
               >
                 <TransactionRiskTrend
                   transactions={visibleTransactions}
-                  threshold={tenantThreshold}
+
                 />
               </Panel>
               <Panel
                 title={t.riskOverview.charts.distTitle}
-                description={t.riskOverview.charts.distDesc.replace("{threshold}", String(tenantThreshold))}
+                description={t.riskOverview.charts.distDesc}
               >
                 <RiskDistributionChart
                   transactions={visibleTransactions}
-                  threshold={tenantThreshold}
+
                 />
               </Panel>
             </section>
@@ -482,7 +479,7 @@ function FraudGuardDashboardContent({
               pagination={pagination}
               onPaginationChange={setPagination}
               onReview={handleReview}
-              threshold={tenantThreshold}
+
             />
           </>
         );
@@ -543,7 +540,7 @@ function FraudGuardDashboardContent({
           permissions={permissions}
           currentRole={currentUser.role}
           currentUserName={currentUser.name}
-          threshold={tenantThreshold}
+
         />
       </div>
     </ToastProvider>

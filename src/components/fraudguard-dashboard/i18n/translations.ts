@@ -88,8 +88,6 @@ const rawTranslations = {
   "risk": {
     "anomaly": "Bất thường",
     "normal": "Bình thường",
-    "riskScore": "Điểm rủi ro",
-    "scoreThreshold": "Ngưỡng kích hoạt",
     "amount": "Số tiền",
     "channel": "Kênh",
     "device": "Thiết bị",
@@ -108,9 +106,9 @@ const rawTranslations = {
       "activeCases": "Hồ sơ đang xử lý",
       "activeCasesDesc": "Đang xử lý trong luồng",
       "anomaly": "Giao dịch Bất thường",
-      "anomalyDescExceeded": "Vượt ngưỡng rủi ro",
-      "normal": "Giao dịch An toàn",
-      "normalDescSafe": "Dưới ngưỡng cảnh báo",
+      "anomalyDescExceeded": "Được AI hoặc Rule xác định bất thường",
+      "normal": "Giao dịch Bình thường",
+      "normalDescSafe": "Không phát hiện bất thường trong lần đánh giá",
       "totalAnalyzed": "Tổng giao dịch phân tích",
       "inLastDays": "Ngày gần nhất",
       "anomalyRatio": "Tỷ lệ bất thường",
@@ -123,8 +121,8 @@ const rawTranslations = {
     "charts": {
       "trendTitle": "Xu hướng rủi ro theo thời gian",
       "trendDesc": "Xu hướng Bất thường (Đỏ) vs Bình thường (Xanh) theo thời gian",
-      "distTitle": "Phân bố rủi ro theo ngưỡng",
-      "distDesc": "Tỷ lệ phân bố theo ngưỡng nhị phân (τ = {threshold})",
+      "distTitle": "Phân bố kết quả phát hiện",
+      "distDesc": "Tỷ lệ giao dịch bất thường và bình thường",
       "trendEmpty": "Không có dữ liệu xu hướng phù hợp với bộ lọc hiện tại.",
       "distNormal": "Bình thường",
       "distAnomaly": "Bất thường",
@@ -135,8 +133,8 @@ const rawTranslations = {
   "toolbar": {
     "allProjects": "Tất cả dự án",
     "allTypes": "Tất cả loại giao dịch",
-    "allSources": "Tất cả nguồn chấm điểm",
-    "aiPaid": "AI Scoring (Nâng cao)",
+    "allSources": "Tất cả nguồn phát hiện",
+    "aiPaid": "AI Detection (Nâng cao)",
     "ruleFree": "Rule Engine (Quy chuẩn)",
     "ruleFallback": "Rule Fallback (Dự phòng)",
     "clearFilters": "Xóa bộ lọc",
@@ -150,8 +148,8 @@ const rawTranslations = {
     "exportData": "Xuất dữ liệu"
   },
   "table": {
-    "title": "Danh sách Giao dịch được chấm điểm",
-    "subtitle": "Kết quả do Risk Score Gateway chuẩn hóa trên thang 0–100",
+    "title": "Danh sách giao dịch đã phân tích",
+    "subtitle": "Kết quả Normal / Abnormal, nguồn phát hiện và thông tin giao dịch",
     "totalTxns": "{count} giao dịch",
     "tabs": {
       "all": "Tất cả giao dịch",
@@ -167,8 +165,7 @@ const rawTranslations = {
       "assessment": "Đánh giá",
       "transaction": "Giao dịch",
       "projectType": "Dự án / Loại",
-      "score": "Điểm số",
-      "scoringSource": "Nguồn chấm điểm",
+      "scoringSource": "Nguồn phát hiện",
       "processedAt": "Thời gian",
       "actions": "Thao tác"
     },
@@ -180,12 +177,12 @@ const rawTranslations = {
   },
   "alertsView": {
     "title": "Hàng đợi Cảnh báo",
-    "subtitle": "Cảnh báo vượt ngưỡng kích hoạt từ Rule Engine và AI Scoring",
+    "subtitle": "Cảnh báo bất thường từ Rule Engine và AI",
     "kpis": {
       "totalAlerts": "Tổng số cảnh báo",
       "totalAlertsDesc": "Trong khoảng thời gian đã chọn",
       "anomaly": "Bất thường",
-      "anomalyDesc": "Vượt ngưỡng rủi ro (≥ 75)",
+      "anomalyDesc": "Giao dịch được xác định bất thường",
       "withoutCase": "Chưa tạo hồ sơ",
       "withoutCaseDesc": "Chưa khởi tạo hồ sơ điều tra"
     },
@@ -198,7 +195,6 @@ const rawTranslations = {
     "emptyMessage": "Không có cảnh báo nào phù hợp với bộ lọc hiện tại.",
     "reviewBtn": "Xem xét",
     "noCaseLabel": "Chưa có Case",
-    "scoreLabel": "Điểm:",
     "confidenceLabel": "Độ tin cậy:"
   },
   "caseQueue": {
@@ -221,8 +217,8 @@ const rawTranslations = {
       "newAssignedDesc": "Cần tiếp nhận & bắt đầu thẩm định",
       "inProgress": "Đang xác minh thực địa",
       "inProgressDesc": "Đang thu thập chứng cứ hiện trường",
-      "urgentCases": "Ca rủi ro cao (Điểm ≥ 80)",
-      "urgentCasesDesc": "Ưu tiên xác minh khẩn cấp"
+      "urgentCases": "Ca bất thường đang xử lý",
+      "urgentCasesDesc": "Đã phân công hoặc đang điều tra"
     },
     "tabs": {
       "allQueue": "Tất cả hàng đợi",
@@ -247,7 +243,7 @@ const rawTranslations = {
   },
   "reportsView": {
     "execTitle": "Báo cáo & Hiệu suất AI",
-    "execSubtitle": "Phân tích tỷ lệ phát hiện gian lận, hiệu suất AI Scoring so với Rule Engine và độ chính xác cảnh báo.",
+    "execSubtitle": "Phân tích tỷ lệ phát hiện gian lận, hiệu suất AI Detection so với Rule Engine và độ chính xác cảnh báo.",
     "btnExport": "Xuất Báo cáo (CSV)",
     "invTitle": "Lịch sử Thụ lý Hồ sơ",
     "invSubtitle": "Xem lại danh sách hồ sơ bạn đã thẩm định, kết quả báo cáo điều tra và quyết định phê duyệt cuối cùng.",
@@ -271,7 +267,6 @@ const rawTranslations = {
     "table": {
       "caseId": "Mã Case",
       "transaction": "Giao dịch / Dự án",
-      "score": "Điểm số",
       "investigatorFinding": "Kết luận ĐTV",
       "decision": "Phán quyết Vận hành",
       "processedAt": "Thời gian",
@@ -285,22 +280,22 @@ const rawTranslations = {
       "analyzedTxns": "Tổng giao dịch phân tích",
       "inLastDays": "Trong {range} ngày qua",
       "anomalyRate": "Tỷ lệ Bất thường",
-      "anomalyRateDesc": "{count} giao dịch bất thường (Score ≥ {threshold})",
+      "anomalyRateDesc": "{count} giao dịch bất thường",
       "falseAlarmRate": "Tỷ lệ Báo động giả",
       "falseAlarmRateDesc": "Tỷ lệ báo động nhầm sau điều tra",
-      "aiCoverage": "Độ phủ AI Scoring",
+      "aiCoverage": "Độ phủ AI Detection",
       "fallbackCoverage": "Fallback: {rate}%"
     },
     "execCharts": {
       "outcomesTitle": "Kết quả Thụ lý Điều tra",
       "outcomesDesc": "Kết luận điều tra thực tế từ đội ngũ Điều tra viên & Vận hành",
-      "scoringTitle": "Độ tin cậy Nguồn Chấm điểm",
+      "scoringTitle": "Độ tin cậy Nguồn Phát hiện",
       "scoringDesc": "Tỷ trọng AI vs Rule Engine vs Fallback",
       "legendConfirmed": "Xác nhận Gian lận",
       "legendInvestigating": "Đang thẩm định / Chờ duyệt",
       "legendFalseAlarm": "Báo động giả",
       "legendOpen": "Chờ phân công / Chưa tạo case",
-      "legendAi": "AI Scoring",
+      "legendAi": "AI Detection",
       "legendRule": "Rule Engine",
       "legendFallback": "Rule Fallback"
     },
@@ -330,7 +325,6 @@ const rawTranslations = {
       "subtitle": "{count} hồ sơ phù hợp bộ lọc hiện tại",
       "colCase": "Mã Case / Tham chiếu",
       "colProject": "Dự án / Giao dịch",
-      "colScore": "Điểm rủi ro",
       "colFinding": "Báo cáo điều tra của bạn",
       "colDecision": "Quyết định phê duyệt",
       "colTime": "Thời gian",
@@ -403,7 +397,7 @@ const rawTranslations = {
       "activeTenantsDesc": "Doanh nghiệp đang vận hành"
     },
     "failoverTitle": "Cơ chế Dự phòng Không Gián đoạn (RULE_FALLBACK Protocol)",
-    "failoverDesc": "Khi AI Scoring Service vượt ngưỡng timeout 100ms hoặc bảo trì, hệ thống tự động chuyển hướng chấm điểm sang Dynamic Rule Engine và gắn cờ RULE_FALLBACK trên transaction để đảm bảo luồng thanh toán của SME không bao giờ bị gián đoạn.",
+    "failoverDesc": "Khi AI không khả dụng hoặc quá thời gian chờ, hệ thống chuyển sang Rule Engine và ghi nhận nguồn RULE_FALLBACK.",
     "failoverBadge": "Sẵn sàng dự phòng cao",
     "microservicesTitle": "Cụm Dịch vụ Microservices",
     "microservicesDesc": "Kiểm tra độ trễ và nhịp tim từng dịch vụ thành phần",
@@ -426,9 +420,9 @@ const rawTranslations = {
       "pinging": "Đang kiểm tra…"
     },
     "chart": {
-      "title": "Giám sát Lưu lượng Chấm điểm & Tỷ lệ Fallback 24h",
-      "subtitle": "Phân bổ số lượng giao dịch chấm điểm bằng AI vs Dynamic Rule Fallback theo khung giờ",
-      "aiLabel": "AI Scoring (Yêu cầu)",
+      "title": "Giám sát Lưu lượng Phát hiện & Tỷ lệ Fallback 24h",
+      "subtitle": "Phân bổ số lượng giao dịch phân tích bằng AI vs Dynamic Rule Fallback theo khung giờ",
+      "aiLabel": "AI Detection (Yêu cầu)",
       "fallbackLabel": "Rule Fallback (Yêu cầu)"
     },
     "tenantsTitle": "Danh sách Khách hàng Doanh nghiệp (SME Tenants)",
@@ -436,7 +430,7 @@ const rawTranslations = {
     "tableTenants": {
       "name": "Tổ chức / Doanh nghiệp",
       "plan": "Gói dịch vụ",
-      "scoringEngine": "Cơ chế Chấm điểm",
+      "scoringEngine": "Cơ chế Phát hiện",
       "quota": "Hạn ngạch tiêu thụ (Tháng)",
       "activeProjects": "Số dự án",
       "status": "Trạng thái",
@@ -474,12 +468,10 @@ const rawTranslations = {
       "btnConfigWebhook": "Sửa URL",
       "notConfigured": "Chưa cấu hình webhook",
       "quota": "Hạn mức tháng",
-      "thresholdLabel": "Ngưỡng Kích Hoạt Bất Thường (τ)",
-      "thresholdDesc": "Chính sách rủi ro Tenant: Giao dịch có điểm rủi ro tổng hợp ≥ {threshold} sẽ tự động kích hoạt cảnh báo đỏ."
     },
     "modalWebhook": {
       "title": "Cấu hình Webhook — {name}",
-      "desc": "Khi có giao dịch rủi ro vượt ngưỡng Critical, FraudGuard sẽ gửi HTTP POST payload tới URL này.",
+      "desc": "FraudGuard gửi thông báo cảnh báo tới URL này.",
       "urlLabel": "Webhook Endpoint URL",
       "btnCancel": "Hủy",
       "btnSave": "Lưu Webhook"
@@ -499,7 +491,7 @@ const rawTranslations = {
   },
   "rulesView": {
     "title": "Quy tắc Phát hiện Gian lận",
-    "subtitle": "Cấu hình, tinh chỉnh ngưỡng điểm phạt và quản lý quy tắc chuẩn hệ thống kết hợp quy tắc tùy biến doanh nghiệp.",
+    "subtitle": "Quản lý điều kiện phát hiện; rule kích hoạt sẽ xác định giao dịch bất thường.",
     "btnNewRule": "Tạo Rule Mới",
     "btnSandbox": "Chạy Thử Nghiệm",
     "btnDryRun": "🧪 Chạy Thử Nghiệm",
@@ -525,8 +517,6 @@ const rawTranslations = {
       "allCategories": "Tất cả danh mục"
     },
     "card": {
-      "penalty": "Điểm phạt",
-      "threshold": "Ngưỡng ({multiplier}x)",
       "btnDetails": "Chi tiết",
       "btnEnable": "Bật",
       "btnDisable": "Tắt",
@@ -572,17 +562,15 @@ const rawTranslations = {
       "running": "Đang chạy test…",
       "btnPublish": "Phát hành phiên bản {version}",
       "selectRule": "Chọn Rule cần kiểm thử",
-      "riskPoints": "Điểm rủi ro: +{points} điểm",
-      "threshold": "Ngưỡng kích hoạt: {val}"
     },
     "results": {
       "title": "Kết quả kiểm thử trên Test Dataset",
-      "subtitle": "So sánh Expected Anomaly vs Actual Detection sau khi Rule Engine xử lý",
+      "subtitle": "So sánh Expected Abnormal vs Actual Detection sau khi Rule Engine xử lý",
       "sampleCount": "{count} giao dịch mẫu",
       "colTxn": "Giao dịch kiểm thử",
       "colParams": "Thông số kiểm thử",
       "colExpected": "Kỳ vọng",
-      "colActual": "Điểm thực tế",
+      "colActual": "Kết quả thực tế",
       "colTriggered": "Rule kích hoạt",
       "colStatus": "Trạng thái",
       "notTested": "Chưa test",
@@ -639,9 +627,9 @@ const rawTranslations = {
     "aiAnalysis": "Phân tích Mô hình AI",
     "systemSummary": "Tóm tắt Hệ thống",
     "observedLabel": "GHI NHẬN THỰC TẾ",
-    "thresholdLabel": "NGƯỠNG QUY ĐỊNH",
+    "thresholdLabel": "ĐIỀU KIỆN RULE",
     "createCaseTitle": "Khởi tạo Hồ sơ Thẩm định",
-    "createCaseDesc": "Giao dịch có điểm rủi ro vượt ngưỡng. Tạo hồ sơ vụ việc để phân công điều tra viên thẩm định.",
+    "createCaseDesc": "Tạo hồ sơ để điều tra giao dịch bất thường. Bất thường chưa phải kết luận gian lận.",
     "createCaseBtn": "Tạo Hồ sơ điều tra",
     "creatingCase": "Đang tạo hồ sơ…",
     "txnRef": "Mã giao dịch",
@@ -653,8 +641,7 @@ const rawTranslations = {
     "orderAmount": "Giá trị đơn hàng",
     "processedAt": "Thời gian xử lý",
     "systemAssessment": "Đánh giá hệ thống",
-    "riskScoreLabel": "Điểm rủi ro",
-    "scoringSource": "Nguồn tính điểm",
+    "scoringSource": "Nguồn phát hiện",
     "confidence": "Độ tin cậy mô hình",
     "investigatorWorkbench": "Bàn làm việc Điều tra viên Hiện trường",
     "assignedTo": "Phụ trách",
@@ -707,7 +694,7 @@ const rawTranslations = {
   "userMenu": {
     "title": "Tùy chọn hiển thị & Cảnh báo",
     "audioAlert": "Âm thanh cảnh báo gian lận",
-    "audioAlertSub": "Báo chuông khi có giao dịch Bất thường (Anomaly)",
+    "audioAlertSub": "Báo chuông khi có giao dịch Bất thường (Abnormal)",
     "audioToggleAria": "Bật/Tắt âm thanh cảnh báo",
     "autoRefresh": "Tự động làm mới dữ liệu",
     "autoRefreshSub": "Tần suất polling giao dịch mới",
@@ -731,7 +718,7 @@ const rawTranslations = {
     "subtitle": "Chuẩn hóa Schema nội bộ theo Module M0 & Hỗ trợ Masked Multi-evidence (M7)",
     "tabSpec": "Đặc tả Lược đồ Dữ liệu (Schema Spec)",
     "tabUpload": "Nhập dữ liệu mẫu (Upload & Validate)",
-    "specDesc": "Nền tảng SME-FraudGuard tiếp nhận dữ liệu từ các hệ thống E-commerce, EdTech và FinTech. Dữ liệu được che giấu PII (PII Masking) trước khi chấm điểm rủi ro.",
+    "specDesc": "Nền tảng SME-FraudGuard tiếp nhận dữ liệu từ các hệ thống E-commerce, EdTech và FinTech. Dữ liệu được che giấu PII (PII Masking) trước khi phân tích giao dịch.",
     "tableHeaders": {
       "fieldName": "Tên trường",
       "dataType": "Kiểu dữ liệu",
@@ -853,10 +840,8 @@ const rawTranslations = {
     "waitingForDecision": "Pending Decision"
   },
   "risk": {
-    "anomaly": "Anomaly",
+    "anomaly": "Abnormal",
     "normal": "Normal",
-    "riskScore": "Risk Score",
-    "scoreThreshold": "Score Threshold",
     "amount": "Amount",
     "channel": "Channel",
     "device": "Device",
@@ -875,12 +860,12 @@ const rawTranslations = {
       "activeCases": "Active Cases",
       "activeCasesDesc": "Currently active in pipeline",
       "anomaly": "Anomalous Transactions",
-      "anomalyDescExceeded": "Exceeded risk threshold",
-      "normal": "Safe Transactions",
-      "normalDescSafe": "Below warning threshold",
+      "anomalyDescExceeded": "Classified as abnormal by AI or rules",
+      "normal": "Normal Transactions",
+      "normalDescSafe": "No anomaly detected in this evaluation",
       "totalAnalyzed": "Total Analyzed Transactions",
       "inLastDays": "In last {range} days",
-      "anomalyRatio": "Anomaly Ratio",
+      "anomalyRatio": "Abnormal Ratio",
       "anomalyRatioDesc": "anomalous transactions",
       "falseAlarmRate": "False Alarm Rate",
       "falseAlarmRateDesc": "False alarms confirmed after investigation",
@@ -889,12 +874,12 @@ const rawTranslations = {
     },
     "charts": {
       "trendTitle": "Risk Trend Over Time",
-      "trendDesc": "Trend of Anomaly (Red) vs Normal (Green) transactions over time",
-      "distTitle": "Risk Distribution by Threshold",
-      "distDesc": "Distribution ratio across binary threshold (τ = {threshold})",
+      "trendDesc": "Trend of Abnormal (Red) vs Normal (Green) transactions over time",
+      "distTitle": "Detection Result Distribution",
+      "distDesc": "Proportion of abnormal and normal transactions",
       "trendEmpty": "No trend data matching the current filter criteria.",
       "distNormal": "Normal",
-      "distAnomaly": "Anomaly",
+      "distAnomaly": "Abnormal",
       "distTooltip": "{count} transactions ({percent}%)",
       "distQuantity": "Count"
     }
@@ -903,7 +888,7 @@ const rawTranslations = {
     "allProjects": "All projects",
     "allTypes": "All transaction types",
     "allSources": "All scoring sources",
-    "aiPaid": "AI Scoring (Advanced)",
+    "aiPaid": "AI Detection (Advanced)",
     "ruleFree": "Rule Engine (Standard)",
     "ruleFallback": "Rule Fallback (High-Availability)",
     "clearFilters": "Clear filters",
@@ -917,8 +902,8 @@ const rawTranslations = {
     "exportData": "Export Data"
   },
   "table": {
-    "title": "Scored Transactions Directory",
-    "subtitle": "Results normalized by Risk Score Gateway on 0–100 scale",
+    "title": "Analyzed Transactions",
+    "subtitle": "Normal / Abnormal results, detection source and transaction details",
     "totalTxns": "{count} transactions",
     "tabs": {
       "all": "All transactions",
@@ -928,14 +913,13 @@ const rawTranslations = {
     "searchPlaceholder": "Search transaction ref, entity, or project…",
     "filterRisk": "Risk classification",
     "filterAllRisk": "All transactions",
-    "filterAnomaly": "🔴 Anomaly",
+    "filterAnomaly": "🔴 Abnormal",
     "filterNormal": "🟢 Normal",
     "columns": {
       "assessment": "Assessment",
       "transaction": "Transaction",
       "projectType": "Project / Type",
-      "score": "Score",
-      "scoringSource": "Scoring Source",
+      "scoringSource": "Detection Source",
       "processedAt": "Processed Time",
       "actions": "Actions"
     },
@@ -947,25 +931,24 @@ const rawTranslations = {
   },
   "alertsView": {
     "title": "Alert Queue",
-    "subtitle": "Threshold alerts triggered from Rule Engine and AI Scoring",
+    "subtitle": "Abnormal transaction alerts from rules and AI",
     "kpis": {
       "totalAlerts": "Total Alerts",
       "totalAlertsDesc": "Within selected time range",
-      "anomaly": "Anomaly",
-      "anomalyDesc": "Above risk threshold (≥ 75)",
+      "anomaly": "Abnormal",
+      "anomalyDesc": "Transactions classified as abnormal",
       "withoutCase": "Unassigned Cases",
       "withoutCaseDesc": "Investigation case not yet initialized"
     },
     "filterRiskLabel": "Risk Level",
     "filterAllAlerts": "All alerts",
-    "filterAnomaly": "🔴 Anomaly",
+    "filterAnomaly": "🔴 Abnormal",
     "filterNormal": "🟢 Normal",
     "filterProjectLabel": "Project",
     "filterAllProjects": "All projects",
     "emptyMessage": "No alerts match the current filter criteria.",
     "reviewBtn": "Review",
     "noCaseLabel": "No Case",
-    "scoreLabel": "Score:",
     "confidenceLabel": "Confidence:"
   },
   "caseQueue": {
@@ -988,8 +971,8 @@ const rawTranslations = {
       "newAssignedDesc": "Accept & begin field verification",
       "inProgress": "In Field Verification",
       "inProgressDesc": "Collecting on-site evidence",
-      "urgentCases": "High Risk Cases (Score ≥ 80)",
-      "urgentCasesDesc": "Immediate verification priority"
+      "urgentCases": "Active Abnormal Cases",
+      "urgentCasesDesc": "Assigned or under investigation"
     },
     "tabs": {
       "allQueue": "All Cases",
@@ -1014,7 +997,7 @@ const rawTranslations = {
   },
   "reportsView": {
     "execTitle": "Reports & AI Performance",
-    "execSubtitle": "Analyze fraud detection rates, AI Scoring vs Rule Engine performance, and alert precision.",
+    "execSubtitle": "Analyze fraud detection rates, AI Detection vs Rule Engine performance, and alert precision.",
     "btnExport": "Export Report (CSV)",
     "invTitle": "Investigation History",
     "invSubtitle": "Review completed field investigation cases and final approval decisions from Operations Lead.",
@@ -1038,7 +1021,6 @@ const rawTranslations = {
     "table": {
       "caseId": "Case ID",
       "transaction": "Transaction / Project",
-      "score": "Score",
       "investigatorFinding": "Investigator Finding",
       "decision": "Operations Verdict",
       "processedAt": "Processed At",
@@ -1051,23 +1033,23 @@ const rawTranslations = {
     "execKpis": {
       "analyzedTxns": "Analyzed Transactions",
       "inLastDays": "In the last {range} days",
-      "anomalyRate": "Anomaly Rate",
-      "anomalyRateDesc": "{count} anomalous transactions (Score ≥ {threshold})",
+      "anomalyRate": "Abnormal Rate",
+      "anomalyRateDesc": "{count} abnormal transactions",
       "falseAlarmRate": "False Alarm Rate",
       "falseAlarmRateDesc": "False alarms confirmed after investigation",
-      "aiCoverage": "AI Scoring Coverage",
+      "aiCoverage": "AI Detection Coverage",
       "fallbackCoverage": "Fallback: {rate}%"
     },
     "execCharts": {
       "outcomesTitle": "Case Investigation Outcomes",
       "outcomesDesc": "Field and Operations teams actual investigation conclusions",
-      "scoringTitle": "Scoring Engine Reliability",
+      "scoringTitle": "Detection Engine Reliability",
       "scoringDesc": "Distribution of AI vs Rule Engine vs Fallback scoring",
       "legendConfirmed": "Confirmed Fraud",
       "legendInvestigating": "Investigating / Reported",
       "legendFalseAlarm": "False Alarm",
       "legendOpen": "Open / No Case",
-      "legendAi": "AI Scoring",
+      "legendAi": "AI Detection",
       "legendRule": "Rule Engine",
       "legendFallback": "Rule Fallback"
     },
@@ -1076,7 +1058,7 @@ const rawTranslations = {
       "subtitle": "Detailed breakdown of transaction volume and fraud rates by integration source",
       "colProject": "Project Name",
       "colTotal": "Total Analyzed",
-      "colAnomaly": "Anomaly",
+      "colAnomaly": "Abnormal",
       "colConfirmed": "Confirmed Fraud",
       "colRate": "Risk Rate (%)"
     },
@@ -1097,7 +1079,6 @@ const rawTranslations = {
       "subtitle": "{count} cases matching current filters",
       "colCase": "Case ID / Reference",
       "colProject": "Project / Transaction",
-      "colScore": "Risk Score",
       "colFinding": "Your Investigation Report",
       "colDecision": "Operations Verdict",
       "colTime": "Processed Time",
@@ -1170,7 +1151,7 @@ const rawTranslations = {
       "activeTenantsDesc": "Tenants in active operation"
     },
     "failoverTitle": "Zero-Downtime Fallback Protocol (RULE_FALLBACK)",
-    "failoverDesc": "When AI Scoring exceeds the 100ms latency threshold or is under maintenance, scoring automatically fails over to the Dynamic Rule Engine with a RULE_FALLBACK flag to ensure zero transaction disruption for SMEs.",
+    "failoverDesc": "When AI is unavailable or times out, evaluation falls back to rules with source RULE_FALLBACK.",
     "failoverBadge": "High-Availability Active",
     "microservicesTitle": "Core Microservices Cluster",
     "microservicesDesc": "Heartbeat and latency health check across microservices",
@@ -1193,9 +1174,9 @@ const rawTranslations = {
       "pinging": "Pinging…"
     },
     "chart": {
-      "title": "24h Scoring Traffic & Fallback Rate Monitoring",
-      "subtitle": "Hourly distribution of transactions scored by AI vs Dynamic Rule Fallback",
-      "aiLabel": "AI Scoring (Requests)",
+      "title": "24h Detection Traffic & Fallback Rate Monitoring",
+      "subtitle": "Hourly distribution of transactions analyzed by AI vs Dynamic Rule Fallback",
+      "aiLabel": "AI Detection (Requests)",
       "fallbackLabel": "Rule Fallback (Requests)"
     },
     "tenantsTitle": "SME Tenants List (Multi-tenant)",
@@ -1203,7 +1184,7 @@ const rawTranslations = {
     "tableTenants": {
       "name": "Tenant / Organization",
       "plan": "Subscription Plan",
-      "scoringEngine": "Scoring Engine",
+      "scoringEngine": "Detection Engine",
       "quota": "Monthly Quota Usage",
       "activeProjects": "Active Projects",
       "status": "Status",
@@ -1241,12 +1222,10 @@ const rawTranslations = {
       "btnConfigWebhook": "Edit URL",
       "notConfigured": "Webhook not configured",
       "quota": "Monthly Quota",
-      "thresholdLabel": "Anomaly Score Threshold (τ)",
-      "thresholdDesc": "Tenant Policy: Transactions with composite risk score ≥ {threshold} automatically trigger red alerts."
     },
     "modalWebhook": {
       "title": "Configure Webhook — {name}",
-      "desc": "When transactions exceed the critical risk threshold, FraudGuard sends an HTTP POST payload to this endpoint.",
+      "desc": "FraudGuard sends alert notifications to this endpoint.",
       "urlLabel": "Webhook Endpoint URL",
       "btnCancel": "Cancel",
       "btnSave": "Save Webhook"
@@ -1266,7 +1245,7 @@ const rawTranslations = {
   },
   "rulesView": {
     "title": "Fraud Detection Rules",
-    "subtitle": "Configure scoring penalties, thresholds, and manage system standard and custom enterprise rules.",
+    "subtitle": "Manage detection conditions; a matching rule marks a transaction as abnormal.",
     "btnNewRule": "Create New Rule",
     "btnSandbox": "Testing Sandbox",
     "btnDryRun": "🧪 Dry-run Simulation Test",
@@ -1292,8 +1271,6 @@ const rawTranslations = {
       "allCategories": "All categories"
     },
     "card": {
-      "penalty": "Risk Points",
-      "threshold": "Threshold ({multiplier}x)",
       "btnDetails": "Details",
       "btnEnable": "Enable",
       "btnDisable": "Disable",
@@ -1310,7 +1287,7 @@ const rawTranslations = {
       "title": "🧪 Dry-run Simulation Results",
       "scanning": "Scanning 100 sample simulated transactions across active rules...",
       "statAudited": "Audited Transactions",
-      "statAnomaly": "Anomaly",
+      "statAnomaly": "Abnormal",
       "statNormal": "Normal",
       "topTriggered": "Top Triggered Rules",
       "timesTriggered": "{count} triggers",
@@ -1339,17 +1316,15 @@ const rawTranslations = {
       "running": "Running test…",
       "btnPublish": "Publish Rule Version {version}",
       "selectRule": "Select Rule to Test",
-      "riskPoints": "Risk Points: +{points} pts",
-      "threshold": "Activation Threshold: {val}"
     },
     "results": {
       "title": "Test Dataset Evaluation Results",
-      "subtitle": "Comparing Expected Anomaly vs Actual Detection after Rule Engine evaluation",
+      "subtitle": "Comparing Expected Abnormal vs Actual Detection after Rule Engine evaluation",
       "sampleCount": "{count} sample transactions",
       "colTxn": "Test Transaction",
       "colParams": "Test Parameters",
       "colExpected": "Expected",
-      "colActual": "Actual Score",
+      "colActual": "Actual Result",
       "colTriggered": "Triggered Rules",
       "colStatus": "Status",
       "notTested": "Not tested",
@@ -1406,9 +1381,9 @@ const rawTranslations = {
     "aiAnalysis": "AI Pipeline Analysis",
     "systemSummary": "System Summary",
     "observedLabel": "OBSERVED FACT",
-    "thresholdLabel": "POLICY THRESHOLD",
+    "thresholdLabel": "RULE CONDITION",
     "createCaseTitle": "Initialize Investigation Case",
-    "createCaseDesc": "Transaction risk exceeds threshold. Create an investigation case to assign a field investigator.",
+    "createCaseDesc": "Create a case to investigate this abnormal transaction. Abnormal does not mean confirmed fraud.",
     "createCaseBtn": "Create Investigation Case",
     "creatingCase": "Creating case…",
     "txnRef": "Transaction Ref",
@@ -1420,8 +1395,7 @@ const rawTranslations = {
     "orderAmount": "Order Amount",
     "processedAt": "Processed Time",
     "systemAssessment": "System Assessment",
-    "riskScoreLabel": "Risk Score",
-    "scoringSource": "Scoring Source",
+    "scoringSource": "Detection Source",
     "confidence": "Model Confidence",
     "investigatorWorkbench": "Field Investigator Workbench",
     "assignedTo": "Investigator",
@@ -1474,7 +1448,7 @@ const rawTranslations = {
   "userMenu": {
     "title": "Display & Notification Preferences",
     "audioAlert": "Fraud Alert Audio Cue",
-    "audioAlertSub": "Play audible chime on Anomaly transactions",
+    "audioAlertSub": "Play audible chime on Abnormal transactions",
     "audioToggleAria": "Toggle audio alert",
     "autoRefresh": "Auto Refresh Data",
     "autoRefreshSub": "Polling interval for incoming transactions",

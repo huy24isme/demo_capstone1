@@ -28,7 +28,7 @@ import styles from "./SecurityDashboard.module.css";
 
 interface ReportsViewProps {
   transactions: TransactionRisk[];
-  threshold?: number;
+
   currentUser?: UserProfile;
   permissions?: RolePermissions;
   onReview?: (transaction: TransactionRisk) => void;
@@ -122,7 +122,7 @@ function getDecisionBadgeStyle(
 
 export function ReportsView({
   transactions,
-  threshold = 75,
+
   currentUser,
   permissions,
   onReview,
@@ -245,7 +245,7 @@ export function ReportsView({
   const macroMetrics = useMemo(() => {
     const total = filteredMacro.length;
     const highRisk = filteredMacro.filter(
-      (tx) => tx.riskLevel === "Anomaly" || tx.riskScore >= threshold,
+      (tx) => tx.riskLevel === "Abnormal",
     ).length;
     const confirmed = filteredMacro.filter(
       (tx) => tx.caseStatus === "Confirmed Fraud",
@@ -268,7 +268,7 @@ export function ReportsView({
       aiCoverage: total > 0 ? ((aiCount / total) * 100).toFixed(1) : "0",
       fallbackRate: total > 0 ? ((fallbackCount / total) * 100).toFixed(1) : "0",
     };
-  }, [filteredMacro, threshold]);
+  }, [filteredMacro]);
 
   const conclusionData = useMemo(() => {
     return [
@@ -328,7 +328,7 @@ export function ReportsView({
     return projects.map((p) => {
       const pTxns = filteredMacro.filter((tx) => tx.projectId === p.id);
       const highCount = pTxns.filter(
-        (tx) => tx.riskLevel === "Anomaly" || tx.riskScore >= threshold,
+        (tx) => tx.riskLevel === "Abnormal",
       ).length;
       const fraudCount = pTxns.filter(
         (tx) => tx.caseStatus === "Confirmed Fraud",
@@ -340,7 +340,7 @@ export function ReportsView({
         confirmed: fraudCount,
       };
     });
-  }, [projects, filteredMacro, threshold]);
+  }, [projects, filteredMacro]);
 
   const handleExportSummaryCSV = () => {
     const headers = [
@@ -513,7 +513,8 @@ export function ReportsView({
                 <tr>
                   <th>{t.reportsView.invTable.colCase}</th>
                   <th>{t.reportsView.invTable.colProject}</th>
-                  <th>{t.reportsView.invTable.colScore}</th>
+                  <th>{t.table.columns.assessment}</th>
+
                   <th>{t.reportsView.invTable.colFinding}</th>
                   <th>{t.reportsView.invTable.colDecision}</th>
                   <th>{t.reportsView.invTable.colTime}</th>
@@ -572,9 +573,7 @@ export function ReportsView({
                             }}
                           >
                             <RiskLevelBadge riskLevel={tx.riskLevel} />
-                            <span style={{ fontWeight: 600, fontSize: 13 }}>
-                              {tx.riskScore}/100
-                            </span>
+
                           </div>
                           <ScoringSourceBadge source={tx.scoringSource} />
                         </td>
@@ -744,8 +743,7 @@ export function ReportsView({
           <strong className={styles.statValue}>{macroMetrics.fraudRate}%</strong>
           <span className={styles.statDescription}>
             {t.reportsView.execKpis.anomalyRateDesc
-              .replace("{count}", String(macroMetrics.highRisk))
-              .replace("{threshold}", String(threshold))}
+              .replace("{count}", String(macroMetrics.highRisk))}
           </span>
         </article>
         <article className={`${styles.statCard} ${styles.statWarning}`}>

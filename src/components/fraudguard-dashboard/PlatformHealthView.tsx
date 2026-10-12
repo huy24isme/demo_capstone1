@@ -218,7 +218,7 @@ export function PlatformHealthView() {
           <div className={styles.legend}>
             <span>
               <span className={styles.legendDot} style={{ background: "var(--security-purple)" }} />
-              AI Scoring
+              AI Detection
             </span>
             <span>
               <span className={styles.legendDot} style={{ background: "var(--security-orange)" }} />

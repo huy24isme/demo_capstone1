@@ -19,12 +19,12 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 interface TransactionRiskTrendProps {
   transactions?: TransactionRisk[];
-  threshold?: number;
+
 }
 
 export function TransactionRiskTrend({
   transactions,
-  threshold = 75,
+
 }: TransactionRiskTrendProps) {
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
@@ -57,7 +57,7 @@ export function TransactionRiskTrend({
       }
       const entry = dateMap.get(label)!;
       entry.total += 1;
-      if (t.riskScore >= threshold) {
+      if (t.riskLevel === "Abnormal") {
         entry.anomaly += 1;
       } else {
         entry.normal += 1;
@@ -65,7 +65,7 @@ export function TransactionRiskTrend({
     });
 
     return Array.from(dateMap.values());
-  }, [transactions, threshold]);
+  }, [transactions]);
 
   if (!mounted) {
     return <div className={styles.chartArea} />;

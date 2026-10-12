@@ -38,7 +38,7 @@ interface AlertCaseDrawerProps {
   permissions?: RolePermissions;
   currentRole?: UserRole;
   currentUserName?: string;
-  threshold?: number;
+
 }
 
 export const AVAILABLE_INVESTIGATORS = [
@@ -53,191 +53,18 @@ interface RuleEvidenceDetail {
   name: string;
   observed: string;
   threshold: string;
-  riskPoints: number;
 }
 
-function getRuleEvidenceDetails(
-  transaction: TransactionRisk,
-  language: Language,
-): RuleEvidenceDetail[] {
-  const isVi = language === "vi";
-  const numLocale = isVi ? "vi-VN" : "en-US";
-
-  const map: Record<string, (tx: TransactionRisk) => RuleEvidenceDetail> = {
-    velocity_check: () => ({
-      code: "velocity_check",
-      name: isVi ? "Kiểm tra tần suất" : "Velocity Check",
-      observed: isVi
-        ? "14 giao dịch trong 1h qua (Tăng 4.2x so với baseline)"
-        : "14 transactions in last 1h (4.2x above baseline)",
-      threshold: isVi
-        ? "Ngưỡng kích hoạt: > 10 giao dịch/1h"
-        : "Trigger threshold: > 10 transactions/1h",
-      riskPoints: 30,
-    }),
-    amount_threshold: (tx) => {
-      const isRefund = tx.transactionType === "refund";
-      const isSub = tx.transactionType === "subscription";
-      const thresholdVal = isRefund ? 10000000 : isSub ? 2000000 : 20000000;
-      const typeLabel = isVi
-        ? isRefund
-          ? "hoàn tiền"
-          : isSub
-            ? "gói định kỳ"
-            : "giao dịch"
-        : isRefund
-          ? "refund"
-          : isSub
-            ? "subscription"
-            : "transaction";
-      return {
-        code: "amount_threshold",
-        name: isVi ? "Vượt hạn mức giá trị" : "Amount Threshold",
-        observed: `${tx.amount != null ? tx.amount.toLocaleString(numLocale) : "45,000,000"} ${tx.currency || "VND"}`,
-        threshold: isVi
-          ? `Ngưỡng tối đa ${typeLabel}: > ${thresholdVal.toLocaleString(numLocale)} ${tx.currency || "VND"}`
-          : `Maximum threshold for ${typeLabel}: > ${thresholdVal.toLocaleString(numLocale)} ${tx.currency || "VND"}`,
-        riskPoints: 25,
-      };
-    },
-    geo_anomaly: () => ({
-      code: "geo_anomaly",
-      name: isVi ? "Vị trí địa lý bất thường" : "Geo Anomaly",
-      observed: isVi
-        ? "IP: Singapore (Cách 1,420 km sau 35 phút từ VN)"
-        : "IP: Singapore (1,420 km away 35 mins after VN login)",
-      threshold: isVi
-        ? "Vị trí lạ (khác VN) hoặc tốc độ di chuyển bất khả thi"
-        : "Unusual location or impossible travel speed",
-      riskPoints: 35,
-    }),
-    device_fingerprint: (tx) => ({
-      code: "device_fingerprint",
-      name: isVi ? "Nhận diện thiết bị lạ" : "Device Fingerprint",
-      observed: isVi
-        ? `Thiết bị ${tx.deviceId || "#DEV-94812"} (Hash phần cứng chưa từng thấy)`
-        : `Device ${tx.deviceId || "#DEV-94812"} (Hardware hash never seen before)`,
-      threshold: isVi
-        ? "Thiết bị chưa từng đăng ký hoặc trong Blacklist"
-        : "Unregistered new device or listed on Blacklist",
-      riskPoints: 40,
-    }),
-    unusual_hour: (tx) => ({
-      code: "unusual_hour",
-      name: isVi ? "Khung giờ giao dịch đêm" : "Unusual Hour",
-      observed: `${new Date(tx.processedAt).toLocaleTimeString(numLocale, { hour: "2-digit", minute: "2-digit" })} (${isVi ? "Khung giờ đêm" : "Late night hours"})`,
-      threshold: isVi
-        ? "Giao dịch phát sinh từ 00:00 đến 06:00"
-        : "Transaction occurred between 00:00 and 06:00",
-      riskPoints: 15,
-    }),
-    dormant_account_reactivated: () => ({
-      code: "dormant_account_reactivated",
-      name: isVi ? "Kích hoạt tài khoản ngủ đông" : "Dormant Account Reactivated",
-      observed: isVi
-        ? "Tài khoản không hoạt động 118 ngày vừa kích hoạt lại"
-        : "Account inactive for 118 days recently reactivated",
-      threshold: isVi
-        ? "Tài khoản ngủ đông > 90 ngày phát sinh giao dịch lớn"
-        : "Dormant > 90 days with high-value transaction",
-      riskPoints: 30,
-    }),
-    first_time_high_value: (tx) => ({
-      code: "first_time_high_value",
-      name: isVi ? "Giao dịch giá trị lớn lần đầu" : "First Time High Value",
-      observed: isVi
-        ? `Giao dịch ${tx.amount != null ? tx.amount.toLocaleString(numLocale) : "85,000,000"} ${tx.currency || "VND"} trên tài khoản 12 ngày tuổi`
-        : `Transaction of ${tx.amount != null ? tx.amount.toLocaleString(numLocale) : "85,000,000"} ${tx.currency || "VND"} on 12-day-old account`,
-      threshold: isVi
-        ? "Tài khoản < 30 ngày giao dịch > 50,000,000 VND"
-        : "Account < 30 days old with transaction > 50,000,000 VND",
-      riskPoints: 35,
-    }),
-    suspicious_user_agent: () => ({
-      code: "suspicious_user_agent",
-      name: isVi ? "Trình duyệt bất thường" : "Suspicious User Agent",
-      observed: isVi
-        ? "Headless Chrome / Tập lệnh tự động"
-        : "Headless Chrome / Automated script",
-      threshold: isVi
-        ? "Điểm tin cậy User-agent < 30"
-        : "User-agent trust score < 30",
-      riskPoints: 20,
-    }),
-    rapid_ip_change: () => ({
-      code: "rapid_ip_change",
-      name: isVi ? "Thay đổi IP liên tục" : "Rapid IP Change",
-      observed: isVi
-        ? "4 địa chỉ IP khác nhau từ 3 ISP trong vòng 45 phút"
-        : "4 distinct IP addresses across 3 ISPs within 45 mins",
-      threshold: isVi
-        ? "Entity đổi > 3 IP trong 1h"
-        : "Entity changed > 3 IPs within 1h",
-      riskPoints: 25,
-    }),
-    "High Transaction Amount": (tx) => ({
-      code: "High Transaction Amount",
-      name: isVi ? "Đơn COD giá trị cao" : "High COD Transaction Amount",
-      observed: isVi
-        ? `Giá trị đơn: ${tx.amount != null ? tx.amount.toLocaleString(numLocale) : "12,500,000"} VND qua kênh COD`
-        : `Order value: ${tx.amount != null ? tx.amount.toLocaleString(numLocale) : "12,500,000"} VND via COD channel`,
-      threshold: isVi
-        ? "Ngưỡng kiểm soát COD: > 10,000,000 VND"
-        : "COD control threshold: > 10,000,000 VND",
-      riskPoints: 25,
-    }),
-    "New Device": (tx) => ({
-      code: "New Device",
-      name: isVi ? "Thiết bị lần đầu xuất hiện" : "New Device",
-      observed: isVi
-        ? `Phần cứng ID: ${tx.deviceId || "DEV_A291"} (Không có trong lịch sử tài khoản)`
-        : `Hardware ID: ${tx.deviceId || "DEV_A291"} (Not in account history)`,
-      threshold: isVi
-        ? "Thiết bị mới chưa từng liên kết (is_new == true)"
-        : "Unlinked new device (is_new == true)",
-      riskPoints: 20,
-    }),
-    "4 Failed Transactions in 24 Hours": () => ({
-      code: "4 Failed Transactions in 24 Hours",
-      name: isVi ? "4 lần thất bại trong 24 giờ" : "4 Failed Transactions in 24 Hours",
-      observed: isVi
-        ? "Ghi nhận 4 lần đặt hàng/thanh toán thất bại trong 24 giờ qua"
-        : "Recorded 4 failed ordering/payment attempts in last 24h",
-      threshold: isVi
-        ? "Số lần thanh toán lỗi trong 24h >= 4"
-        : "Failed payment count in 24h >= 4",
-      riskPoints: 30,
-    }),
-    "Address Reuse": () => ({
-      code: "Address Reuse",
-      name: isVi ? "Trùng lặp địa chỉ nhận hàng" : "Address Reuse",
-      observed: isVi
-        ? "Địa chỉ giao hàng trùng khớp với 3 tài khoản khách hàng khác nhau"
-        : "Delivery address matched across 3 distinct customer accounts",
-      threshold: isVi
-        ? "Địa chỉ được dùng bởi > 2 tài khoản trong 48h"
-        : "Address used by > 2 accounts in 48h",
-      riskPoints: 15,
-    }),
-  };
-
-  const results: RuleEvidenceDetail[] = [];
-  for (const ruleKey of transaction.triggeredRules) {
-    if (map[ruleKey]) {
-      results.push(map[ruleKey](transaction));
-    } else {
-      results.push({
-        code: ruleKey,
-        name: ruleKey.replace(/_/g, " "),
-        observed: isVi
-          ? "Kích hoạt dựa trên bộ rule an ninh động"
-          : "Triggered by dynamic security rules",
-        threshold: isVi ? "Ngưỡng chuẩn" : "Standard baseline",
-        riskPoints: 20,
-      });
-    }
-  }
-  return results;
+function getRuleEvidenceDetails(transaction: TransactionRisk, language: Language): RuleEvidenceDetail[] {
+  return transaction.triggeredRules.map((name) => {
+    const evidence = transaction.ruleEvidence?.find((item) => item.code === name || item.name === name);
+    return {
+      code: evidence?.code ?? name,
+      name: evidence?.name ?? name,
+      observed: evidence?.observed ?? (language === "vi" ? "Chưa có dữ liệu bằng chứng chi tiết." : "Detailed evidence is not available."),
+      threshold: evidence?.condition ?? (language === "vi" ? "Chưa có bản ghi điều kiện tại thời điểm phát hiện." : "No condition snapshot is available for this detection."),
+    };
+  });
 }
 
 const WORKFLOW_STEP_KEYS: Array<{ key: keyof TranslationKey["drawer"]["stepper"] }> = [
@@ -301,7 +128,7 @@ export function AlertCaseDrawer({
   permissions,
   currentRole = "Operation",
   currentUserName = "Trần Mai Anh",
-  threshold = 75,
+
 }: AlertCaseDrawerProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
@@ -740,23 +567,7 @@ export function AlertCaseDrawer({
               <span className={styles.drawerLabel}>{t.drawer.systemAssessment}</span>
               <RiskLevelBadge riskLevel={transaction.riskLevel} />
             </div>
-            <div className={styles.drawerRow}>
-              <span className={styles.drawerLabel}>
-                {t.drawer.riskScoreLabel} ({t.drawer.thresholdLabel} τ = {threshold})
-              </span>
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color:
-                    transaction.riskScore >= threshold
-                      ? "var(--security-red)"
-                      : "var(--security-green)",
-                }}
-              >
-                {transaction.riskScore}/100
-              </span>
-            </div>
+
             <div className={styles.drawerRow}>
               <span className={styles.drawerLabel}>{t.drawer.scoringSource}</span>
               <ScoringSourceBadge source={transaction.scoringSource} />
@@ -780,7 +591,6 @@ export function AlertCaseDrawer({
                   <div key={ev.code} className={styles.evidenceItemCard}>
                     <div className={styles.evidenceItemHeader}>
                       <span className={styles.evidenceItemName}>{ev.name}</span>
-                      <span className={styles.evidenceItemScore}>+{ev.riskPoints} pts</span>
                     </div>
                     <div className={styles.evidenceRow}>
                       <div className={styles.evidenceCol}>

@@ -36,11 +36,11 @@ interface TransactionRiskTableProps {
   pagination: PaginationState;
   onPaginationChange: (pagination: PaginationState) => void;
   onReview: (transaction: TransactionRisk) => void;
-  threshold?: number;
+
 }
 
 const RISK_ORDER: Record<RiskLevel, number> = {
-  Anomaly: 0,
+  Abnormal: 0,
   Normal: 1,
 };
 
@@ -55,8 +55,6 @@ function sortTransactions(
     switch (sort.field) {
       case "riskLevel":
         return (RISK_ORDER[a.riskLevel] - RISK_ORDER[b.riskLevel]) * dir;
-      case "riskScore":
-        return (a.riskScore - b.riskScore) * dir;
       case "processedAt":
         return (
           (new Date(a.processedAt).getTime() -
@@ -122,7 +120,7 @@ export function TransactionRiskTable({
   pagination,
   onPaginationChange,
   onReview,
-  threshold = 75,
+
 }: TransactionRiskTableProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
@@ -227,7 +225,7 @@ export function TransactionRiskTable({
             }
           >
             <option value="all">{t.table.filterAllRisk}</option>
-            <option value="Anomaly">{t.table.filterAnomaly}</option>
+            <option value="Abnormal">{t.table.filterAnomaly}</option>
             <option value="Normal">{t.table.filterNormal}</option>
           </select>
         </div>
@@ -250,12 +248,7 @@ export function TransactionRiskTable({
                 sort={sort}
                 onSort={onSortChange}
               />
-              <SortHeader
-                label={t.table.columns.score}
-                field="riskScore"
-                sort={sort}
-                onSort={onSortChange}
-              />
+
               <th>{t.table.columns.scoringSource}</th>
               <SortHeader
                 label={t.table.columns.processedAt}
@@ -269,7 +262,7 @@ export function TransactionRiskTable({
           <tbody>
             {pageData.length === 0 ? (
               <tr>
-                <td className={styles.emptyState} colSpan={7}>
+                <td className={styles.emptyState} colSpan={6}>
                   {t.table.emptyMessage}
                 </td>
               </tr>
@@ -279,8 +272,7 @@ export function TransactionRiskTable({
                   <td>
                     <RiskLevelBadge
                       riskLevel={transaction.riskLevel}
-                      score={transaction.riskScore}
-                      threshold={threshold}
+
                     />
                   </td>
                   <td>
@@ -297,7 +289,7 @@ export function TransactionRiskTable({
                       {transaction.transactionType}
                     </span>
                   </td>
-                  <td>{transaction.riskScore}/100</td>
+
                   <td>
                     <ScoringSourceBadge source={transaction.scoringSource} />
                   </td>

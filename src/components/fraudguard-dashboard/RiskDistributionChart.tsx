@@ -17,12 +17,12 @@ import { useLanguage } from "./i18n/LanguageContext";
 
 interface RiskDistributionChartProps {
   transactions: TransactionRisk[];
-  threshold?: number;
+
 }
 
 export function RiskDistributionChart({
   transactions,
-  threshold = 75,
+
 }: RiskDistributionChartProps) {
   const { t } = useLanguage();
   const [mounted, setMounted] = useState(false);
@@ -31,7 +31,7 @@ export function RiskDistributionChart({
     setMounted(true);
   }, []);
 
-  const anomalies = transactions.filter((t) => t.riskScore >= threshold).length;
+  const anomalies = transactions.filter((t) => t.riskLevel === "Abnormal").length;
   const normals = transactions.length - anomalies;
 
   const normalLabel = t.riskOverview.charts.distNormal;

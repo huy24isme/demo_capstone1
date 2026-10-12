@@ -101,8 +101,8 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
       title: language === "vi" ? "Review Result & Validate" : "Review Result & Validate",
       description:
         language === "vi"
-          ? "Xác nhận rule trigger chuẩn xác (TX-83912 đạt điểm 82/100 Anomaly)."
-          : "Confirm correct rule triggers (TX-83912 scored 82/100 Anomaly).",
+          ? "Xác nhận rule kích hoạt và lý do phát hiện bất thường của giao dịch TX-83912."
+          : "Confirm triggered rules and the abnormal detection explanation for TX-83912.",
       status: currentStep > 8 ? "completed" : currentStep === 8 ? "current" : "upcoming",
       actor: "Platform Admin",
     },
