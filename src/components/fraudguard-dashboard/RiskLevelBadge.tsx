@@ -13,8 +13,9 @@ export function RiskLevelBadge({
   riskLevel,
 
 }: RiskLevelBadgeProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
+  if (!riskLevel || riskLevel === 'Undetermined') return <span className={styles.badge}>{language === 'vi' ? 'Chưa thể kết luận' : 'Undetermined'}</span>;
   const isAnomaly = riskLevel === "Abnormal";
 
   if (isAnomaly) {

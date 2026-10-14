@@ -32,12 +32,13 @@ export function RiskDistributionChart({
   }, []);
 
   const anomalies = transactions.filter((t) => t.riskLevel === "Abnormal").length;
-  const normals = transactions.length - anomalies;
+  const normals = transactions.filter(transaction => transaction.riskLevel === "Normal").length;
 
   const normalLabel = t.riskOverview.charts.distNormal;
   const anomalyLabel = t.riskOverview.charts.distAnomaly;
 
   const distribution = [
+    { level: 'Undetermined', color: '#eda765', count: transactions.filter(transaction => transaction.riskLevel === 'Undetermined').length, percentage: transactions.length ? (transactions.filter(transaction => transaction.riskLevel === 'Undetermined').length / transactions.length * 100).toFixed(1) : '0' },
     {
       level: normalLabel,
       color: "#78c9ac",

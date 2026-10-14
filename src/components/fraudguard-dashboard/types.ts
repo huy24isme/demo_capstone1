@@ -1,5 +1,5 @@
 export type AnomalyStatus = "Abnormal" | "Normal";
-export type RiskLevel = "Abnormal" | "Normal";
+export type RiskLevel = "Abnormal" | "Normal" | "Undetermined";
 export type ScoringSource = "AI" | "RULE" | "RULE_FALLBACK";
 export type CaseStatus =
   | "Open"
@@ -33,7 +33,14 @@ export interface CaseDecision {
   directive?: string;
 }
 
+export interface RuleSetEvaluation {
+  applicable: number; evaluated: number; matched: number; failed: number;
+  status: 'Complete' | 'Incomplete' | 'NotEvaluated'; result: RiskLevel; evaluatedAt: string;
+  fields: Record<string, string | number | boolean>;
+  rules: Array<{ id: string; name: string; version: string; conditionGroup: ConditionGroupNode; outcome: 'Matched' | 'NotMatched' | 'Error'; error?: string }>;
+}
 export interface TransactionRisk {
+  ruleEvaluation?: RuleSetEvaluation;
   id: string;
   transactionReference: string;
   projectId: string;

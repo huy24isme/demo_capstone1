@@ -12,7 +12,7 @@ function load(relative, imports = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const exports = {};
-  vm.runInNewContext(output, { exports, require: (name) => name in imports ? imports[name] : require(name) }, { filename });
+  vm.runInNewContext(output, { exports, structuredClone, require: (name) => name in imports ? imports[name] : require(name) }, { filename });
   return exports;
 }
 const engine = load('src/lib/rule-sandbox.ts');
@@ -88,7 +88,7 @@ function harness(initialRules = rules, withPublisher = true) {
   };
   const translations = load('src/components/fraudguard-dashboard/i18n/translations.ts').translations;
   const component = load('src/components/fraudguard-dashboard/RuleTestingView.tsx', {
-    react, '@/lib/rule-sandbox': engine, '@/lib/rule-lifecycle': lifecycle, './SecurityDashboard.module.css': { default: {} },
+    react, './RuleSetTestingView': { RuleSetTestingView: () => null }, '@/lib/rule-sandbox': engine, '@/lib/rule-lifecycle': lifecycle, './SecurityDashboard.module.css': { default: {} },
     'lucide-react': { Play: 'icon', Check: 'icon', Sliders: 'icon' },
     './ToastProvider': { useToast: () => ({ toast: (...args) => toasts.push(args) }) },
     './i18n/LanguageContext': { useLanguage: () => ({ language: 'en', t: translations.en }) },
@@ -103,6 +103,7 @@ function harness(initialRules = rules, withPublisher = true) {
   const click = (name) => { const button = action(name); assert.ok(button); if (!button.props.disabled) button.props.onClick(); render(); };
   const change = (id, value) => { nodes().find((n) => n.props.id === id).props.onChange({ target: { value } }); render(); };
   render();
+  nodes().find(n => n.props.id === 'sandbox-single-mode').props.onClick(); render();
   return { action, click, change, nodes, toasts, published };
 }
 
@@ -252,4 +253,45 @@ test('final case decisions need a reason; closed cases and normal transactions c
   assert.equal(cases.canUpdateCase(previous, { ...final, caseDecision: { directive: '' } }, actor), false);
   assert.equal(cases.canUpdateCase(final, { ...final, caseStatus: 'Assigned', assignedInvestigator: 'Owner' }, actor), false);
   assert.equal(cases.canUpdateCase({ id: 'tx', riskLevel: 'Normal' }, previous, actor), false);
+});
+
+const ruleSet = load('src/lib/rule-set.ts', { './rule-sandbox': engine });
+const active = (id, node, extra = {}) => ({ ...rules[0], id, name: id, status: 'Published', enabled: true, conditionGroup: group('AND', [node]), appliesTo: { projects: ['p1'], transactionTypes: ['payment'] }, ...extra });
+const inputTx = { projectId: 'p1', transactionType: 'payment', fields: { amount: 12 } };
+test('rule set checks all 10 applicable rules and one match is abnormal', () => {
+  const ten = Array.from({ length: 10 }, (_, index) => active('r' + index, condition('amount', '>', index === 0 ? 10 : 100)));
+  const result = ruleSet.evaluateRuleSet(ten, inputTx);
+  assert.equal(result.applicable, 10); assert.equal(result.evaluated, 10); assert.equal(result.matched, 1);
+  assert.equal(result.result, 'Abnormal'); assert.equal(result.status, 'Complete');
+});
+test('only live enabled scope-matching rules run, never drafts or other project rules', () => {
+  const base = active('live', condition('amount', '>', 100));
+  const result = ruleSet.evaluateRuleSet([base, { ...base, id: 'disabled', enabled: false }, { ...base, id: 'draft', status: 'Draft' }, { ...base, id: 'other', appliesTo: { projects: ['other'], transactionTypes: ['payment'] } }, { ...base, id: 'refund', appliesTo: { projects: ['p1'], transactionTypes: ['refund'] } }], inputTx);
+  assert.equal(result.applicable, 1); assert.equal(result.result, 'Normal');
+});
+test('missing fields do not abort other rules or become normal', () => {
+  const missing = active('missing', condition('history.count', '>', 3));
+  const match = active('match', condition('amount', '>', 10));
+  const result = ruleSet.evaluateRuleSet([missing, match], inputTx);
+  assert.equal(result.result, 'Abnormal'); assert.equal(result.status, 'Incomplete'); assert.equal(result.failed, 1); assert.equal(result.matched, 1);
+  assert.equal(ruleSet.evaluateRuleSet([missing], inputTx).result, 'Undetermined');
+  assert.equal(ruleSet.evaluateRuleSet([], inputTx).status, 'NotEvaluated');
+  assert.equal(ruleSet.evaluateRuleSet([], inputTx).result, 'Undetermined');
+});
+test('evaluation snapshots survive edits and only abnormal results create alerts, not cases', () => {
+  const live = active('r1', condition('amount', '>', 10));
+  const evaluation = ruleSet.evaluateRuleSet([live], inputTx);
+  live.conditionGroup.children[0].value = 500;
+  assert.equal(evaluation.rules[0].conditionGroup.children[0].value, 10);
+  const sample = { ...inputTx, id: 'sample', ref: 'TX1' };
+  const row = ruleSet.detectionTransaction(sample, evaluation, 'Project', 'demo1');
+  assert.ok(row.alertId); assert.equal(row.caseId, undefined); assert.equal(row.caseStatus, undefined);
+  const unknown = ruleSet.detectionTransaction(sample, ruleSet.evaluateRuleSet([], inputTx), 'Project', 'demo2');
+  assert.equal(unknown.alertId, undefined); assert.equal(unknown.riskLevel, 'Undetermined');
+});
+test('dataset parser accepts unlabeled samples but rejects duplicate IDs and invalid field values', () => {
+  const sample = { ...inputTx, id: 's1', ref: 'TX1' };
+  assert.equal(ruleSet.parseRuleSetSamples(JSON.stringify([sample])).length, 1);
+  assert.throws(() => ruleSet.parseRuleSetSamples(JSON.stringify([sample, sample])), /Duplicate/);
+  assert.throws(() => ruleSet.parseRuleSetSamples(JSON.stringify([{ ...sample, fields: { amount: null } }])), /fields/);
 });

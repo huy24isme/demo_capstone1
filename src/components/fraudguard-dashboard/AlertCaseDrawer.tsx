@@ -11,6 +11,7 @@ import type {
   TransactionRisk,
   UserRole,
 } from "./types";
+import { RuleEvaluationDetails } from "./RuleEvaluationDetails";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
 import { useToast } from "./ToastProvider";
@@ -579,10 +580,11 @@ export function AlertCaseDrawer({
             )}
           </div>
 
+          {transaction.ruleEvaluation && <div className={styles.drawerSection}><RuleEvaluationDetails evaluation={transaction.ruleEvaluation} /></div>}
           {/* Detection result & Evidence breakdown */}
           <div className={styles.drawerSection}>
             <h3 className={styles.drawerSectionTitle}>{t.drawer.evidenceTitle}</h3>
-            {ruleEvidences.length > 0 ? (
+            {transaction.ruleEvaluation ? null : ruleEvidences.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
                 {ruleEvidences.map((ev) => (
                   <div key={ev.code} className={styles.evidenceItemCard}>
@@ -648,7 +650,7 @@ export function AlertCaseDrawer({
               <button
                 className={styles.drawerPrimaryBtn}
                 onClick={handleCreateCase}
-                disabled={isMutating || isViewer}
+                disabled={isMutating || isViewer || !isOperation || transaction.riskLevel !== "Abnormal"}
                 type="button"
               >
                 {isMutating ? t.drawer.creatingCase : t.drawer.createCaseBtn}

@@ -3045,3 +3045,20 @@
 
 
 
+.sandboxStack { display: grid; gap: 16px; margin-top: 20px; min-width: 0; }
+.sandboxHeader { flex-wrap: wrap; }
+.sandboxTitle, .sandboxActions { display: flex; align-items: center; gap: 10px; }
+.sandboxActions { flex-wrap: wrap; margin-top: 6px; }
+.sandboxAction { width: auto; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.sandboxFields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; }
+.sandboxFields select { display: block; width: 100%; margin-top: 6px; }
+.sandboxUpload { position: relative; display: inline-flex; align-items: center; gap: 8px; overflow: hidden; cursor: pointer; }
+.sandboxUpload input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+.sandboxUpload:focus-within { outline: 2px solid var(--security-blue); outline-offset: 2px; }
+.sandboxAdvanced { border-top: 1px solid var(--security-border); margin-top: 16px; padding-top: 14px; font-size: 12px; overflow-wrap: anywhere; }
+.sandboxAdvanced summary { cursor: pointer; color: var(--security-muted); }
+.sandboxJson { width: 100%; display: block; margin-top: 8px; resize: vertical; font-family: monospace; }
+.sandboxError { color: var(--security-red); font-size: 12px; }
+.sandboxFooter { border-top: 1px solid var(--security-border); padding: 16px; }
+.sandboxStack button:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 700px) { .sandboxFields { grid-template-columns: 1fr; } }

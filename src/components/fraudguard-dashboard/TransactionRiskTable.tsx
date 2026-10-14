@@ -42,6 +42,7 @@ interface TransactionRiskTableProps {
 const RISK_ORDER: Record<RiskLevel, number> = {
   Abnormal: 0,
   Normal: 1,
+  Undetermined: 2,
 };
 
 function sortTransactions(
@@ -227,6 +228,7 @@ export function TransactionRiskTable({
             <option value="all">{t.table.filterAllRisk}</option>
             <option value="Abnormal">{t.table.filterAnomaly}</option>
             <option value="Normal">{t.table.filterNormal}</option>
+            <option value="Undetermined">{language === "vi" ? "Chưa thể kết luận" : "Undetermined"}</option>
           </select>
         </div>
       </div>
@@ -250,6 +252,8 @@ export function TransactionRiskTable({
               />
 
               <th>{t.table.columns.scoringSource}</th>
+              <th>{language === "vi" ? "Rule khớp / đã đánh giá" : "Matched / evaluated rules"}</th>
+              <th>{language === "vi" ? "Trạng thái xử lý" : "Processing status"}</th>
               <SortHeader
                 label={t.table.columns.processedAt}
                 field="processedAt"
@@ -262,7 +266,7 @@ export function TransactionRiskTable({
           <tbody>
             {pageData.length === 0 ? (
               <tr>
-                <td className={styles.emptyState} colSpan={6}>
+                <td className={styles.emptyState} colSpan={8}>
                   {t.table.emptyMessage}
                 </td>
               </tr>
@@ -293,6 +297,8 @@ export function TransactionRiskTable({
                   <td>
                     <ScoringSourceBadge source={transaction.scoringSource} />
                   </td>
+                  <td>{transaction.ruleEvaluation ? transaction.ruleEvaluation.matched + '/' + transaction.ruleEvaluation.evaluated : '—'}</td>
+                  <td>{transaction.ruleEvaluation ? (language === 'vi' ? ({ Complete: 'Hoàn tất', Incomplete: 'Chưa hoàn tất', NotEvaluated: 'Chưa đánh giá' }[transaction.ruleEvaluation.status]) : transaction.ruleEvaluation.status) + ' (' + transaction.ruleEvaluation.evaluated + '/' + transaction.ruleEvaluation.applicable + ')' : '—'}</td>
                   <td>{formatDate(transaction.processedAt, dateLocale)}</td>
                   <td>
                     <button

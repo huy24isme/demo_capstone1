@@ -221,6 +221,8 @@ function FraudGuardDashboardContent({
         filters.riskLevel === "all" ||
         (filters.riskLevel === "Abnormal"
           ? transaction.riskLevel === "Abnormal"
+          : filters.riskLevel === "Undetermined"
+            ? transaction.riskLevel === "Undetermined"
           : filters.riskLevel === "Normal"
             ? transaction.riskLevel === "Normal"
             : transaction.riskLevel === filters.riskLevel);
@@ -249,7 +251,7 @@ function FraudGuardDashboardContent({
     return {
       analyzed: visibleTransactions.length,
       highRisk: anomalies.length,
-      normals: visibleTransactions.length - anomalies.length,
+      normals: visibleTransactions.filter(transaction => transaction.riskLevel === "Normal").length,
       openAlerts: visibleTransactions.filter(
         (transaction) => transaction.alertId && !transaction.caseId,
       ).length,
@@ -321,7 +323,13 @@ function FraudGuardDashboardContent({
       case "rule-testing":
         return (
           <RuleTestingView
+            projects={projects}
             rules={rules}
+            onAddDemoTransactions={items => {
+              if (!permissions.canAccessRuleTesting) return;
+              setTransactions(previous => [...items.filter(item => !previous.some(old => old.id === item.id)).map(item => ({ ...item, projectName: projects.find(project => project.id === item.projectId)?.name ?? item.projectName })), ...previous]);
+              recordAudit('ALERT_REVIEWED', 'Sandbox demo', 'Added rule-set evaluation results: ' + items.length);
+            }}
             onPublishRule={(publishedRule) => {
               changeRules((prev) => [publishedRule, ...prev.filter((r) => r.id !== publishedRule.id)]);
             }}

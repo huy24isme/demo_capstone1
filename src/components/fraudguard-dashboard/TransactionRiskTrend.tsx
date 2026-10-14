@@ -59,7 +59,7 @@ export function TransactionRiskTrend({
       entry.total += 1;
       if (t.riskLevel === "Abnormal") {
         entry.anomaly += 1;
-      } else {
+      } else if (t.riskLevel === "Normal") {
         entry.normal += 1;
       }
     });

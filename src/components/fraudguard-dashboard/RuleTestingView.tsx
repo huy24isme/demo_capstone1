@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { RuleTemplate } from "./types";
+import { RuleSetTestingView } from "./RuleSetTestingView";
+import type { TransactionRisk, RuleTemplate, ProjectItem } from "./types";
 import { evaluateSandboxRule, nextSandboxVersion } from "@/lib/rule-sandbox";
 import { candidateRule, publishRuleDraft } from "@/lib/rule-lifecycle";
 import styles from "./SecurityDashboard.module.css";
@@ -11,6 +12,8 @@ import { useLanguage } from "./i18n/LanguageContext";
 
 interface RuleTestingViewProps {
   rules: RuleTemplate[];
+  projects?: ProjectItem[];
+  onAddDemoTransactions?: (transactions: TransactionRisk[]) => void;
   onPublishRule?: (rule: RuleTemplate) => void;
 }
 
@@ -87,11 +90,12 @@ const EXPECTED_BY_RULE: Record<string, boolean[]> = {
   "rule-002": [false, false, false, false, false],
 };
 
-export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) {
+export function RuleTestingView({ rules, projects, onPublishRule, onAddDemoTransactions }: RuleTestingViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
 
+  const [mode, setMode] = useState<"single" | "set">("set");
   const [selectedRuleId, setSelectedRuleId] = useState(
     rules[0]?.id || "rule-cod-001",
   );
@@ -176,11 +180,16 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>{t.ruleTestingView.title}</h1>
-          <p>{t.ruleTestingView.subtitle}</p>
+          <h1>{language === "vi" ? "Kiểm thử Sandbox" : "Sandbox testing"}</h1>
+          <p>{language === "vi" ? "Kiểm tra giao dịch trên tập rule của project hoặc xác minh từng rule trước khi phát hành." : "Test transactions against project rules or validate a single rule before publication."}</p>
         </div>
       </div>
 
+      <div className={styles.tabs} role="group" aria-label="Sandbox mode">
+        <button type="button" className={`${styles.tab} ${mode === 'set' ? styles.tabActive : ''}`} aria-pressed={mode === 'set'} onClick={() => setMode('set')}>{language === 'vi' ? 'Kiểm thử tập rule' : 'Rule set test'}</button>
+        <button id="sandbox-single-mode" type="button" className={`${styles.tab} ${mode === 'single' ? styles.tabActive : ''}`} aria-pressed={mode === 'single'} onClick={() => setMode('single')}>{language === 'vi' ? 'Kiểm thử & phát hành từng rule' : 'Single rule testing & publication'}</button>
+      </div>
+      {mode === 'set' ? <RuleSetTestingView projects={projects} rules={rules} onAddDemoTransactions={onAddDemoTransactions} /> : <>
       {/* Overview Grid */}
       <div className={styles.metricsGrid} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>
@@ -252,7 +261,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
             const next = [...(expectations[selectedRuleId] ?? EXPECTED_BY_RULE[selectedRuleId] ?? [])];
             next[index] = event.target.value === "true";
             setExpectations(previous => ({ ...previous, [selectedRuleId]: next })); setTestedSignature(null);
-          }}><option value="" disabled>—</option><option value="false">Normal</option><option value="true">Abnormal</option></select>
+          }}><option value="" disabled>—</option><option value="false">{t.risk.normal}</option><option value="true">{t.risk.anomaly}</option></select>
         </label>)}
       </div>
       <details className={styles.panel} style={{ padding: 16, marginTop: 12 }}>
@@ -303,7 +312,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
               disabled={!canPublish}
               type="button"
               style={{
-                background: "linear-gradient(135deg, #059669, #10b981)",
+                width: "auto", padding: "0 16px",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
@@ -510,6 +519,7 @@ export function RuleTestingView({ rules, onPublishRule }: RuleTestingViewProps) 
           </table>
         </div>
       </section>
+      </>}
     </>
   );
 }
