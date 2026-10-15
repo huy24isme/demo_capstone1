@@ -38,7 +38,8 @@ const rawTranslations = {
       "myCases": "Hồ sơ của tôi",
       "reports": "Báo cáo & Hiệu suất",
       "auditTrail": "Nhật ký Tuân thủ",
-      "ruleTemplates": "Quy tắc Đã công bố",
+      "ruleTemplates": "Thư viện rule",
+      "ruleSets": "Tập rule doanh nghiệp",
       "ruleTesting": "Kiểm thử Sandbox",
       "onboarding": "Thiết lập Doanh nghiệp",
       "projects": "Dự án & Tích hợp",
@@ -545,7 +546,7 @@ const rawTranslations = {
   },
   "ruleTestingView": {
     "title": "Môi trường Kiểm thử Quy tắc",
-    "subtitle": "Môi trường kiểm thử biệt lập dành cho Platform Admin. Kiểm tra và tinh chỉnh Rule với test data mà không ảnh hưởng tới dữ liệu vận hành thực tế.",
+    "subtitle": "Môi trường kiểm thử biệt lập dành cho Deployment Staff. Kiểm tra và tinh chỉnh Rule với test data mà không ảnh hưởng tới dữ liệu vận hành thực tế.",
     "kpis": {
       "targetProject": "Dự án mục tiêu",
       "targetProjectDesc": "Giám sát đơn hàng COD",
@@ -594,7 +595,7 @@ const rawTranslations = {
       "afterTitle": "SAU BÀN GIAO (PRODUCTION)",
       "beforeTitle": "TRƯỚC BÀN GIAO (STAGING / SETUP)",
       "afterDesc": "Workspace đã trở thành môi trường vận hành riêng của SME. Platform Admin bị giới hạn, không truy cập trực tiếp vào hồ sơ giao dịch hay đóng case của khách hàng. Mọi thay đổi Rule về sau phải qua Change Request và kiểm thử tại Rule Testing Sandbox.",
-      "beforeDesc": "Workspace đang trong giai đoạn triển khai kỹ thuật. Platform Admin có toàn quyền cấu hình schema, thiết lập detection rule, nạp sample data và chạy thử nghiệm để tinh chỉnh ngưỡng trước khi bàn giao."
+      "beforeDesc": "Workspace đang trong giai đoạn triển khai kỹ thuật. Deployment Staff được phân công cấu hình schema, thiết lập detection rule, nạp sample data và chạy thử nghiệm để tinh chỉnh ngưỡng trước khi bàn giao."
     },
     "caseStudy": {
       "title": "ABC Fashion — Giám sát Đơn hàng COD",
@@ -794,7 +795,8 @@ const rawTranslations = {
       "myCases": "My Cases",
       "reports": "Reports & Performance",
       "auditTrail": "Audit Trail",
-      "ruleTemplates": "Published Rules",
+      "ruleTemplates": "Rule library",
+      "ruleSets": "Enterprise rule sets",
       "ruleTesting": "Rule Testing Sandbox",
       "onboarding": "Onboarding & Handover",
       "projects": "Projects & Integrations",
@@ -1301,7 +1303,7 @@ const rawTranslations = {
   },
   "ruleTestingView": {
     "title": "Rule Testing Sandbox",
-    "subtitle": "Isolated sandbox testing environment for Platform Admins. Test and refine rules without impacting production data.",
+    "subtitle": "Isolated sandbox testing environment for Deployment Staff. Test and refine rules without impacting production data.",
     "kpis": {
       "targetProject": "Target Project",
       "targetProjectDesc": "COD Order Monitoring",
@@ -1350,7 +1352,7 @@ const rawTranslations = {
       "afterTitle": "AFTER HANDOVER (PRODUCTION)",
       "beforeTitle": "BEFORE HANDOVER (STAGING / SETUP)",
       "afterDesc": "Workspace is now under independent SME operation. Platform Admin access is restricted from viewing customer transactions or closing cases. Subsequent rule modifications require Change Requests and Sandbox validation.",
-      "beforeDesc": "Workspace is in the technical setup phase. Platform Admin has full permissions to configure schema, setup detection rules, ingest sample data, and run calibration tests before handover."
+      "beforeDesc": "Workspace is in the technical setup phase. Assigned Deployment Staff can configure schema, setup detection rules, ingest sample data, and run calibration tests before handover."
     },
     "caseStudy": {
       "title": "ABC Fashion — COD Order Monitoring",

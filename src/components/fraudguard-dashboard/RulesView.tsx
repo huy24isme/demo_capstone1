@@ -248,7 +248,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
             className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
             onClick={() => canManage && handleCreate()}
             disabled={!canManage}
-            title={!canManage ? "Platform Admin permission required" : undefined}
+            title={!canManage ? "Deployment Staff permission required" : undefined}
             type="button"
           >
             {t.rulesView.btnNewRule}
@@ -474,7 +474,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                     className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                     onClick={() => canManage && handleToggle(rule.id)}
                     disabled={!canManage || rule.status !== "Published"}
-                    title={!canManage ? "SME Admin permission required" : undefined}
+                    title={!canManage ? "Deployment Staff permission required" : undefined}
                     style={{ minWidth: 70 }}
                     type="button"
                   >
@@ -532,7 +532,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                       className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                       onClick={() => canManage && handleEdit(rule)}
                       disabled={!canManage}
-                      title={!canManage ? "SME Admin permission required" : undefined}
+                      title={!canManage ? "Deployment Staff permission required" : undefined}
                       type="button"
                     >
                       {t.rulesView.card.btnEdit}
@@ -541,7 +541,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                       className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                       onClick={() => canManage && handleClone(rule)}
                       disabled={!canManage}
-                      title={!canManage ? "SME Admin permission required" : undefined}
+                      title={!canManage ? "Deployment Staff permission required" : undefined}
                       type="button"
                     >
                       {t.rulesView.card.btnClone}
@@ -550,7 +550,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                       className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
                       onClick={() => canManage && handleDelete(rule.id)}
                       disabled={!canManage}
-                      title={!canManage ? "SME Admin permission required" : undefined}
+                      title={!canManage ? "Deployment Staff permission required" : undefined}
                       style={{ color: canManage ? "var(--critical-text)" : undefined }}
                       type="button"
                     >

@@ -34,6 +34,7 @@ export interface CaseDecision {
 }
 
 export interface RuleSetEvaluation {
+  ruleSet?: { id: string; name: string; version: number };
   applicable: number; evaluated: number; matched: number; failed: number;
   status: 'Complete' | 'Incomplete' | 'NotEvaluated'; result: RiskLevel; evaluatedAt: string;
   fields: Record<string, string | number | boolean>;
@@ -132,6 +133,7 @@ export interface ConditionGroupNode {
 }
 
 export interface RuleTemplate {
+  enterpriseId?: string;
   id: string;
   name: string;
   description: string;
@@ -161,6 +163,7 @@ export type SecondaryView =
   | "my-cases"
   | "rule-templates"
   | "rule-testing"
+  | "rule-sets"
   | "onboarding"
   | "projects"
   | "reports"
@@ -218,12 +221,14 @@ export interface AuditLogEntry {
 
 export type UserRole =
   | "Platform Admin"
+  | "Deployment Staff"
   | "SME Admin"
   | "Operation"
   | "Investigator"
   | "Viewer";
 
 export interface UserProfile {
+  enterpriseId?: string;
   id: string;
   name: string;
   email: string;

@@ -65,4 +65,5 @@ export const initialProjects: ProjectItem[] = [
     status: "Active",
     createdAt: "2026-09-01T09:00:00Z",
   },
+  { id: 'proj-abc-cod', name: 'ABC Fashion - COD', code: 'ABC_COD', description: 'Dự án COD minh họa của ABC Fashion', environment: 'Staging', apiKey: '', quota: { used: 0, total: 10000, resetDate: '2026-11-01' }, status: 'Active', createdAt: '2026-10-15T00:00:00Z' },
 ];

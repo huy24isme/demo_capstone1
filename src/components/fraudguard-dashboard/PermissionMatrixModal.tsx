@@ -83,6 +83,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
               <tr>
                 <th style={{ width: "30%" }}>{t.permissionMatrixModal.colCapability}</th>
                 <th style={{ width: "14%" }}>Platform Admin</th>
+                <th>Deployment Staff</th>
                 <th style={{ width: "14%" }}>SME Admin</th>
                 <th style={{ width: "14%" }}>Operation</th>
                 <th style={{ width: "14%" }}>Investigator</th>
@@ -99,6 +100,7 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
                     </div>
                   </td>
                   <td>{renderBadge(item.platformAdmin)}</td>
+                  <td>{renderBadge(item.deploymentStaff)}</td>
                   <td>{renderBadge(item.smeAdmin)}</td>
                   <td>{renderBadge(item.operation)}</td>
                   <td>{renderBadge(item.investigator)}</td>

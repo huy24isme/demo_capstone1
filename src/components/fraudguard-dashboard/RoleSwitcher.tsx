@@ -47,6 +47,8 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
     switch (role) {
       case "Platform Admin":
         return styles.roleBadgePlatformAdmin;
+      case "Deployment Staff":
+        return styles.roleBadgeOperation;
       case "SME Admin":
         return styles.roleBadgeSMEAdmin;
       case "Operation":

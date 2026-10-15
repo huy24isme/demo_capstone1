@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Enterprise } from '@/data/fraudguard-enterprises';
 import { RuleSetTestingView } from "./RuleSetTestingView";
 import type { TransactionRisk, RuleTemplate, ProjectItem } from "./types";
 import { evaluateSandboxRule, nextSandboxVersion } from "@/lib/rule-sandbox";
@@ -12,6 +13,9 @@ import { useLanguage } from "./i18n/LanguageContext";
 
 interface RuleTestingViewProps {
   rules: RuleTemplate[];
+  activeRules?: RuleTemplate[];
+  enterprises?: Enterprise[];
+  setContext?: Record<string, { id: string; name: string; version: number }>;
   projects?: ProjectItem[];
   onAddDemoTransactions?: (transactions: TransactionRisk[]) => void;
   onPublishRule?: (rule: RuleTemplate) => void;
@@ -90,11 +94,13 @@ const EXPECTED_BY_RULE: Record<string, boolean[]> = {
   "rule-002": [false, false, false, false, false],
 };
 
-export function RuleTestingView({ rules, projects, onPublishRule, onAddDemoTransactions }: RuleTestingViewProps) {
+export function RuleTestingView({ rules, enterprises = [], activeRules, setContext, projects, onPublishRule, onAddDemoTransactions }: RuleTestingViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
 
+  const [enterpriseId, setEnterpriseId] = useState(enterprises[0]?.id ?? '');
+  const enterprise = enterprises.find(e => e.id === enterpriseId);
   const [mode, setMode] = useState<"single" | "set">("set");
   const [selectedRuleId, setSelectedRuleId] = useState(
     rules[0]?.id || "rule-cod-001",
@@ -109,7 +115,8 @@ export function RuleTestingView({ rules, projects, onPublishRule, onAddDemoTrans
   const [expectations, setExpectations] = useState<Record<string, boolean[]>>({});
   const signature = JSON.stringify([selectedRule, expectations[selectedRuleId], customDataset]);
   const hasRun = testedSignature === signature;
-  const samples = SAMPLE_DATASET.map((item, index) => ({ ...item, expectedAnomaly: (expectations[selectedRuleId] ?? EXPECTED_BY_RULE[selectedRule?.id ?? ""])?.[index] }));
+  const sampleProjectId = selectedRule?.appliesTo.projects.find(id => id !== '*') ?? enterprise?.projectIds[0] ?? 'proj-abc-cod';
+  const samples = SAMPLE_DATASET.map((item, index) => ({ ...item, projectId: sampleProjectId, expectedAnomaly: (expectations[selectedRuleId] ?? EXPECTED_BY_RULE[selectedRule?.id ?? ""])?.[index] }));
   const testDataset = hasRun ? results : samples;
   const passedCount = hasRun ? results.filter((tx) => tx.status === "PASSED").length : 0;
   const nextVersion = storedRule?.status === "Published" ? nextSandboxVersion(storedRule.version) : "v1.0";
@@ -189,7 +196,7 @@ export function RuleTestingView({ rules, projects, onPublishRule, onAddDemoTrans
         <button type="button" className={`${styles.tab} ${mode === 'set' ? styles.tabActive : ''}`} aria-pressed={mode === 'set'} onClick={() => setMode('set')}>{language === 'vi' ? 'Kiểm thử tập rule' : 'Rule set test'}</button>
         <button id="sandbox-single-mode" type="button" className={`${styles.tab} ${mode === 'single' ? styles.tabActive : ''}`} aria-pressed={mode === 'single'} onClick={() => setMode('single')}>{language === 'vi' ? 'Kiểm thử & phát hành từng rule' : 'Single rule testing & publication'}</button>
       </div>
-      {mode === 'set' ? <RuleSetTestingView projects={projects} rules={rules} onAddDemoTransactions={onAddDemoTransactions} /> : <>
+      {mode === 'set' ? <><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={enterpriseId} onChange={e => setEnterpriseId(e.target.value)}>{enterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>{enterprise ? <RuleSetTestingView key={enterprise.id} projects={projects?.filter(p => enterprise.projectIds.includes(p.id))} allowedProjectIds={enterprise.projectIds} enterpriseLabel={enterprise.name} rules={activeRules ?? []} setContext={setContext} onAddDemoTransactions={onAddDemoTransactions} /> : <p>{language === 'vi' ? 'Chưa được phân công doanh nghiệp.' : 'No enterprise assigned.'}</p>}</> : <>
       {/* Overview Grid */}
       <div className={styles.metricsGrid} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>
@@ -200,7 +207,7 @@ export function RuleTestingView({ rules, projects, onPublishRule, onAddDemoTrans
             className={styles.statValue}
             style={{ fontSize: 20, color: "var(--security-blue)" }}
           >
-            ABC Fashion
+            {projects?.find(p => p.id === sampleProjectId)?.name ?? sampleProjectId}
           </strong>
           <span className={styles.statDescription}>
             {t.ruleTestingView.kpis.targetProjectDesc}

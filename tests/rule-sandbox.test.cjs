@@ -295,3 +295,114 @@ test('dataset parser accepts unlabeled samples but rejects duplicate IDs and inv
   assert.throws(() => ruleSet.parseRuleSetSamples(JSON.stringify([sample, sample])), /Duplicate/);
   assert.throws(() => ruleSet.parseRuleSetSamples(JSON.stringify([{ ...sample, fields: { amount: null } }])), /fields/);
 });
+
+const enterpriseData = load('src/data/fraudguard-enterprises.ts');
+const roleData = load('src/data/fraudguard-roles.ts');
+const managed = load('src/lib/rule-set-lifecycle.ts', { '../data/fraudguard-enterprises': enterpriseData, './rule-lifecycle': lifecycle, './rule-set': ruleSet });
+function draftSet(id = 'set1') { return { id, name: id, enterpriseId: 'e1', projectIds: ['p1'], versions: [], draft: { rules: managed.snapshotRules([active('r1', condition('amount', '>', 10))], 'p1') } }; }
+const labeledSample = { ...inputTx, id: 's1', ref: 'TX-1', expected: 'Abnormal' };
+test('set publication requires complete current tests and reviewer evidence', () => {
+ const set = draftSet(); assert.equal(managed.canPublishSet(set), false);
+ assert.throws(() => managed.publishSet(set, 'Admin', 'reviewed'));
+ set.draft.test = managed.testDraft(set, [labeledSample]);
+ assert.equal(managed.canPublishSet(set), true);
+ assert.throws(() => managed.publishSet(set, 'Admin', ' '));
+ const released = managed.publishSet(set, 'Admin', 'Reviewed specification');
+ assert.equal(released.versions[0].version, 1); assert.equal(released.activeVersion, undefined); assert.equal(released.draft, undefined);
+ set.draft.rules[0].conditionGroup.children[0].value = 100;
+ assert.equal(managed.canPublishSet(set), false);
+ assert.equal(released.versions[0].rules[0].conditionGroup.children[0].value, 10);
+});
+test('missing data, mismatches and unexercised members block set publication', () => {
+ const set = draftSet();
+ for (const sample of [{ ...labeledSample, expected: 'Normal' }, { ...labeledSample, fields: {} }]) {
+  set.draft.test = managed.testDraft(set, [sample]); assert.equal(managed.canPublishSet(set), false);
+ }
+ set.draft.rules.push({ ...set.draft.rules[0], id: 'refund-only', appliesTo: { projects: ['p1'], transactionTypes: ['refund'] } });
+ set.draft.test = managed.testDraft(set, [labeledSample]); assert.equal(managed.canPublishSet(set), false);
+ assert.throws(() => managed.testDraft(set, [{ ...labeledSample, projectId: 'other' }]));
+});
+test('activation is exclusive per project and draft edits never alter runtime release', () => {
+ function publish(id) { const s = draftSet(id); s.draft.test = managed.testDraft(s, [labeledSample]); return managed.publishSet(s, 'Admin', 'Confirmed'); }
+ let sets = managed.activateSet([publish('one'), publish('two')], 'one', 1);
+ assert.equal(managed.activeSetRules(sets).length, 1);
+ sets[0].draft = { rules: structuredClone(sets[0].versions[0].rules) };
+ sets[0].draft.rules[0].conditionGroup.children[0].value = 500;
+ assert.equal(managed.activeSetRules(sets)[0].conditionGroup.children[0].value, 10);
+ sets = managed.activateSet(sets, 'two', 1);
+ assert.equal(sets[0].activeVersion, undefined); assert.equal(sets[1].activeVersion, 1);
+ assert.throws(() => managed.activateSet(sets, 'two', 2));
+});
+test('unlabeled tests retain their unlabeled evidence and snapshots are independent of library drafts', () => {
+ const source = active('r1', condition('amount', '>', 10)); source.draft = { ...source, conditionGroup: group('AND', [condition('amount', '>', 20)]) };
+ const snapshots = managed.snapshotRules([source], 'p1'); source.draft.conditionGroup.children[0].value = 999;
+ assert.equal(snapshots[0].conditionGroup.children[0].value, 20);
+ const s = draftSet(); s.draft.test = managed.testDraft(s, [{ ...labeledSample, expected: undefined }]);
+ assert.equal(s.draft.test.labeled, 0); assert.equal(managed.canPublishSet(s), true);
+ const release = managed.publishSet(s, 'Reviewer', 'Manually checked against specification');
+ assert.equal(release.versions[0].test.labeled, 0);
+});
+
+test('rule set UI creates, tests, reviews, publishes and activates a version', () => {
+ const states = []; let cursor, tree;
+ const react = { useState(initial) { const slot = cursor++; if (!(slot in states)) states[slot] = typeof initial === 'function' ? initial() : initial; return [states[slot], value => { states[slot] = typeof value === 'function' ? value(states[slot]) : value; }]; } };
+ const Tester = () => null;
+ const component = load('src/components/fraudguard-dashboard/RuleSetsView.tsx', {
+  react, '@/data/fraudguard-enterprises': enterpriseData, '@/data/fraudguard-roles': roleData, '@/lib/rule-set-lifecycle': managed, './RuleSetTestingView': { RuleSetTestingView: Tester }, '@/lib/rule-lifecycle': lifecycle,
+  './i18n/LanguageContext': { useLanguage: () => ({ language: 'vi' }) }, './SecurityDashboard.module.css': { default: {} }
+ }).RuleSetsView;
+ const s = draftSet();
+ const props = { sets: [s], rules: s.draft.rules, projects: [{ id: 'p1', name: 'Wallet' }], enterprises: [{ id: 'e1', name: 'Enterprise', projectIds: ['p1'], deploymentStaffId: 'staff' }], currentUser: { id: 'staff', role: 'Deployment Staff' }, onAssign() {}, reviewer: 'Admin', onOpenLibrary() {}, onChange(next) { props.sets = next; } };
+ function render() { cursor = 0; tree = component(props); }
+ function nodes() { const out = []; function walk(n) { if (Array.isArray(n)) n.forEach(walk); else if (n?.props) { out.push(n); walk(n.props.children); } } walk(tree); return out; }
+ function button(text) { return nodes().find(n => n.type === 'button' && n.props.children === text); }
+ function click(text) { const b = button(text); assert.ok(b, text); assert.ok(!b.props.disabled, text); b.props.onClick(); render(); }
+ render(); click('Xem chi tiết');
+ assert.equal(button('Phát hành phiên bản tập rule').props.disabled, true);
+ nodes().find(n => n.type === Tester).props.onTestCompleted([labeledSample]); render();
+ assert.equal(button('Phát hành phiên bản tập rule').props.disabled, true);
+ nodes().find(n => n.type === 'textarea').props.onChange({ target: { value: 'Verified the business specification.' } }); render();
+ nodes().filter(n => n.type === 'input' && n.props.type === 'checkbox').at(-1).props.onChange({ target: { checked: true } }); render();
+ click('Phát hành phiên bản tập rule');
+ assert.equal(props.sets[0].versions.length, 1); assert.equal(props.sets[0].activeVersion, undefined);
+ click('Kích hoạt cho doanh nghiệp'); assert.equal(props.sets[0].activeVersion, 1);
+ click('Tạo phiên bản nháp mới');
+ assert.equal(props.sets[0].activeVersion, 1); assert.equal(button('Phát hành phiên bản tập rule').props.disabled, true);
+});
+
+test('enterprise roles separate platform administration from assigned deployment', () => {
+ const admin = { id: 'admin', role: 'Platform Admin' }, staff = { id: 'staff', role: 'Deployment Staff' };
+ const enterprises = [{ id: 'e1', name: 'One', projectIds: ['p1','p2'], deploymentStaffId: 'staff' }, { id: 'e2', name: 'Two', projectIds: ['p3'], deploymentStaffId: 'other' }];
+ assert.equal(roleData.getRolePermissions('Platform Admin').canManageRules, false);
+ assert.equal(roleData.getRolePermissions('Platform Admin').canAccessRuleTesting, false);
+ assert.equal(roleData.getRolePermissions('Deployment Staff').canManageRules, true);
+ assert.equal(roleData.getRolePermissions('Deployment Staff').canManageCases, false);
+ assert.equal(enterpriseData.visibleEnterprises(admin, enterprises).length, 2);
+ assert.equal(enterpriseData.visibleEnterprises(staff, enterprises).length, 1);
+ const one = draftSet();
+ assert.equal(managed.canChangeEnterpriseSets([], [one], staff, enterprises), true);
+ assert.equal(managed.canChangeEnterpriseSets([], [one], admin, enterprises), false);
+ assert.equal(managed.canChangeEnterpriseSets([], [one, {...one, id:'second'}], staff, enterprises), false);
+ assert.equal(managed.canChangeEnterpriseSets([], [{...one, enterpriseId:'e2'}], staff, enterprises), false);
+ assert.equal(managed.canChangeEnterpriseSets([], [{...one, projectIds:['p3']}], staff, enterprises), false);
+ assert.equal(managed.canChangeEnterpriseSets([one], [], staff, enterprises), false);
+});
+test('one enterprise set accepts multiple owned projects but rejects foreign samples', () => {
+ const source = {...active('shared', condition('amount','>',10)), appliesTo:{projects:['*'],transactionTypes:['*']}};
+ const snapshots = managed.snapshotRules([source], ['p1','p2']);
+ const set = {...draftSet(),projectIds:['p1','p2'],draft:{rules:snapshots}};
+ assert.equal(managed.testDraft(set,[labeledSample,{...labeledSample,id:'two',projectId:'p2'}]).complete,true);
+ assert.throws(()=>managed.testDraft(set,[{...labeledSample,projectId:'foreign'}]));
+ assert.equal(snapshots[0].appliesTo.projects.includes('*'),false);
+ assert.equal(snapshots[0].appliesTo.projects.length,2);
+});
+test('legacy migration preserves single releases, archives ambiguous project sets and retains unknown projects', () => {
+ const enterprise = {id:'e1',name:'One',projectIds:['p1','p2'],deploymentStaffId:'staff'};
+ const original = {...draftSet(),projectId:'p1'};delete original.enterpriseId;delete original.projectIds;
+ const one=managed.migrateProjectSets([original],[enterprise]);
+ assert.equal(one.sets[0].enterpriseId,'e1');assert.equal(one.sets[0].draft.rules.length,1);
+ const multiple=managed.migrateProjectSets([original,{...original,id:'old-two',projectId:'p2'},{...original,id:'unknown',projectId:'unknown'}],[enterprise]);
+ assert.equal(multiple.sets.length,1);assert.equal(multiple.sets[0].legacySets.length,2);
+ assert.equal(multiple.sets[0].activeVersion,undefined);assert.equal(multiple.unassigned.length,1);
+ assert.equal(original.projectId,'p1');
+});

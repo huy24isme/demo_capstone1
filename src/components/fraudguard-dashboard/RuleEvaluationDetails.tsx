@@ -6,6 +6,7 @@ import styles from './SecurityDashboard.module.css';
 export function RuleEvaluationDetails({ evaluation }: { evaluation: RuleSetEvaluation }) {
   const { language } = useLanguage(); const vi = language === 'vi';
   return <section>
+    {evaluation.ruleSet && <p><strong>{evaluation.ruleSet.name} · v{evaluation.ruleSet.version}.0</strong></p>}
     <p><RiskLevelBadge riskLevel={evaluation.result} /> · {evaluation.matched}/{evaluation.evaluated} {vi ? 'rule đã đánh giá khớp' : 'evaluated rules matched'}</p>
     <p>{evaluation.evaluated}/{evaluation.applicable} {vi ? 'rule áp dụng đã đánh giá' : 'applicable rules evaluated'} · {evaluation.failed} {vi ? 'lỗi' : 'errors'} · {evaluation.status === 'Complete' ? (vi ? 'Hoàn tất' : 'Complete') : evaluation.status === 'Incomplete' ? (vi ? 'Chưa hoàn tất' : 'Incomplete') : (vi ? 'Không có rule áp dụng' : 'No applicable rules')}</p>
     <p className={styles.muted}>{vi ? 'Kết quả phát hiện không phải kết luận gian lận. Doanh nghiệp xem xét và quyết định.' : 'Detection is not a fraud verdict. The enterprise reviews and decides.'}</p>

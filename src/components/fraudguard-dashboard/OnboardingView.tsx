@@ -38,13 +38,13 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
     },
     {
       step: 2,
-      title: language === "vi" ? "Platform Admin Review" : "Platform Admin Review",
+      title: language === "vi" ? "Deployment Staff Review" : "Deployment Staff Review",
       description:
         language === "vi"
           ? "Xác nhận các trường dữ liệu: COD channel, device ID, address hash, fail count."
           : "Validate data fields: COD channel, device ID, address hash, fail count.",
       status: currentStep > 2 ? "completed" : currentStep === 2 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 3,
@@ -54,7 +54,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           ? "Khởi tạo workspace tenant 'ABC Fashion' và dự án 'COD Order Monitoring' (proj-abc-cod)."
           : "Initialize tenant workspace 'ABC Fashion' and 'COD Order Monitoring' project (proj-abc-cod).",
       status: currentStep > 3 ? "completed" : currentStep === 3 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 4,
@@ -64,7 +64,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           ? "Cấu hình custom schema cho đơn hàng thương mại điện tử giao nhận COD."
           : "Configure custom schema for e-commerce COD cash-on-delivery orders.",
       status: currentStep > 4 ? "completed" : currentStep === 4 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 5,
@@ -74,7 +74,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           ? "Thiết lập 4 rules cốt lõi: High Amount, New Device, Failed Tx, Address Reuse."
           : "Configure 4 core rules: High Amount, New Device, Failed Tx, Address Reuse.",
       status: currentStep > 5 ? "completed" : currentStep === 5 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 6,
@@ -84,7 +84,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           ? "Cấp API Key live/staging và thiết lập Webhook endpoint https://api.abcfashion.vn/fraudguard/webhook."
           : "Provision live/staging API keys and configure webhook endpoint https://api.abcfashion.vn/fraudguard/webhook.",
       status: currentStep > 6 ? "completed" : currentStep === 6 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 7,
@@ -94,7 +94,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           ? "Chạy thử 26 giao dịch mẫu qua Sandbox Rule Engine để đánh giá độ chuẩn xác."
           : "Run 26 sample transactions through Sandbox Rule Engine to calibrate precision.",
       status: currentStep > 7 ? "completed" : currentStep === 7 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 8,
@@ -104,17 +104,17 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           ? "Xác nhận rule kích hoạt và lý do phát hiện bất thường của giao dịch TX-83912."
           : "Confirm triggered rules and the abnormal detection explanation for TX-83912.",
       status: currentStep > 8 ? "completed" : currentStep === 8 ? "current" : "upcoming",
-      actor: "Platform Admin",
+      actor: "Deployment Staff",
     },
     {
       step: 9,
       title: language === "vi" ? "Handover & Activate" : "Handover & Activate",
       description:
         language === "vi"
-          ? "Bàn giao tài khoản SME Admin, khóa quyền truy cập dữ liệu nội bộ của Platform Admin."
-          : "Handover credentials to SME Admin and restrict Platform Admin access to private records.",
+          ? "Bàn giao tài khoản SME Admin, khóa quyền truy cập dữ liệu nội bộ của Deployment Staff."
+          : "Handover credentials to SME Admin and restrict Deployment Staff access to private records.",
       status: isHandedOver ? "completed" : currentStep === 9 ? "current" : "upcoming",
-      actor: "Platform Admin & SME",
+      actor: "Deployment Staff & SME",
     },
   ];
 

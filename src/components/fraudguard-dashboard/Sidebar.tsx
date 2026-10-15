@@ -37,25 +37,19 @@ interface NavSection {
 
 function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
   const nav = t?.nav;
-  if (role === "Platform Admin") {
-    return [
-      {
-        title: nav?.sections.platformSystem || "PLATFORM SYSTEM",
-        items: [
-          { id: "platform-health", label: nav?.items.platformHealth || "Platform Health & Tenants", icon: Server },
-          { id: "onboarding", label: nav?.items.onboarding || "Onboarding & Handover", icon: FolderKanban },
-          { id: "audit-trail", label: nav?.items.auditTrail || "Global Audit Trail", icon: History },
-        ],
-      },
-      {
-        title: nav?.sections.ruleLifecycle || "RULE LIFECYCLE & SANDBOX",
-        items: [
-          { id: "rule-testing", label: nav?.items.ruleTesting || "Rule Testing Sandbox", icon: TestTube2 },
-          { id: "rule-templates", label: nav?.items.ruleTemplates || "Published Rules", icon: Sliders },
-        ],
-      },
-    ];
-  }
+  if (role === "Platform Admin") return [{ title: nav?.sections.platformSystem || "PLATFORM", items: [
+    { id: "platform-health", label: nav?.items.platformHealth || "Platform health", icon: Server },
+    { id: "rule-sets", label: nav?.items.ruleSets || "Enterprise rule sets", icon: FolderKanban },
+    { id: "audit-trail", label: nav?.items.auditTrail || "Audit trail", icon: History },
+  ] }];
+  if (role === "Deployment Staff") return [{ title: nav?.sections.ruleLifecycle || "DEPLOYMENT", items: [
+    { id: "rule-sets", label: nav?.items.ruleSets || "Enterprise rule sets", icon: FolderKanban },
+    { id: "onboarding", label: nav?.items.onboarding || "Onboarding", icon: FolderKanban },
+    { id: "rule-templates", label: nav?.items.ruleTemplates || "Rule library", icon: Sliders },
+    { id: "rule-testing", label: nav?.items.ruleTesting || "Sandbox", icon: TestTube2 },
+    { id: "projects", label: nav?.items.projects || "Projects", icon: FolderKanban },
+    { id: "audit-trail", label: nav?.items.auditTrail || "Audit trail", icon: History },
+  ] }];
 
   if (role === "Operation") {
     return [
@@ -122,7 +116,8 @@ function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
     {
       title: nav?.sections.configuration || "CONFIGURATION",
       items: [
-        { id: "rule-templates", label: nav?.items.ruleTemplates || "Rule Templates", icon: Sliders },
+        { id: "rule-sets", label: nav?.items.ruleSets || "Rule sets", icon: FolderKanban },
+
         { id: "projects", label: nav?.items.projects || "Projects & Integrations", icon: FolderKanban },
       ],
     },
@@ -173,6 +168,8 @@ export function Sidebar({
             <span className={styles.logoSub}>
               {currentUser?.role === "Platform Admin"
                 ? t.roles.platformAdmin
+                : currentUser?.role === "Deployment Staff"
+                ? (language === "vi" ? "Triển khai" : "Deployment")
                 : currentUser?.role === "Viewer"
                 ? t.roles.viewer
                 : currentUser?.role === "Operation"
@@ -185,7 +182,9 @@ export function Sidebar({
           <span className={styles.planBadge}>
             {currentUser?.role === "Platform Admin"
               ? t.roles.superBadge
-              : currentUser?.role === "Viewer"
+              : currentUser?.role === "Deployment Staff"
+                ? "DEPLOY"
+                : currentUser?.role === "Viewer"
               ? t.roles.auditBadge
               : currentUser?.role === "Operation"
               ? t.roles.opsBadge
