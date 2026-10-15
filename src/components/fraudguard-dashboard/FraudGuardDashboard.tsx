@@ -604,7 +604,7 @@ function FraudGuardDashboardContent({
       "my-cases": t.nav.items.myCases,
       "rule-templates": t.nav.items.ruleTemplates,
       "rule-testing": t.nav.items.ruleTesting,
-      "rule-sets": t.nav.items.ruleSets,
+      "rule-sets": currentUser.role === 'SME Admin' ? (language === 'vi' ? 'Quy tắc phát hiện' : 'Detection rules') : t.nav.items.ruleSets,
       onboarding: t.nav.items.onboarding,
       projects: t.nav.items.projects,
       reports: t.nav.items.reports,
@@ -612,7 +612,7 @@ function FraudGuardDashboardContent({
       "platform-health": t.nav.items.platformHealth,
     };
     return navTitleMap[activeNavItem] || t.nav.items.riskOverview;
-  }, [currentUser.role, activeNavItem, t]);
+  }, [currentUser.role, activeNavItem, t, language]);
 
   return (
     <ToastProvider>

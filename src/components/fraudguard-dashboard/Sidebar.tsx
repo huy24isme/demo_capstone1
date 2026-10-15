@@ -116,7 +116,7 @@ function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
     {
       title: nav?.sections.configuration || "CONFIGURATION",
       items: [
-        { id: "rule-sets", label: nav?.items.ruleSets || "Rule sets", icon: FolderKanban },
+        { id: "rule-sets", label: nav?.items.ruleSets === 'Tập rule doanh nghiệp' ? 'Quy tắc phát hiện' : 'Detection rules', icon: FolderKanban },
 
         { id: "projects", label: nav?.items.projects || "Projects & Integrations", icon: FolderKanban },
       ],

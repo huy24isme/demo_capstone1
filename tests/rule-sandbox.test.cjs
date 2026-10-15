@@ -348,7 +348,7 @@ test('rule set UI creates, tests, reviews, publishes and activates a version', (
  const react = { useState(initial) { const slot = cursor++; if (!(slot in states)) states[slot] = typeof initial === 'function' ? initial() : initial; return [states[slot], value => { states[slot] = typeof value === 'function' ? value(states[slot]) : value; }]; } };
  const Tester = () => null;
  const component = load('src/components/fraudguard-dashboard/RuleSetsView.tsx', {
-  react, '@/data/fraudguard-enterprises': enterpriseData, '@/data/fraudguard-roles': roleData, '@/lib/rule-set-lifecycle': managed, './RuleSetTestingView': { RuleSetTestingView: Tester }, '@/lib/rule-lifecycle': lifecycle,
+  react, './EnterpriseRulesView': { EnterpriseRulesView: () => null }, '@/data/fraudguard-enterprises': enterpriseData, '@/data/fraudguard-roles': roleData, '@/lib/rule-set-lifecycle': managed, './RuleSetTestingView': { RuleSetTestingView: Tester }, '@/lib/rule-lifecycle': lifecycle,
   './i18n/LanguageContext': { useLanguage: () => ({ language: 'vi' }) }, './SecurityDashboard.module.css': { default: {} }
  }).RuleSetsView;
  const s = draftSet();
@@ -405,4 +405,46 @@ test('legacy migration preserves single releases, archives ambiguous project set
  assert.equal(multiple.sets.length,1);assert.equal(multiple.sets[0].legacySets.length,2);
  assert.equal(multiple.sets[0].activeVersion,undefined);assert.equal(multiple.unassigned.length,1);
  assert.equal(original.projectId,'p1');
+});
+
+const React = require('react');
+const { renderToStaticMarkup } = require('react-dom/server');
+const readable = load('src/components/fraudguard-dashboard/ReadableConditions.tsx', { './SecurityDashboard.module.css': { default: {} } });
+const businessView = load('src/components/fraudguard-dashboard/EnterpriseRulesView.tsx', {
+ './ReadableConditions': readable,
+ './i18n/LanguageContext': { useLanguage: () => ({ language: 'vi' }) },
+ './SecurityDashboard.module.css': { default: {} }
+}).EnterpriseRulesView;
+const business = { id: 'e1', name: 'Enterprise', projectIds: ['p1'], deploymentStaffId: 'staff' };
+function businessHtml(set) { return renderToStaticMarkup(React.createElement(businessView, { set, enterprise: business, projects: [{ id: 'p1', name: 'Wallet' }] })); }
+function handedOverSet() {
+ const draft = draftSet(); draft.draft.test = managed.testDraft(draft, [labeledSample]);
+ const published = managed.publishSet(draft, 'Reviewer', 'INTERNAL_REVIEW_ONLY');
+ return { ...published, activeVersion: 1, handover: { version: 1, by: 'Reviewer', at: '2026-10-15T00:00:00Z' } };
+}
+test('SME pending view explains handover without a dead details button or draft exposure', () => {
+ const set = draftSet(); set.draft.rules[0].name = 'SECRET_DRAFT';
+ const html = businessHtml(set);
+ assert.match(html, /Đội triển khai đang chuẩn bị/);
+ assert.doesNotMatch(html, /SECRET_DRAFT|Xem chi tiết|disabled|conditionGroup/);
+});
+test('SME sees readable handed-over conditions, never draft definitions or review evidence', () => {
+ const set = handedOverSet(); set.draft = { rules: [{ ...set.versions[0].rules[0], name: 'SECRET_DRAFT' }] };
+ const html = businessHtml(set);
+ assert.match(html, /Xem chi tiết/); assert.match(html, /Số tiền giao dịch/); assert.match(html, /lớn hơn/); assert.match(html, /Đang áp dụng/);
+ assert.doesNotMatch(html, /SECRET_DRAFT|INTERNAL_REVIEW_ONLY|conditionGroup|<pre/);
+});
+test('activation keeps last handover visible but marks it as no longer active until new handover', () => {
+ const set = handedOverSet(); set.versions.push({ ...structuredClone(set.versions[0]), version: 2, rules: [{ ...set.versions[0].rules[0], name: 'UNDELIVERED_VERSION' }] });
+ const next = managed.activateSet([set], set.id, 2)[0];
+ assert.equal(next.handover.version, 1);
+ const html = businessHtml(next);
+ assert.match(html, /Đang cập nhật/); assert.match(html, /không phải phiên bản đang được kích hoạt/);
+ assert.doesNotMatch(html, /UNDELIVERED_VERSION/);
+});
+test('readable conditions preserve nested AND/OR and strict versus inclusive comparisons', () => {
+ const node = group('OR', [condition('amount', '>', 10), group('AND', [condition('amount', '>=', 20), condition('device.is_new', '==', false)])]);
+ const html = renderToStaticMarkup(React.createElement(readable.ReadableConditions, { node, vi: true }));
+ assert.match(html, /ít nhất một/); assert.match(html, /tất cả điều kiện/);
+ assert.match(html, /lớn hơn/); assert.match(html, /từ/); assert.match(html, /Không/);
 });

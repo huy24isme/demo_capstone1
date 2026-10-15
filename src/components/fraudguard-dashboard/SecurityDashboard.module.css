@@ -3059,6 +3059,87 @@
 .sandboxAdvanced summary { cursor: pointer; color: var(--security-muted); }
 .sandboxJson { width: 100%; display: block; margin-top: 8px; resize: vertical; font-family: monospace; }
 .sandboxError { color: var(--security-red); font-size: 12px; }
+.ruleWorkspace { display: grid; gap: 20px; min-width: 0; }
+.ruleWorkspace .pageHeading { margin-bottom: 0; }
+.ruleWorkspace h2 { font-size: 16px; line-height: 1.4; margin: 0; }
+.ruleWorkspace h3 { font-size: 14px; line-height: 1.5; margin: 0 0 8px; }
+.ruleWorkspace p { line-height: 1.6; }
+.ruleWorkspace .panel:not(.tablePanel) { padding: 24px; }
+.ruleWorkspace .tablePanel { padding: 0; }
+.ruleWorkspace .sandboxStack { margin-top: 0; }
+.ruleWorkspace .control { max-width: 100%; }
+.ruleWorkspace .drawerLabel { display: grid; gap: 8px; color: var(--security-text-secondary); font-size: 12px; }
+.ruleWorkspace textarea { min-height: 100px; font-family: inherit; }
+.ruleWorkspace :is(button, input, select, summary) { min-height: 40px; }
+.ruleWorkspace :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--security-blue); outline-offset: 3px; }
+.ruleWorkspace button:disabled { cursor: not-allowed; opacity: .55; }
+.ruleWorkspace pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ruleWorkspace .panelHeader { flex-wrap: wrap; }
+.ruleToolbar, .ruleSectionHeader { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.ruleToolbar { padding: 20px 24px; border-bottom: 1px solid var(--security-border); }
+.ruleToolbar p { color: var(--security-text-secondary); margin: 6px 0 0; font-size: 12px; max-width: 560px; }
+.ruleSearch { display: grid; gap: 8px; font-size: 12px; color: var(--security-text-secondary); width: min(100%, 300px); }
+.ruleSearch input { width: 100%; }
+.ruleCaption { display: block; color: var(--security-text-secondary); font-size: 12px; line-height: 1.6; }
+.ruleSectionHeader h2 { margin-top: 4px; }
+.protectionOverview > p { max-width: 780px; color: var(--security-text-secondary); }
+.ruleFacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 20px 0; margin: 0; }
+.ruleFacts dt { color: var(--security-text-secondary); font-size: 12px; }
+.ruleFacts dd { margin: 8px 0 0; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ruleScope { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid var(--security-border); padding-top: 16px; font-size: 12px; }
+.ruleScope > span:first-child { color: var(--security-text-secondary); margin-right: 8px; }
+.ruleTag { padding: 4px 8px; border-radius: 3px; background: var(--security-control); color: var(--security-text-secondary); }
+.rulePending { padding: 28px 0 20px; max-width: 680px; }
+.rulePending p { color: var(--security-text-secondary); margin-bottom: 0; }
+.ruleNotice { padding: 12px 16px; background: var(--high-bg); color: var(--high-text) !important; border-radius: 4px; font-size: 13px; }
+.businessRule { border-bottom: 1px solid var(--security-border); }
+.businessRule:last-child { border-bottom: 0; }
+.businessRule > summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; cursor: pointer; list-style: none; }
+.businessRule > summary::-webkit-details-marker { display: none; }
+.businessRule > summary:hover { background: var(--security-panel-hover); }
+.businessRule > summary strong { font-size: 14px; }
+.businessRule > summary .ruleCaption { margin-top: 4px; }
+.ruleOpenLabel { color: var(--security-blue); font-size: 12px; flex-shrink: 0; }
+.ruleOpenLabel::after { content: ' +'; font-size: 16px; }
+.businessRule[open] .ruleOpenLabel::after { content: ' −'; }
+.businessRuleBody { padding: 0 24px 20px; }
+.businessRuleBody > p:first-child { margin-top: 0; color: var(--security-text-secondary); }
+.readableConditions { padding: 12px 16px; background: var(--security-control); border-radius: 4px; font-size: 13px; line-height: 1.7; }
+.readableConditions p { margin: 0 0 8px; font-weight: 500; }
+.readableConditions ul { padding-left: 20px; margin: 0; }
+.readableConditions li + li { margin-top: 6px; }
+.readableConditions .readableConditions { padding: 8px 0; }
+.evaluationFields { display: grid; gap: 0; padding: 0 16px; margin: 0; font-size: 12px; }
+.evaluationFields > div { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--security-border); padding: 12px 0; }
+.evaluationFields dt { color: var(--security-text-secondary); }
+.evaluationFields dd { margin: 0; overflow-wrap: anywhere; text-align: right; }
+.ruleEmpty { text-align: center; padding: 40px 24px; color: var(--security-text-secondary); }
+.ruleEmpty h2, .ruleEmpty h3 { color: var(--security-text); }
+.ruleFootnote { border-top: 1px solid var(--security-border); padding: 14px 24px; font-size: 12px; color: var(--security-text-secondary); line-height: 1.6; }
+.ruleBack { justify-self: start; }
+.ruleWorkflow { display: flex; flex-wrap: wrap; list-style: none; padding: 16px 20px; margin: 0; gap: 16px 24px; background: var(--security-panel); border: 1px solid var(--security-border); border-radius: var(--panel-radius); }
+.ruleWorkflow li { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--security-text-secondary); }
+.ruleWorkflow li > span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 4px; background: var(--security-control); }
+.ruleWorkflow [aria-current="step"] { color: var(--security-blue); font-weight: 600; }
+.ruleWorkflow [data-complete="true"] > span { background: var(--low-bg); color: var(--low-text); }
+@media (max-width: 1000px) {
+  .ruleToolbar { align-items: flex-start; gap: 16px; }
+  .ruleFacts { gap: 16px; }
+}
+@media (max-width: 680px) {
+  .ruleWorkspace { gap: 16px; }
+  .ruleWorkspace .panel:not(.tablePanel), .ruleToolbar { padding: 16px; }
+  .ruleWorkspace :is(button, input, select, summary) { min-height: 44px; }
+  .ruleSearch { width: 100%; }
+  .ruleFacts { grid-template-columns: 1fr; gap: 12px; }
+  .ruleFacts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .ruleFacts dd { font-size: 16px; margin: 0; }
+  .businessRule > summary { padding: 16px; align-items: flex-start; }
+  .businessRule > summary > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .ruleOpenLabel { font-size: 11px; }
+  .businessRuleBody { padding: 0 16px 16px; }
+  .ruleFootnote { padding: 12px 16px; }
+}
 .sandboxFooter { border-top: 1px solid var(--security-border); padding: 16px; }
 .sandboxStack button:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 700px) { .sandboxFields { grid-template-columns: 1fr; } }

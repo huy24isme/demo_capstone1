@@ -580,7 +580,7 @@ export function AlertCaseDrawer({
             )}
           </div>
 
-          {transaction.ruleEvaluation && <div className={styles.drawerSection}><RuleEvaluationDetails evaluation={transaction.ruleEvaluation} /></div>}
+          {transaction.ruleEvaluation && <div className={styles.drawerSection}><RuleEvaluationDetails evaluation={transaction.ruleEvaluation} technical={currentRole === 'Platform Admin' || currentRole === 'Deployment Staff'} /></div>}
           {/* Detection result & Evidence breakdown */}
           <div className={styles.drawerSection}>
             <h3 className={styles.drawerSectionTitle}>{t.drawer.evidenceTitle}</h3>

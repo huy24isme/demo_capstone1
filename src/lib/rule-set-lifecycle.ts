@@ -50,7 +50,7 @@ export function publishSet(set: ManagedRuleSet, reviewer: string, reviewNote: st
 export function activateSet(sets: ManagedRuleSet[], id: string, version: number): ManagedRuleSet[] {
   const target = sets.find(s => s.id === id);
   if (!target?.versions.some(v => v.version === version)) throw new Error('Chỉ kích hoạt phiên bản đã phát hành.');
-  return sets.map(s => s.enterpriseId !== target.enterpriseId ? s : { ...s, activeVersion: s.id === id ? version : undefined, handover: undefined });
+  return sets.map(s => s.enterpriseId !== target.enterpriseId ? s : { ...s, activeVersion: s.id === id ? version : undefined });
 }
 export function activeSetRules(sets: ManagedRuleSet[]): RuleTemplate[] {
   return sets.flatMap(s => s.versions.find(v => v.version === s.activeVersion)?.rules ?? []);
