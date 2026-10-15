@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import type {
   CaseDecision,
   CaseNote,
@@ -133,7 +134,7 @@ export function AlertCaseDrawer({
 }: AlertCaseDrawerProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useDialogFocus(open, onClose);
 
   // Investigator zone local inputs
   const [investigatorNote, setInvestigatorNote] = useState("");
@@ -148,16 +149,6 @@ export function AlertCaseDrawer({
   const [operationFeedback, setOperationFeedback] = useState("");
   const [isMutating, setIsMutating] = useState(false);
 
-  // Keyboard navigation
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    drawerRef.current?.focus();
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
 
   // Sync state when transaction opens/changes
   useEffect(() => {
@@ -432,6 +423,7 @@ export function AlertCaseDrawer({
         ref={drawerRef}
         className={styles.drawer}
         role="dialog"
+        aria-modal="true"
         aria-label={`${t.drawer.title}: ${transaction.transactionReference}`}
         tabIndex={-1}
         style={{ width: "min(680px, 100vw)" }}

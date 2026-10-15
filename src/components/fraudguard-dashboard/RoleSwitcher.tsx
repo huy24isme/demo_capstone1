@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, FileSpreadsheet } from "lucide-react";
 import type { UserProfile } from "./types";
 import { DEMO_USERS } from "../../data/fraudguard-roles";
+import { demoEnterprises } from '@/data/fraudguard-enterprises';
 import { PermissionMatrixModal } from "./PermissionMatrixModal";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
@@ -14,7 +15,7 @@ interface RoleSwitcherProps {
 }
 
 export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -133,6 +134,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
                         {u.role}
                       </span>
                     </div>
+                    <p className={styles.roleAccountScope}>{u.role === 'Platform Admin' ? (language === 'vi' ? 'Toàn nền tảng' : 'Platform-wide') : demoEnterprises.filter(e => u.role === 'Deployment Staff' ? e.deploymentStaffId === u.id : e.id === u.enterpriseId).map(e => e.name).join(' · ')}</p>
                     <p className={styles.roleItemDesc}>{u.description}</p>
                   </div>
 

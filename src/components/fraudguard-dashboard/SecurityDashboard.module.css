@@ -1004,6 +1004,8 @@
 }
 
 @media (max-width: 680px) {
+  .headerRight { flex-wrap: wrap; max-width: 100%; }
+  .headerLeft, .headerBreadcrumb { min-width: 0; flex-wrap: wrap; }
   .productHeader {
     height: auto;
     min-height: var(--product-header-height);
@@ -3070,7 +3072,9 @@
 .ruleWorkspace .control { max-width: 100%; }
 .ruleWorkspace .drawerLabel { display: grid; gap: 8px; color: var(--security-text-secondary); font-size: 12px; }
 .ruleWorkspace textarea { min-height: 100px; font-family: inherit; }
-.ruleWorkspace :is(button, input, select, summary) { min-height: 40px; }
+.ruleWorkspace :is(button, input:not([type="checkbox"]), select, summary) { min-height: 40px; }
+.ruleWorkspace input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
+.ruleWorkspace label.sandboxActions { min-height: 44px; cursor: pointer; }
 .ruleWorkspace :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--security-blue); outline-offset: 3px; }
 .ruleWorkspace button:disabled { cursor: not-allowed; opacity: .55; }
 .ruleWorkspace pre { white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -3129,7 +3133,7 @@
 @media (max-width: 680px) {
   .ruleWorkspace { gap: 16px; }
   .ruleWorkspace .panel:not(.tablePanel), .ruleToolbar { padding: 16px; }
-  .ruleWorkspace :is(button, input, select, summary) { min-height: 44px; }
+  .ruleWorkspace :is(button, input:not([type="checkbox"]), select, summary) { min-height: 44px; }
   .ruleSearch { width: 100%; }
   .ruleFacts { grid-template-columns: 1fr; gap: 12px; }
   .ruleFacts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }

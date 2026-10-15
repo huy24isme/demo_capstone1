@@ -1,6 +1,9 @@
 "use client";
 
-import { Sun, Moon, Globe } from "lucide-react";
+import { Sun, Moon, Globe, Menu, X } from "lucide-react";
+import { useState } from 'react';
+import { getSectionsForRole } from './Sidebar';
+import { useDialogFocus } from './useDialogFocus';
 import type { SecondaryView, UserProfile } from "./types";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { UserProfileMenu } from "./UserProfileMenu";
@@ -25,10 +28,13 @@ export function ProductHeader({
   onNavigate,
 }: ProductHeaderProps) {
   const { language, toggleLanguage, t } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useDialogFocus(menuOpen, () => setMenuOpen(false));
 
   return (
     <header className={styles.productHeader}>
       <div className={styles.headerLeft}>
+        <button className={`${styles.button} ${styles.mobileMenuButton}`} onClick={() => setMenuOpen(true)} aria-expanded={menuOpen} aria-controls="mobile-navigation" aria-label={language === 'vi' ? 'Mở menu điều hướng' : 'Open navigation'}><Menu size={18} /></button>
         <div className={styles.headerBreadcrumb}>
           <span className={styles.breadcrumbMuted}>{t.brandName}</span>
           <span className={styles.breadcrumbDivider}>/</span>
@@ -79,6 +85,12 @@ export function ProductHeader({
         {/* User Profile & Preferences Dropdown Menu */}
         <UserProfileMenu currentUser={currentUser} onNavigate={onNavigate} />
       </div>
+      {menuOpen && <div className={styles.mobileNavigationOverlay} onClick={event => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+        <div id="mobile-navigation" ref={menuRef} role="dialog" aria-modal="true" aria-label={language === 'vi' ? 'Điều hướng' : 'Navigation'} tabIndex={-1} className={styles.mobileNavigation}>
+          <div className={styles.panelHeader}><strong>FraudGuard</strong><button className={styles.button} onClick={() => setMenuOpen(false)} aria-label={language === 'vi' ? 'Đóng menu' : 'Close menu'}><X size={18} /></button></div>
+          <nav>{getSectionsForRole(currentUser?.role, t).map(section => <section key={section.title}><p className={styles.sectionLabel}>{section.title}</p>{section.items.map(item => <button key={item.id} className={styles.secondaryNavButton} aria-current={activeViewTitle === item.label ? 'page' : undefined} onClick={() => { onNavigate?.(item.id); setMenuOpen(false); }}><item.icon size={18} />{item.label}</button>)}</section>)}</nav>
+        </div>
+      </div>}
     </header>
   );
 }

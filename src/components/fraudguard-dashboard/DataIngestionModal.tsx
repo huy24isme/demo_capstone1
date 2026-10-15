@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import { Download, Upload, CheckCircle2, FileText, X } from "lucide-react";
 import { downloadCSVTemplate } from "@/lib/export-csv";
 import { useLanguage } from "./i18n/LanguageContext";
@@ -19,6 +20,7 @@ export function DataIngestionModal({ open, onClose }: DataIngestionModalProps) {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [rowCount, setRowCount] = useState(0);
+  const dialogRef = useDialogFocus(open, onClose);
 
   if (!open) return null;
 
@@ -40,6 +42,9 @@ export function DataIngestionModal({ open, onClose }: DataIngestionModalProps) {
         className={styles.builderModal}
         style={{ maxWidth: 760 }}
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
+        aria-modal="true"
         aria-label="Data Ingestion Specification & Template"
       >
         <div className={styles.builderHeader}>

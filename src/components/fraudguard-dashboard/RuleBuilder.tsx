@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import type {
   ConditionGroupNode,
   ConditionOperator,
@@ -533,14 +534,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
     }
   }, [rule]);
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  const dialogRef = useDialogFocus(open, onClose);
 
   if (!open) return null;
 
@@ -578,7 +572,7 @@ export function RuleBuilder({ rule, open, onClose, onSave }: RuleBuilderProps) {
 
   return (
     <div className={styles.builderOverlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={styles.builderModal} role="dialog" aria-label={isEdit ? "Edit rule" : "Create rule"}>
+      <div ref={dialogRef} tabIndex={-1} className={styles.builderModal} role="dialog" aria-modal="true" aria-label={isEdit ? "Edit rule" : "Create rule"}>
         <div className={styles.builderHeader}>
           <h2 className={styles.builderTitle}>
             {isEdit

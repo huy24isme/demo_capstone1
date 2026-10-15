@@ -394,7 +394,7 @@ function FraudGuardDashboardContent({
       case "my-cases":
         return (
           <CasesView
-            transactions={transactions}
+            transactions={enterpriseTransactions}
             onUpdateTransaction={handleUpdateTransaction}
             onReview={handleReview}
             permissions={permissions}
@@ -425,7 +425,7 @@ function FraudGuardDashboardContent({
       case "reports":
         return (
           <ReportsView
-            transactions={transactions}
+            transactions={enterpriseTransactions}
 
             currentUser={currentUser}
             permissions={permissions}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import {
   Sliders,
   Copy,
@@ -116,18 +117,7 @@ export function RuleDetailDrawer({
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const canManage = permissions ? permissions.canManageRules : true;
-  const drawerRef = useRef<HTMLDivElement>(null);
-
-  // Focus and ESC handling
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    drawerRef.current?.focus();
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  const drawerRef = useDialogFocus(open, onClose);
 
   // Derived Performance Metrics for this Rule
   const metrics = useMemo(() => {
@@ -178,6 +168,7 @@ export function RuleDetailDrawer({
         ref={drawerRef}
         tabIndex={-1}
         role="dialog"
+        aria-modal="true"
         aria-label={language === "vi" ? "Chi tiết Quy tắc" : "Rule Detail"}
       >
         <div className={styles.drawerHeader}>

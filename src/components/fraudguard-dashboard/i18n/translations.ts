@@ -290,7 +290,7 @@ const rawTranslations = {
     "execCharts": {
       "outcomesTitle": "Kết quả Thụ lý Điều tra",
       "outcomesDesc": "Kết luận điều tra thực tế từ đội ngũ Điều tra viên & Vận hành",
-      "scoringTitle": "Độ tin cậy Nguồn Phát hiện",
+      "scoringTitle": "Phân bố nguồn phát hiện",
       "scoringDesc": "Tỷ trọng AI vs Rule Engine vs Fallback",
       "legendConfirmed": "Xác nhận Gian lận",
       "legendInvestigating": "Đang thẩm định / Chờ duyệt",
@@ -712,9 +712,9 @@ const rawTranslations = {
     "online": "Trực tuyến"
   },
   "roleSwitcher": {
-    "menuTitle": "Chọn vai trò người dùng (RBAC)",
+    "menuTitle": "Chuyển tài khoản demo",
     "matrixBtn": "Xem bảng phân quyền (Matrix)",
-    "triggerTitle": "Đang đăng nhập: {name} ({role}) — Click để đổi vai trò"
+    "triggerTitle": "Đang đăng nhập: {name} ({role}) — Chuyển tài khoản demo"
   },
   "dataIngestionModal": {
     "title": "Tiếp nhận & Chuẩn hóa Dữ liệu (Data Ingestion)",
@@ -1047,7 +1047,7 @@ const rawTranslations = {
     "execCharts": {
       "outcomesTitle": "Case Investigation Outcomes",
       "outcomesDesc": "Field and Operations teams actual investigation conclusions",
-      "scoringTitle": "Detection Engine Reliability",
+      "scoringTitle": "Detection source distribution",
       "scoringDesc": "Distribution of AI vs Rule Engine vs Fallback scoring",
       "legendConfirmed": "Confirmed Fraud",
       "legendInvestigating": "Investigating / Reported",
@@ -1469,9 +1469,9 @@ const rawTranslations = {
     "online": "Online"
   },
   "roleSwitcher": {
-    "menuTitle": "Select User Role (RBAC)",
+    "menuTitle": "Switch demo account",
     "matrixBtn": "View Permission Matrix",
-    "triggerTitle": "Signed in as: {name} ({role}) — Click to switch role"
+    "triggerTitle": "Signed in as: {name} ({role}) — Switch demo account"
   },
   "dataIngestionModal": {
     "title": "Data Ingestion & Schema Normalization",

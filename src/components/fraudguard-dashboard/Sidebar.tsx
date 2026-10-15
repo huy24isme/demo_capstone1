@@ -35,7 +35,7 @@ interface NavSection {
   items: NavItem[];
 }
 
-function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
+export function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
   const nav = t?.nav;
   if (role === "Platform Admin") return [{ title: nav?.sections.platformSystem || "PLATFORM", items: [
     { id: "platform-health", label: nav?.items.platformHealth || "Platform health", icon: Server },

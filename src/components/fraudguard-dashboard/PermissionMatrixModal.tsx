@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import { createPortal } from "react-dom";
 import { X, Check, ShieldAlert } from "lucide-react";
 import { PERMISSION_MATRIX_DATA } from "../../data/fraudguard-roles";
@@ -15,26 +16,12 @@ interface PermissionMatrixModalProps {
 export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalProps) {
   const { t, language } = useLanguage();
   const [mounted, setMounted] = useState(false);
+  const dialogRef = useDialogFocus(open && mounted, onClose);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    }
-    if (open) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [open, onClose]);
 
   if (!open || !mounted) return null;
 
@@ -59,8 +46,8 @@ export function PermissionMatrixModal({ open, onClose }: PermissionMatrixModalPr
   };
 
   return createPortal(
-    <div className={styles.matrixModalOverlay} onClick={onClose} role="dialog" aria-modal="true">
-      <div className={styles.matrixModalContent} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.matrixModalOverlay} onClick={onClose}>
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t.permissionMatrixModal.title} className={styles.matrixModalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.matrixModalHeader}>
           <div>
             <h2>{t.permissionMatrixModal.title}</h2>
