@@ -87,6 +87,7 @@
 }
 
 .logoTitle {
+  white-space: nowrap;
   font-size: 15px;
   font-weight: 700;
   line-height: 1.2;
@@ -98,6 +99,17 @@
   font-size: 10px;
   color: var(--security-muted);
 }
+
+.logoMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 6px;
+}
+
+.logoMeta .logoSub { line-height: 1.4; }
+.logoMeta .planBadge { flex-shrink: 0; }
 
 .planBadge {
   display: inline-flex;

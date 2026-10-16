@@ -165,6 +165,7 @@ export function Sidebar({
           </div>
           <div className={styles.logoText}>
             <span className={styles.logoTitle}>{t.brandName}</span>
+            <div className={styles.logoMeta}>
             <span className={styles.logoSub}>
               {currentUser?.role === "Platform Admin"
                 ? t.roles.platformAdmin
@@ -178,7 +179,6 @@ export function Sidebar({
                 ? t.roles.investigator
                 : t.roles.smeAdmin}
             </span>
-          </div>
           <span className={styles.planBadge}>
             {currentUser?.role === "Platform Admin"
               ? t.roles.superBadge
@@ -192,6 +192,8 @@ export function Sidebar({
               ? t.roles.fieldBadge
               : t.roles.smeBadge}
           </span>
+            </div>
+          </div>
         </div>
 
         {onToggleCollapse && (
