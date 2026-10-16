@@ -1,4 +1,4 @@
-import type { UserProfile } from '../components/fraudguard-dashboard/types';
+import type { TransactionRisk, UserProfile } from '../components/fraudguard-dashboard/types';
 export interface Enterprise { id: string; name: string; projectIds: string[]; deploymentStaffId: string }
 // Synthetic ownership and staff assignments used by the local demo.
 export const demoEnterprises: Enterprise[] = [
@@ -9,6 +9,10 @@ export const demoEnterprises: Enterprise[] = [
  { id: 'tenant-greenmart', name: 'GreenMart Global Online', projectIds: [], deploymentStaffId: 'usr-deployment-2' },
 ];
 export function canDeploy(user: UserProfile, enterprise: Enterprise) { return user.role === 'Deployment Staff' && user.id === enterprise.deploymentStaffId; }
+export function transactionsForEnterprise(transactions: TransactionRisk[], user: UserProfile, enterprises: Enterprise[]) {
+ const projects = enterprises.find(e => e.id === user.enterpriseId)?.projectIds ?? [];
+ return transactions.filter(tx => projects.includes(tx.projectId));
+}
 export function visibleEnterprises(user: UserProfile, enterprises: Enterprise[]) {
  if (user.role === 'Platform Admin') return enterprises;
  if (user.role === 'Deployment Staff') return enterprises.filter(e => canDeploy(user, e));

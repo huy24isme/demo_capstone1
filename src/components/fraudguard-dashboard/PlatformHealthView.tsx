@@ -20,6 +20,7 @@ import {
 import { useToast } from "./ToastProvider";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
+import { useDialogFocus } from './useDialogFocus';
 
 export function PlatformHealthView() {
   const { t, language } = useLanguage();
@@ -28,6 +29,8 @@ export function PlatformHealthView() {
   const [mounted, setMounted] = useState(false);
   const [services] = useState<MicroserviceHealth[]>(initialMicroservices);
   const [tenants] = useState<SmeTenantItem[]>(initialSmeTenants);
+  const [selectedTenant, setSelectedTenant] = useState<SmeTenantItem | null>(null);
+  const tenantRef = useDialogFocus(!!selectedTenant, () => setSelectedTenant(null));
   const [isPinging, setIsPinging] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -224,17 +227,17 @@ export function PlatformHealthView() {
               <AreaChart data={fallbackHourlyTrend}>
                 <defs>
                   <linearGradient id="aiGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ad8af3" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#ad8af3" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="var(--security-purple)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--security-purple)" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#eda765" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#eda765" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="var(--security-orange)" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="var(--security-orange)" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#35363e" />
-                <XAxis dataKey="time" stroke="#777b8b" fontSize={11} />
-                <YAxis stroke="#777b8b" fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--security-border)" />
+                <XAxis dataKey="time" stroke="var(--security-muted)" fontSize={11} />
+                <YAxis stroke="var(--security-muted)" fontSize={11} />
                 <Tooltip
                   contentStyle={{
                     background: "var(--security-panel)",
@@ -248,7 +251,7 @@ export function PlatformHealthView() {
                   type="monotone"
                   dataKey="aiRequests"
                   name={t.platformHealthView.chart.aiLabel}
-                  stroke="#ad8af3"
+                  stroke="var(--security-purple)"
                   fillOpacity={1}
                   fill="url(#aiGrad)"
                 />
@@ -256,7 +259,7 @@ export function PlatformHealthView() {
                   type="monotone"
                   dataKey="fallbackRequests"
                   name={t.platformHealthView.chart.fallbackLabel}
-                  stroke="#eda765"
+                  stroke="var(--security-orange)"
                   fillOpacity={1}
                   fill="url(#fbGrad)"
                 />
@@ -349,7 +352,7 @@ export function PlatformHealthView() {
                     <td>
                       <button
                         className={styles.button}
-                        onClick={() => toast("info", `${t.platformHealthView.tableTenants.btnInspect}: ${item.name}`)}
+                        onClick={() => setSelectedTenant(item)}
                         type="button"
                         style={{ fontSize: 11, padding: "3px 8px", minHeight: 26 }}
                       >
@@ -363,6 +366,14 @@ export function PlatformHealthView() {
           </table>
         </div>
       </section>
+      {selectedTenant && <div className={styles.builderOverlay} onClick={e => { if (e.target === e.currentTarget) setSelectedTenant(null); }}>
+        <div ref={tenantRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={selectedTenant.name} className={styles.builderModal}>
+          <div className={styles.builderHeader}><h2 className={styles.builderTitle}>{selectedTenant.name}</h2><button className={styles.button} onClick={() => setSelectedTenant(null)}>{language === 'vi' ? 'Đóng' : 'Close'}</button></div>
+          <div className={styles.builderBody}><p className={styles.muted}>{language === 'vi' ? 'Thông tin minh họa, chưa kết nối hệ thống quản lý doanh nghiệp thực tế.' : 'Sample information; not connected to a live tenant management service.'}</p><dl className={styles.evaluationFields}>
+            {[[language === 'vi' ? 'Mã doanh nghiệp' : 'Business code', selectedTenant.code], [language === 'vi' ? 'Gói dịch vụ' : 'Plan', selectedTenant.plan], [language === 'vi' ? 'Trạng thái' : 'Status', selectedTenant.status], [language === 'vi' ? 'Dự án hoạt động' : 'Active projects', selectedTenant.activeProjectsCount], [language === 'vi' ? 'Hạn mức đã dùng' : 'Quota used', `${selectedTenant.quotaUsed.toLocaleString(dateLocale)} / ${selectedTenant.quotaLimit.toLocaleString(dateLocale)}`], [language === 'vi' ? 'Nguồn phát hiện' : 'Detection source', selectedTenant.scoringEngine]].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+          </dl></div>
+        </div>
+      </div>}
     </>
   );
 }

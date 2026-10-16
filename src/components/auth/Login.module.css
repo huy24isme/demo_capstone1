@@ -12,7 +12,7 @@
   --login-divider: #2e303b;
   --login-social-bg: #202126;
   --login-social-hover: #292a33;
-  --login-btn-primary: #5b8bf7;
+  --login-btn-primary: var(--action-bg);
   --login-btn-primary-hover: #4578ea;
   --login-btn-text: #ffffff;
   --login-accent: #ad8af3;

@@ -50,14 +50,14 @@ function getFindingBadgeStyle(
       return {
         bg: "rgba(120, 201, 172, 0.15)",
         text: "var(--security-green)",
-        border: "#3f665a",
+        border: "var(--low-border)",
         label: t.findings.legitimate,
       };
     case "Need More Info":
       return {
         bg: "rgba(173, 138, 243, 0.15)",
         text: "var(--security-purple)",
-        border: "#5c4778",
+        border: "var(--medium-border)",
         label: t.findings.needMoreInfo,
       };
   }
@@ -71,9 +71,9 @@ function getDecisionBadgeStyle(
     case "Reported":
       return {
         label: t.caseStatus.reported,
-        bg: "rgba(255, 215, 0, 0.15)",
-        text: "#ffd700",
-        border: "#8c7b00",
+        bg: "var(--high-bg)",
+        text: "var(--high-text)",
+        border: "var(--high-border)",
       };
     case "Confirmed Fraud":
       return {
@@ -87,35 +87,35 @@ function getDecisionBadgeStyle(
         label: t.caseStatus.falseAlarm,
         bg: "rgba(120, 201, 172, 0.15)",
         text: "var(--security-green)",
-        border: "#3f665a",
+        border: "var(--low-border)",
       };
     case "Resolved":
       return {
         label: t.caseStatus.resolved,
         bg: "rgba(120, 201, 172, 0.15)",
         text: "var(--security-green)",
-        border: "#3f665a",
+        border: "var(--low-border)",
       };
     case "Investigating":
       return {
         label: t.caseStatus.investigating,
         bg: "rgba(173, 138, 243, 0.15)",
         text: "var(--security-purple)",
-        border: "#5c4778",
+        border: "var(--medium-border)",
       };
     case "Assigned":
       return {
         label: t.caseStatus.assigned,
         bg: "rgba(113, 185, 244, 0.15)",
         text: "var(--security-blue)",
-        border: "#2d5a7b",
+        border: "var(--security-border-strong)",
       };
     case "Open":
       return {
         label: t.caseStatus.open,
         bg: "rgba(237, 167, 101, 0.15)",
         text: "var(--security-orange)",
-        border: "#715139",
+        border: "var(--high-border)",
       };
   }
 }

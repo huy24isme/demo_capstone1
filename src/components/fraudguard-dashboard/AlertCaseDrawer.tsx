@@ -377,7 +377,7 @@ export function AlertCaseDrawer({
       case "Investigating":
         return { bg: "rgba(173, 138, 243, 0.15)", text: "var(--security-purple)", border: "#5c4778" };
       case "Reported":
-        return { bg: "rgba(255, 215, 0, 0.15)", text: "#ffd700", border: "#8c7b00" };
+        return { bg: "var(--high-bg)", text: "var(--high-text)", border: "var(--high-border)" };
       case "Confirmed Fraud":
         return { bg: "var(--critical-bg)", text: "var(--critical-text)", border: "var(--critical-border)" };
       case "False Alarm":
@@ -947,8 +947,8 @@ export function AlertCaseDrawer({
                         style={{
                           padding: "10px 14px",
                           borderRadius: 5,
-                          background: "rgba(255, 215, 0, 0.1)",
-                          border: "1px solid #8c7b00",
+                          background: "var(--high-bg)",
+                          border: "1px solid var(--high-border)",
                           marginBottom: 14,
                         }}
                       >
@@ -957,7 +957,7 @@ export function AlertCaseDrawer({
                             display: "flex",
                             alignItems: "center",
                             gap: 8,
-                            color: "#ffd700",
+                            color: "var(--high-text)",
                             fontWeight: 600,
                             fontSize: 12,
                           }}

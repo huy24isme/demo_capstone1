@@ -22,6 +22,8 @@
 
   /* Accent colors */
   --security-blue: #71b9f4;
+  --action-bg: #2563eb;
+  --action-text: #ffffff;
   --security-blue-bg: #34546c;
   --security-purple: #ad8af3;
   --security-purple-bg: #594076;
@@ -46,7 +48,7 @@
   /* Layout */
   --sidebar-width: 240px;
   --product-header-height: 60px;
-  --panel-radius: 6px;
+  --panel-radius: 5px;
   --content-max-width: 1900px;
 }
 
@@ -70,7 +72,7 @@
   --security-text: #0f172a;
   --security-text-secondary: #334155;
   --security-muted: #64748b;
-  --security-subtle: #94a3b8;
+  --security-subtle: #64748b;
 
   /* Accent colors */
   --security-blue: #2563eb;
@@ -131,7 +133,7 @@ a {
   text-decoration: none;
 }
 
-:where(button, a, input, select):focus-visible {
+:where(button, a, input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--security-blue);
   outline-offset: 3px;
 }

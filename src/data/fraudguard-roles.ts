@@ -1,4 +1,8 @@
-import type { RolePermissions, UserProfile, UserRole } from "../components/fraudguard-dashboard/types";
+import type {
+  RolePermissions,
+  UserProfile,
+  UserRole,
+} from "../components/fraudguard-dashboard/types";
 
 export const DEMO_USERS: UserProfile[] = [
   {
@@ -9,8 +13,32 @@ export const DEMO_USERS: UserProfile[] = [
     title: "Platform Superadmin",
     avatarLetter: "P",
     avatarBg: "#d97706", // Amber
-    description: "Quản trị hệ thống, doanh nghiệp và tài khoản; xem tình trạng triển khai và tập rule, không cấu hình hay phát hành rule.",
+    description:
+      "Quản trị hệ thống, doanh nghiệp và tài khoản; xem tình trạng triển khai và tập rule, không cấu hình hay phát hành rule.",
   },
+    {
+    id: "usr-deployment",
+    name: "Nguyễn Minh Hà",
+    email: "ha.nm@fraudguard.io",
+    role: "Deployment Staff",
+    title: "Nhân viên triển khai",
+    avatarLetter: "H",
+    avatarBg: "#2563eb",
+    description:
+      "Triển khai TechPay, FastRetail và ABC Fashion: cấu hình, kiểm thử, review, phát hành và bàn giao.",
+  },
+  {
+    id: "usr-deployment-2",
+    name: "Phạm Thu Linh",
+    email: "linh.pt@fraudguard.io",
+    role: "Deployment Staff",
+    title: "Nhân viên triển khai",
+    avatarLetter: "L",
+    avatarBg: "#0284c7",
+    description:
+      "Triển khai EduLearn và GreenMart; chỉ thao tác doanh nghiệp được phân công.",
+  },
+
   {
     id: "usr-sme-admin",
     enterpriseId: "tenant-abc",
@@ -20,7 +48,20 @@ export const DEMO_USERS: UserProfile[] = [
     title: "Security & Risk Lead",
     avatarLetter: "A",
     avatarBg: "#7c3aed", // Purple
-    description: "Quản trị viên doanh nghiệp (ABC Fashion): Giám sát tổng quan, quản lý thành viên & phân quyền, cấu hình API Key và xem báo cáo điều hành.",
+    description:
+      "Quản trị viên doanh nghiệp (ABC Fashion): Giám sát tổng quan, quản lý thành viên & phân quyền, cấu hình API Key và xem báo cáo điều hành.",
+  },
+  {
+    id: "usr-techpay-admin",
+    enterpriseId: "tenant-techpay",
+    name: "TechPay Admin (Demo)",
+    email: "admin@techpay.example",
+    role: "SME Admin",
+    title: "Enterprise Administrator",
+    avatarLetter: "T",
+    avatarBg: "#2563eb",
+    description:
+      "Tài khoản demo của TechPay: xem kết quả Mobile Wallet và Checkout Gateway sau bàn giao.",
   },
   {
     id: "usr-operation",
@@ -31,7 +72,8 @@ export const DEMO_USERS: UserProfile[] = [
     title: "Risk Operations Team Leader",
     avatarLetter: "K",
     avatarBg: "#2563eb", // Blue
-    description: "Trưởng nhóm vận hành: Quản lý hàng đợi cảnh báo, phân công case cho điều tra viên, duyệt báo cáo điều tra và đưa ra quyết định xử lý cuối cùng.",
+    description:
+      "Trưởng nhóm vận hành: Quản lý hàng đợi cảnh báo, phân công case cho điều tra viên, duyệt báo cáo điều tra và đưa ra quyết định xử lý cuối cùng.",
   },
   {
     id: "usr-investigator",
@@ -42,7 +84,8 @@ export const DEMO_USERS: UserProfile[] = [
     title: "Fraud Field Investigator",
     avatarLetter: "N",
     avatarBg: "#0284c7", // Sky blue
-    description: "Điều tra viên hiện trường: Tiếp nhận case được giao (My Cases), xác minh chứng cứ đơn COD, ghi chú và gửi báo cáo kết luận về cho Operation.",
+    description:
+      "Điều tra viên hiện trường: Tiếp nhận case được giao (My Cases), xác minh chứng cứ đơn COD, ghi chú và gửi báo cáo kết luận về cho Operation.",
   },
   {
     id: "usr-viewer",
@@ -53,19 +96,41 @@ export const DEMO_USERS: UserProfile[] = [
     title: "External Auditor / Executive",
     avatarLetter: "Q",
     avatarBg: "#059669", // Emerald green
-    description: "Kiểm toán viên / Ban lãnh đạo: Chế độ chỉ đọc (Read-only). Xem danh sách giao dịch, báo cáo, và xuất dữ liệu mà không có quyền thay đổi.",
+    description:
+      "Kiểm toán viên / Ban lãnh đạo: Chế độ chỉ đọc (Read-only). Xem danh sách giao dịch, báo cáo, và xuất dữ liệu mà không có quyền thay đổi.",
   },
-  { id: "usr-deployment", name: "Nguyễn Minh Hà", email: "ha.nm@fraudguard.io", role: "Deployment Staff", title: "Nhân viên triển khai", avatarLetter: "H", avatarBg: "#2563eb", description: "Triển khai TechPay, FastRetail và ABC Fashion: cấu hình, kiểm thử, review, phát hành và bàn giao." },
-  { id: "usr-deployment-2", name: "Phạm Thu Linh", email: "linh.pt@fraudguard.io", role: "Deployment Staff", title: "Nhân viên triển khai", avatarLetter: "L", avatarBg: "#0284c7", description: "Triển khai EduLearn và GreenMart; chỉ thao tác doanh nghiệp được phân công." },
-  { id: 'usr-techpay-admin', enterpriseId: 'tenant-techpay', name: 'TechPay Admin (Demo)', email: 'admin@techpay.example', role: 'SME Admin', title: 'Enterprise Administrator', avatarLetter: 'T', avatarBg: '#2563eb', description: 'Tài khoản demo của TechPay: xem kết quả Mobile Wallet và Checkout Gateway sau bàn giao.' },
 ];
 
 export function getRolePermissions(role: UserRole): RolePermissions {
   switch (role) {
     case "Platform Admin":
-      return { canManageProjects: false, canManageRules: false, canManageCases: false, canInvestigateCases: false, canViewAllCases: false, canViewAudit: true, canExport: false, isReadOnly: false, isSuperAdmin: true, canAccessRuleTesting: false, canAccessOnboarding: false };
+      return {
+        canManageProjects: false,
+        canManageRules: false,
+        canManageCases: false,
+        canInvestigateCases: false,
+        canViewAllCases: false,
+        canViewAudit: true,
+        canExport: false,
+        isReadOnly: false,
+        isSuperAdmin: true,
+        canAccessRuleTesting: false,
+        canAccessOnboarding: false,
+      };
     case "Deployment Staff":
-      return { canManageProjects: true, canManageRules: true, canManageCases: false, canInvestigateCases: false, canViewAllCases: false, canViewAudit: true, canExport: false, isReadOnly: false, isSuperAdmin: false, canAccessRuleTesting: true, canAccessOnboarding: true };
+      return {
+        canManageProjects: true,
+        canManageRules: true,
+        canManageCases: false,
+        canInvestigateCases: false,
+        canViewAllCases: false,
+        canViewAudit: true,
+        canExport: false,
+        isReadOnly: false,
+        isSuperAdmin: false,
+        canAccessRuleTesting: true,
+        canAccessOnboarding: true,
+      };
     case "SME Admin":
       return {
         canManageProjects: true,
@@ -209,7 +274,8 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     viewer: "Không (Read-only)",
   },
   {
-    capability: "Đưa ra quyết định cuối cùng (Confirm Fraud / False Alarm / Resolve)",
+    capability:
+      "Đưa ra quyết định cuối cùng (Confirm Fraud / False Alarm / Resolve)",
     category: "Case Decision",
     platformAdmin: "Không can thiệp prod",
     deploymentStaff: "Không",

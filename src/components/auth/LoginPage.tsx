@@ -154,7 +154,7 @@ export function LoginPage() {
                   handleQuickFill();
                 }}
               >
-                {lang === "vi" ? "Đăng ký" : "Sign up"}
+                {lang === "vi" ? "Dùng tài khoản mẫu" : "Use demo account"}
               </a>
             </div>
           </div>
@@ -324,7 +324,7 @@ export function LoginPage() {
           {/* Subtext links */}
           <div className={styles.linksSection}>
             <div>
-              {lang === "vi" ? "Don't have an account?" : "Don't have an account?"}{" "}
+              {lang === "vi" ? "Bạn muốn trải nghiệm?" : "Want to try the demo?"}{" "}
               <a
                 href="#signup"
                 className={styles.link}
@@ -333,27 +333,11 @@ export function LoginPage() {
                   handleQuickFill();
                 }}
               >
-                Sign up
+                {lang === "vi" ? "Điền tài khoản mẫu" : "Fill demo credentials"}
               </a>
             </div>
             <div>
-              Forgot your{" "}
-              <a
-                href="#forgot-email"
-                className={styles.link}
-                onClick={(e) => e.preventDefault()}
-              >
-                email
-              </a>{" "}
-              or{" "}
-              <a
-                href="#forgot-password"
-                className={styles.link}
-                onClick={(e) => e.preventDefault()}
-              >
-                password
-              </a>
-              ?
+              {lang === 'vi' ? 'Khôi phục tài khoản chưa hỗ trợ trong bản demo. Bạn có thể dùng tài khoản mẫu bên dưới.' : 'Account recovery is unavailable in this demo. Use the sample account below.'}
             </div>
           </div>
 
@@ -375,19 +359,7 @@ export function LoginPage() {
 
         {/* Left Panel Terms Footer */}
         <footer className={styles.leftFooter}>
-          By continuing, I agree to FraudGuard&apos;s{" "}
-          <a href="#terms" onClick={(e) => e.preventDefault()}>
-            terms
-          </a>
-          ,{" "}
-          <a href="#privacy" onClick={(e) => e.preventDefault()}>
-            privacy policy
-          </a>
-          , and{" "}
-          <a href="#cookies" onClick={(e) => e.preventDefault()}>
-            cookie policy
-          </a>
-          .
+          {lang === 'vi' ? 'Bản minh họa phục vụ đồ án. Đăng nhập mô phỏng; không sử dụng mật khẩu thật.' : 'Capstone demonstration. Sign-in is simulated; do not use a real password.'}
         </footer>
       </div>
 
@@ -414,7 +386,7 @@ export function LoginPage() {
               handleQuickFill();
             }}
           >
-            {lang === "vi" ? "Đăng ký" : "Sign up"}
+            {lang === "vi" ? "Dùng tài khoản mẫu" : "Use demo account"}
           </a>
         </div>
 

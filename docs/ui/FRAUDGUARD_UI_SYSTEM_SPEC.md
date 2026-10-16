@@ -1,9 +1,38 @@
 # FraudGuard Dashboard UI System Specification
 
-**Phiên bản:** 1.0  
+**Phiên bản:** 1.1 — cập nhật 16/10/2026  
 **Phạm vi:** SaaS đa tenant phát hiện giao dịch bất thường cho SME  
 **Tech stack mục tiêu:** React, Next.js App Router, TypeScript, CSS Modules  
 **Tài liệu liên quan:** `FRAUDGUARD_DASHBOARD_UI_GUIDE_NEXTJS.md`, proposal `FraudGuard-as-a-Service`
+
+## Quy chuẩn hiện hành 1.1 (ưu tiên khi có mâu thuẫn với baseline 1.0)
+
+### Nghiệp vụ và phạm vi dữ liệu
+
+- Không hiển thị hoặc tính risk score/risk point/threshold điểm. Kết quả là Bình thường, Bất thường, Chưa thể kết luận; lỗi đánh giá là trạng thái xử lý riêng.
+- Chỉ cần một quy tắc áp dụng khớp là Bất thường. Hiển thị số rule khớp/đã đánh giá và bằng chứng; không tự khóa tài khoản hay hủy giao dịch.
+- Mỗi doanh nghiệp có một tập rule với nhiều phiên bản và phạm vi nhiều project. Luồng: bản nháp → kiểm thử → review → phát hành → kích hoạt → bàn giao. SME chỉ xem phiên bản bàn giao; không thấy draft và ghi chú review nội bộ.
+- Platform Admin quản trị nền tảng, xem tiến độ và phân công. Deployment Staff cấu hình/kiểm thử/phát hành doanh nghiệp được giao. SME Admin quản lý phía doanh nghiệp; Operation xử lý hồ sơ; Investigator làm hồ sơ được giao; Viewer chỉ xem.
+- Dashboard, cảnh báo, hồ sơ, báo cáo, filter, drawer và export phải dùng cùng phạm vi doanh nghiệp. Không lấy toàn bộ giao dịch để tính KPI của SME. Backend thật vẫn phải kiểm tra quyền độc lập.
+- Bộ chọn người dùng trong demo mang tên “Chuyển tài khoản demo”, gồm tên, role và doanh nghiệp/phạm vi. Hai tài khoản cùng role không phải hai role khác nhau.
+
+### Layout và thành phần
+
+- Desktop dùng sidebar hợp nhất của LCS; dưới 900px thay bằng nút mở menu mobile, không chỉ ẩn sidebar. Menu dùng cùng danh sách quyền với desktop, có trang hiện tại và đóng sau điều hướng.
+- Control mặc định 40px; mobile tối thiểu 44px. Control compact 34px chỉ dùng khi có lý do về mật độ và vẫn tăng vùng chạm trên mobile. Checkbox 18px trong label tương tác đủ lớn; không kéo giãn hình checkbox theo chiều cao button.
+- Panel radius 5px; control 4px; badge 3px. Spacing ưu tiên 4/8/12/16/20/24/28/32px. Gap 14px trong các ví dụ baseline là ngoại lệ lịch sử, không dùng làm chuẩn mới.
+- KPI dùng grid responsive; tránh inline số cột làm vô hiệu breakpoint. Cases có thể dùng auto-fit 180px, mobile 2 cột và dưới 420px 1 cột.
+- CTA dùng `--action-bg: #2563eb` và `--action-text: #ffffff`; không dùng chữ trắng trên màu link xanh sáng của dark theme.
+- Trạng thái dùng semantic token text/bg/border theo theme. Không hard-code vàng #ffd700 cho chữ trên nền sáng. Metadata cần đọc tối thiểu 11px; light subtle text dùng #64748b.
+- Modal/drawer: accessible title, aria-modal, focus ban đầu, trap Tab/Shift+Tab, Escape và restore focus về nút mở. Dùng `useDialogFocus` chung. Với dữ liệu chưa lưu cần chủ động giữ hoặc xác nhận bỏ dữ liệu tùy luồng.
+- Có route loading/error/retry, empty state rõ, và feedback thao tác. Không tạo loading giả cho việc đồng bộ local.
+- Chart “Phân bố nguồn phát hiện” thể hiện lượng/tỷ trọng AI/Rule/Fallback; không gọi tỷ trọng là độ tin cậy hoặc độ chính xác.
+- SME dùng nhãn nghiệp vụ trước, thông tin kỹ thuật ở chi tiết tích hợp/evidence. Không dịch sai hoặc thay tên rule do người dùng tự đặt.
+- Login được phép có bố cục riêng nhưng màu hành động dùng token chung. Tính năng chưa có backend phải ghi rõ demo/chưa hỗ trợ, không để link không hoạt động giả làm tính năng đã có.
+
+### Trạng thái của nội dung baseline bên dưới
+
+Các chương 1–19 bên dưới được giữ để tra cứu cấu trúc và ví dụ thiết kế 1.0. **Các nội dung risk score, threshold, quyền SME sửa rule, Platform Admin triển khai rule, và rail/subnav cũ đã bị thay thế bởi mục 1.1 ở trên.** Không dùng các ví dụ nghiệp vụ/code đó làm yêu cầu triển khai hiện hành. Các quy tắc accessibility, dữ liệu, typography còn phù hợp tiếp tục áp dụng.
 
 ---
 

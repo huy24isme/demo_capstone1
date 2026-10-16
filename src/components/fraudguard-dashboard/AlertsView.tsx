@@ -128,7 +128,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
           </div>
         ) : (
           alerts.map((alert) => (
-            <article key={alert.id} className={styles.panel} style={{ padding: "14px 17px" }}>
+            <article key={alert.id} className={styles.panel} style={{ padding: "16px" }}>
               <div
                 style={{
                   display: "flex",
@@ -181,7 +181,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
                       {alert.explanation}
                     </p>
                   )}
-                  <div style={{ marginTop: 8, fontSize: 10, color: "var(--security-subtle)" }}>
+                  <div style={{ marginTop: 8, fontSize: 11, color: "var(--security-subtle)" }}>
                     {alert.confidence != null && `${t.alertsView.confidenceLabel} ${(alert.confidence * 100).toFixed(0)}% · `}
                     {new Date(alert.processedAt).toLocaleString(numLocale)}
                   </div>
@@ -196,7 +196,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
                   </button>
                   <span
                     className={styles.muted}
-                    style={{ fontSize: 10, textAlign: "center" }}
+                    style={{ fontSize: 11, textAlign: "center" }}
                   >
                     {alert.caseId ? getStatusLabel(alert.caseStatus) : t.alertsView.noCaseLabel}
                   </span>

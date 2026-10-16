@@ -297,6 +297,20 @@ test('dataset parser accepts unlabeled samples but rejects duplicate IDs and inv
 });
 
 const enterpriseData = load('src/data/fraudguard-enterprises.ts');
+test('SME transaction scope excludes foreign projects and fails closed without an enterprise', () => {
+ const data = load('src/data/fraudguard-transactions.ts').fraudGuardTransactions;
+ for (const role of ['SME Admin', 'Operation', 'Investigator', 'Viewer']) {
+   const abc = enterpriseData.transactionsForEnterprise(data, { role, enterpriseId: 'tenant-abc' }, enterpriseData.demoEnterprises);
+   assert.ok(abc.length > 0);
+   assert.ok(abc.every(tx => tx.projectId === 'proj-abc-cod'));
+   const techpay = enterpriseData.transactionsForEnterprise(data, { role, enterpriseId: 'tenant-techpay' }, enterpriseData.demoEnterprises);
+   assert.ok(techpay.length > 0);
+   assert.ok(techpay.every(tx => ['proj-wallet', 'proj-checkout'].includes(tx.projectId)));
+   assert.ok(!techpay.some(tx => abc.some(item => item.id === tx.id)));
+ }
+ assert.equal(enterpriseData.transactionsForEnterprise(data, { role: 'SME Admin' }, enterpriseData.demoEnterprises).length, 0);
+ assert.equal(enterpriseData.transactionsForEnterprise(data, { role: 'SME Admin', enterpriseId: 'unknown' }, enterpriseData.demoEnterprises).length, 0);
+});
 const roleData = load('src/data/fraudguard-roles.ts');
 const managed = load('src/lib/rule-set-lifecycle.ts', { '../data/fraudguard-enterprises': enterpriseData, './rule-lifecycle': lifecycle, './rule-set': ruleSet });
 function draftSet(id = 'set1') { return { id, name: id, enterpriseId: 'e1', projectIds: ['p1'], versions: [], draft: { rules: managed.snapshotRules([active('r1', condition('amount', '>', 10))], 'p1') } }; }
@@ -348,6 +362,7 @@ test('rule set UI creates, tests, reviews, publishes and activates a version', (
  const react = { useState(initial) { const slot = cursor++; if (!(slot in states)) states[slot] = typeof initial === 'function' ? initial() : initial; return [states[slot], value => { states[slot] = typeof value === 'function' ? value(states[slot]) : value; }]; } };
  const Tester = () => null;
  const component = load('src/components/fraudguard-dashboard/RuleSetsView.tsx', {
+  './ReadableConditions': load('src/components/fraudguard-dashboard/ReadableConditions.tsx', { './SecurityDashboard.module.css': { default: {} } }),
   react, './EnterpriseRulesView': { EnterpriseRulesView: () => null }, '@/data/fraudguard-enterprises': enterpriseData, '@/data/fraudguard-roles': roleData, '@/lib/rule-set-lifecycle': managed, './RuleSetTestingView': { RuleSetTestingView: Tester }, '@/lib/rule-lifecycle': lifecycle,
   './i18n/LanguageContext': { useLanguage: () => ({ language: 'vi' }) }, './SecurityDashboard.module.css': { default: {} }
  }).RuleSetsView;
@@ -355,7 +370,7 @@ test('rule set UI creates, tests, reviews, publishes and activates a version', (
  const props = { sets: [s], rules: s.draft.rules, projects: [{ id: 'p1', name: 'Wallet' }], enterprises: [{ id: 'e1', name: 'Enterprise', projectIds: ['p1'], deploymentStaffId: 'staff' }], currentUser: { id: 'staff', role: 'Deployment Staff' }, onAssign() {}, reviewer: 'Admin', onOpenLibrary() {}, onChange(next) { props.sets = next; } };
  function render() { cursor = 0; tree = component(props); }
  function nodes() { const out = []; function walk(n) { if (Array.isArray(n)) n.forEach(walk); else if (n?.props) { out.push(n); walk(n.props.children); } } walk(tree); return out; }
- function button(text) { return nodes().find(n => n.type === 'button' && n.props.children === text); }
+ function button(text) { return nodes().find(n => n.type === 'button' && (Array.isArray(n.props.children) ? n.props.children.filter(child => typeof child === 'string').join('') : n.props.children) === text); }
  function click(text) { const b = button(text); assert.ok(b, text); assert.ok(!b.props.disabled, text); b.props.onClick(); render(); }
  render(); click('Xem chi tiết');
  assert.equal(button('Phát hành phiên bản tập rule').props.disabled, true);

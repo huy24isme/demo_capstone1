@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import {
   Copy,
   Eye,
@@ -46,6 +47,8 @@ export function ProjectsView({
 
   // Create Project Modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const createRef = useDialogFocus(createModalOpen, () => setCreateModalOpen(false));
+  const webhookRef = useDialogFocus(!!editingWebhookProject, () => setEditingWebhookProject(null));
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectCode, setNewProjectCode] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
@@ -197,7 +200,7 @@ export function ProjectsView({
       <div className={styles.pageHeading}>
         <div>
           <h1>{t.projectsView.title}</h1>
-          <p>{t.projectsView.subtitle}</p>
+          <p>{language === 'vi' ? 'Quản lý các dự án gửi giao dịch và nơi nhận thông báo cảnh báo.' : 'Manage projects that submit transactions and receive alert notifications.'}</p>
         </div>
         <button
           className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
@@ -269,6 +272,7 @@ export function ProjectsView({
             className={styles.searchInput}
             type="search"
             placeholder={t.projectsView.searchPlaceholder}
+            aria-label={t.projectsView.searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -339,7 +343,7 @@ export function ProjectsView({
                     </span>
                     <button
                       className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
-                      style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
+                      style={{ minHeight: 34, padding: "4px 8px", fontSize: 11 }}
                       onClick={() => canManage && handleRegenerateKey(project)}
                       disabled={!canManage}
                       type="button"
@@ -406,7 +410,7 @@ export function ProjectsView({
                     </span>
                     <button
                       className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}
-                      style={{ minHeight: 24, padding: "2px 8px", fontSize: 10 }}
+                      style={{ minHeight: 34, padding: "4px 8px", fontSize: 11 }}
                       onClick={() => canManage && handleOpenWebhookModal(project)}
                       disabled={!canManage}
                       type="button"
@@ -462,6 +466,7 @@ export function ProjectsView({
           <div
             className={styles.builderModal}
             style={{ maxWidth: 500 }}
+            ref={webhookRef} role="dialog" aria-modal="true" tabIndex={-1} aria-label={t.projectsView.modalWebhook.title.replace('{name}', editingWebhookProject.name)}
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.builderHeader}>
@@ -474,6 +479,7 @@ export function ProjectsView({
               <button
                 className={styles.drawerCloseBtn}
                 onClick={() => setEditingWebhookProject(null)}
+                aria-label={language === 'vi' ? 'Đóng' : 'Close'}
                 type="button"
               >
                 ✕
@@ -497,6 +503,7 @@ export function ProjectsView({
                 <input
                   className={styles.formInput}
                   type="url"
+                  aria-label={t.projectsView.modalWebhook.urlLabel}
                   placeholder="https://your-api.com/webhooks/fraud-alerts"
                   value={webhookInput}
                   onChange={(e) => setWebhookInput(e.target.value)}
@@ -532,6 +539,7 @@ export function ProjectsView({
           <div
             className={styles.builderModal}
             style={{ maxWidth: 520 }}
+            ref={createRef} role="dialog" aria-modal="true" tabIndex={-1} aria-label={t.projectsView.modalCreate.title}
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.builderHeader}>
@@ -541,6 +549,7 @@ export function ProjectsView({
               <button
                 className={styles.drawerCloseBtn}
                 onClick={() => setCreateModalOpen(false)}
+                aria-label={language === 'vi' ? 'Đóng' : 'Close'}
                 type="button"
               >
                 ✕
@@ -555,6 +564,7 @@ export function ProjectsView({
                   className={styles.formInput}
                   type="text"
                   placeholder={t.projectsView.modalCreate.namePlaceholder}
+                  aria-label={t.projectsView.modalCreate.nameLabel}
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                 />
@@ -568,6 +578,7 @@ export function ProjectsView({
                     className={styles.formInput}
                     type="text"
                     placeholder={t.projectsView.modalCreate.codePlaceholder}
+                    aria-label={t.projectsView.modalCreate.codeLabel}
                     value={newProjectCode}
                     onChange={(e) => setNewProjectCode(e.target.value)}
                   />
@@ -579,6 +590,7 @@ export function ProjectsView({
                   <select
                     className={styles.formInput}
                     value={newProjectEnv}
+                    aria-label={t.projectsView.modalCreate.envLabel}
                     onChange={(e) =>
                       setNewProjectEnv(e.target.value as "Production" | "Staging")
                     }
@@ -595,6 +607,7 @@ export function ProjectsView({
                 <textarea
                   className={styles.formTextarea}
                   placeholder={t.projectsView.modalCreate.descPlaceholder}
+                  aria-label={t.projectsView.modalCreate.descLabel}
                   value={newProjectDesc}
                   onChange={(e) => setNewProjectDesc(e.target.value)}
                 />

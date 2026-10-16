@@ -1,5 +1,20 @@
 # Hướng dẫn xây dựng FraudGuard Dashboard UI với React + Next.js
 
+> **Cập nhật 16/10/2026:** Áp dụng mục “Quy chuẩn hiện hành 1.1” trong `FRAUDGUARD_UI_SYSTEM_SPEC.md` trước mọi ví dụ bên dưới. Các ví dụ 1.0 dùng score/threshold và ma trận quyền cũ chỉ là tài liệu lịch sử, không copy nguyên vào hệ thống hiện hành.
+
+## Hướng triển khai hiện tại
+
+- Kết quả phát hiện: Normal/Abnormal/Undetermined, không risk score. Khớp ít nhất một rule áp dụng → Abnormal; doanh nghiệp quyết định xử lý.
+- Một tập quy tắc/doanh nghiệp; Deployment Staff phụ trách bản nháp, kiểm thử, review, phát hành, kích hoạt và bàn giao. Platform Admin chỉ quản trị; SME xem bản đã bàn giao.
+- Dùng `transactionsForEnterprise` để cấp dữ liệu đã giới hạn cho dashboard, cảnh báo, hồ sơ và báo cáo; export và filter được tính từ cùng nguồn. Đây chỉ là scope frontend demo, không thay authorization backend.
+- Desktop dùng Sidebar; mobile có menu trong ProductHeader với `getSectionsForRole` dùng chung. Không để navigation biến mất dưới 900px.
+- Modal/drawer dùng `useDialogFocus`, aria-modal và accessible title. Các form có label/aria-label.
+- Dùng token `--action-bg`/`--action-text` cho CTA, semantic token cho trạng thái, control 40px desktop/44px mobile, panel radius 5px.
+- Route `/fraud-monitoring` có loading.tsx và error.tsx. API errors từng panel cần được nối vào cùng pattern khi backend sẵn sàng.
+- “Chuyển tài khoản demo” thể hiện từng tài khoản, role và phạm vi; không gọi danh sách tài khoản là danh sách role.
+
+## Baseline 1.0 — ví dụ cấu trúc tham khảo
+
 Tài liệu này chuyển phong cách dashboard mẫu thành giao diện cho **FraudGuard-as-a-Service**: nền tảng SaaS đa tenant phát hiện giao dịch bất thường cho SME. Nội dung bám theo proposal: tiếp nhận transaction qua API hoặc CSV/Excel, chấm điểm bằng Dynamic Rule Engine hoặc AI, chuẩn hóa risk score 0–100 qua Risk Score Gateway, tạo alert/case và hỗ trợ nhân sự điều tra.
 
 > FraudGuard chỉ cảnh báo và hỗ trợ ra quyết định. UI không được diễn đạt risk score như kết luận pháp lý rằng giao dịch chắc chắn là gian lận, và không cung cấp hành động tự động khóa tài khoản hoặc hủy giao dịch.

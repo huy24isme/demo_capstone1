@@ -170,7 +170,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
           background: isHandedOver
             ? "rgba(120, 201, 172, 0.08)"
             : "rgba(217, 119, 6, 0.08)",
-          border: `1px solid ${isHandedOver ? "#3f665a" : "#715139"}`,
+          border: `1px solid ${isHandedOver ? "var(--low-border)" : "var(--high-border)"}`,
           display: "flex",
           alignItems: "flex-start",
           gap: 16,
@@ -262,7 +262,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
                   ? "rgba(120, 201, 172, 0.15)"
                   : "rgba(237, 167, 101, 0.15)",
                 color: isHandedOver ? "var(--security-green)" : "var(--security-orange)",
-                borderColor: isHandedOver ? "#3f665a" : "#715139",
+                borderColor: isHandedOver ? "var(--low-border)" : "var(--high-border)",
                 fontSize: 11,
                 padding: "4px 10px",
               }}
@@ -339,7 +339,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
                   </strong>
                   <span
                     style={{
-                      fontSize: 10,
+                      fontSize: 11,
                       color: "var(--security-subtle)",
                       textTransform: "uppercase",
                     }}
@@ -432,7 +432,7 @@ export function OnboardingView({ onActivateWorkspace }: OnboardingViewProps) {
                 onClick={handleHandover}
                 type="button"
                 style={{
-                  background: "linear-gradient(135deg, #059669, #10b981)",
+                  background: "var(--action-bg)",
                   padding: "0 18px",
                   display: "inline-flex",
                   alignItems: "center",

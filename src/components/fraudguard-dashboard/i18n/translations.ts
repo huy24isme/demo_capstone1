@@ -157,7 +157,7 @@ const rawTranslations = {
       "alerts": "Chỉ cảnh báo",
       "cases": "Hồ sơ điều tra"
     },
-    "searchPlaceholder": "Tìm mã giao dịch, entity, hoặc dự án…",
+    "searchPlaceholder": "Tìm mã giao dịch, mã đối tượng hoặc dự án…",
     "filterRisk": "Phân loại rủi ro",
     "filterAllRisk": "Tất cả giao dịch",
     "filterAnomaly": "🔴 Bất thường",
@@ -244,7 +244,7 @@ const rawTranslations = {
   },
   "reportsView": {
     "execTitle": "Báo cáo & Hiệu suất AI",
-    "execSubtitle": "Phân tích tỷ lệ phát hiện gian lận, hiệu suất AI Detection so với Rule Engine và độ chính xác cảnh báo.",
+    "execSubtitle": "Theo dõi giao dịch bất thường, kết quả điều tra và nguồn phát hiện theo từng dự án.",
     "btnExport": "Xuất Báo cáo (CSV)",
     "invTitle": "Lịch sử Thụ lý Hồ sơ",
     "invSubtitle": "Xem lại danh sách hồ sơ bạn đã thẩm định, kết quả báo cáo điều tra và quyết định phê duyệt cuối cùng.",
@@ -307,7 +307,7 @@ const rawTranslations = {
       "colTotal": "Tổng phân tích",
       "colAnomaly": "Bất thường",
       "colConfirmed": "Gian lận xác nhận",
-      "colRate": "Tỷ lệ rủi ro (%)"
+      "colRate": "Tỷ lệ bất thường (%)"
     },
     "invFilters": {
       "timeRange": "Khoảng thời gian",
@@ -1001,7 +1001,7 @@ const rawTranslations = {
   },
   "reportsView": {
     "execTitle": "Reports & AI Performance",
-    "execSubtitle": "Analyze fraud detection rates, AI Detection vs Rule Engine performance, and alert precision.",
+    "execSubtitle": "Review abnormal transactions, investigation outcomes and detection sources by project.",
     "btnExport": "Export Report (CSV)",
     "invTitle": "Investigation History",
     "invSubtitle": "Review completed field investigation cases and final approval decisions from Operations Lead.",
@@ -1064,7 +1064,7 @@ const rawTranslations = {
       "colTotal": "Total Analyzed",
       "colAnomaly": "Abnormal",
       "colConfirmed": "Confirmed Fraud",
-      "colRate": "Risk Rate (%)"
+      "colRate": "Abnormal Rate (%)"
     },
     "invFilters": {
       "timeRange": "Time Range",

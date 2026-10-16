@@ -42,25 +42,25 @@ const STATUS_BADGE_STYLE: Record<
   Open: {
     bg: "rgba(237, 167, 101, 0.15)",
     text: "var(--security-orange)",
-    border: "#715139",
+    border: "var(--high-border)",
     labelKey: "open",
   },
   Assigned: {
     bg: "rgba(113, 185, 244, 0.15)",
     text: "var(--security-blue)",
-    border: "#2d5a7b",
+    border: "var(--security-border-strong)",
     labelKey: "assigned",
   },
   Investigating: {
     bg: "rgba(173, 138, 243, 0.15)",
     text: "var(--security-purple)",
-    border: "#5c4778",
+    border: "var(--medium-border)",
     labelKey: "investigating",
   },
   Reported: {
-    bg: "rgba(255, 215, 0, 0.15)",
-    text: "#ffd700",
-    border: "#8c7b00",
+    bg: "var(--high-bg)",
+    text: "var(--high-text)",
+    border: "var(--high-border)",
     labelKey: "reported",
   },
   "Confirmed Fraud": {
@@ -72,13 +72,13 @@ const STATUS_BADGE_STYLE: Record<
   "False Alarm": {
     bg: "rgba(120, 201, 172, 0.15)",
     text: "var(--security-green)",
-    border: "#3f665a",
+    border: "var(--low-border)",
     labelKey: "falseAlarm",
   },
   Resolved: {
     bg: "rgba(120, 201, 172, 0.15)",
     text: "var(--security-green)",
-    border: "#3f665a",
+    border: "var(--low-border)",
     labelKey: "resolved",
   },
 };
@@ -306,7 +306,7 @@ export function CasesView({
         </div>
 
         {/* Investigator Personal KPIs */}
-        <section className={styles.metricsGrid} style={{ marginTop: 20 }}>
+        <section className={`${styles.metricsGrid} ${styles.caseMetricsGrid}`} style={{ marginTop: 20 }}>
           <article
             className={`${styles.statCard} ${investigatorStats.assigned > 0 ? styles.statWarning : ""}`}
           >
@@ -325,9 +325,9 @@ export function CasesView({
             <span className={styles.statDescription}>{t.caseQueue.kpis.inProgressDesc}</span>
           </article>
 
-          <article className={styles.statCard} style={{ borderColor: "#8c7b00" }}>
+          <article className={styles.statCard} style={{ borderColor: "var(--high-border)" }}>
             <div className={styles.statLabel}>{t.caseQueue.kpis.awaitingReview}</div>
-            <strong className={styles.statValue} style={{ color: "#ffd700" }}>
+            <strong className={styles.statValue} style={{ color: "var(--high-text)" }}>
               {investigatorStats.reported}
             </strong>
             <span className={styles.statDescription}>{t.caseQueue.kpis.awaitingReviewDesc}</span>
@@ -428,7 +428,7 @@ export function CasesView({
                       : isInvestigating
                         ? "4px solid var(--security-purple)"
                         : isReported
-                          ? "4px solid #ffd700"
+                          ? "4px solid var(--high-text)"
                           : undefined,
                   }}
                 >
@@ -606,8 +606,8 @@ export function CasesView({
                           style={{
                             padding: "8px 12px",
                             borderRadius: 4,
-                            background: "rgba(255, 215, 0, 0.08)",
-                            border: "1px solid rgba(255, 215, 0, 0.3)",
+                            background: "var(--high-bg)",
+                            border: "1px solid var(--high-border)",
                             fontSize: 11,
                             display: "flex",
                             alignItems: "center",
@@ -616,8 +616,8 @@ export function CasesView({
                           }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <FileCheck2 size={15} style={{ color: "#ffd700" }} />
-                            <span style={{ color: "#ffd700" }}>
+                            <FileCheck2 size={15} style={{ color: "var(--high-text)" }} />
+                            <span style={{ color: "var(--high-text)" }}>
                               <strong>{t.caseQueue.calloutReported}:</strong> {t.caseQueue.proposedFinding}{" "}
                               <strong>
                                 {getFindingLabel(tx.investigationReport.finding)}
@@ -625,7 +625,7 @@ export function CasesView({
                               — "{tx.investigationReport.notes}"
                             </span>
                           </div>
-                          <span style={{ color: "var(--security-muted)", fontSize: 10 }}>
+                          <span style={{ color: "var(--security-muted)", fontSize: 11 }}>
                             {t.caseQueue.calloutReportedPending}
                           </span>
                         </div>
@@ -695,8 +695,8 @@ export function CasesView({
                             height: 32,
                             minHeight: 32,
                             padding: "6px 12px",
-                            borderColor: "#8c7b00",
-                            color: "#ffd700",
+                            borderColor: "var(--high-border)",
+                            color: "var(--high-text)",
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -748,7 +748,7 @@ export function CasesView({
       </div>
 
       {/* Operation Macro KPIs */}
-      <section className={styles.metricsGrid} style={{ marginTop: 20 }}>
+      <section className={`${styles.metricsGrid} ${styles.caseMetricsGrid}`} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.caseQueue.kpis.totalQueue}</div>
           <strong className={styles.statValue}>{operationStats.total}</strong>
@@ -778,10 +778,10 @@ export function CasesView({
 
         <article
           className={styles.statCard}
-          style={{ borderColor: operationStats.reported > 0 ? "#8c7b00" : undefined }}
+          style={{ borderColor: operationStats.reported > 0 ? "var(--high-border)" : undefined }}
         >
           <div className={styles.statLabel}>{t.caseQueue.kpis.awaitingReview}</div>
-          <strong className={styles.statValue} style={{ color: "#ffd700" }}>
+          <strong className={styles.statValue} style={{ color: "var(--high-text)" }}>
             {operationStats.reported}
           </strong>
           <span className={styles.statDescription}>{t.caseQueue.kpis.awaitingReviewDesc}</span>
@@ -875,7 +875,7 @@ export function CasesView({
                 style={{
                   padding: "16px 18px",
                   borderLeft: isReported
-                    ? "4px solid #ffd700"
+                    ? "4px solid var(--high-text)"
                     : isUnassigned
                       ? "4px solid var(--security-orange)"
                       : undefined,
@@ -938,7 +938,7 @@ export function CasesView({
                             : "rgba(237, 167, 101, 0.15)",
                           color: tx.assignedInvestigator ? "#38bdf8" : "var(--security-orange)",
                           border: "1px solid",
-                          borderColor: tx.assignedInvestigator ? "#0284c7" : "#715139",
+                          borderColor: tx.assignedInvestigator ? "#0284c7" : "var(--high-border)",
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 4,
@@ -1005,8 +1005,8 @@ export function CasesView({
                           marginTop: 8,
                           padding: "8px 12px",
                           borderRadius: 4,
-                          background: "rgba(255, 215, 0, 0.08)",
-                          border: "1px solid rgba(255, 215, 0, 0.3)",
+                          background: "var(--high-bg)",
+                          border: "1px solid var(--high-border)",
                           fontSize: 11,
                           display: "flex",
                           alignItems: "center",
@@ -1015,8 +1015,8 @@ export function CasesView({
                         }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <FileCheck2 size={15} style={{ color: "#ffd700" }} />
-                          <span style={{ color: "#ffd700" }}>
+                          <FileCheck2 size={15} style={{ color: "var(--high-text)" }} />
+                          <span style={{ color: "var(--high-text)" }}>
                             <strong>{t.caseQueue.calloutReported}:</strong> {t.caseQueue.proposedFinding}{" "}
                             <strong>
                               {getFindingLabel(tx.investigationReport.finding)}
@@ -1024,7 +1024,7 @@ export function CasesView({
                             {t.caseQueue.submittedBy} {tx.investigationReport.submittedBy}
                           </span>
                         </div>
-                        <span style={{ color: "var(--security-muted)", fontSize: 10 }}>
+                        <span style={{ color: "var(--security-muted)", fontSize: 11 }}>
                           {t.caseQueue.calloutReportedPending}
                         </span>
                       </div>
@@ -1086,8 +1086,8 @@ export function CasesView({
                         onClick={() => onReview(tx)}
                         type="button"
                         style={{
-                          background: "#ffd700",
-                          color: "#1f2025",
+                          background: "var(--high-bg)",
+                          color: "var(--high-text)",
                           fontWeight: 700,
                           fontSize: 12,
                           height: 32,

@@ -4,17 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, FileSpreadsheet } from "lucide-react";
 import type { UserProfile } from "./types";
 import { DEMO_USERS } from "../../data/fraudguard-roles";
-import { demoEnterprises } from '@/data/fraudguard-enterprises';
+import type { Enterprise } from '@/data/fraudguard-enterprises';
 import { PermissionMatrixModal } from "./PermissionMatrixModal";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RoleSwitcherProps {
+  enterprises: Enterprise[];
   currentUser: UserProfile;
   onSwitchUser: (user: UserProfile) => void;
 }
 
-export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
+export function RoleSwitcher({ currentUser, onSwitchUser, enterprises }: RoleSwitcherProps) {
   const { t, language } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
@@ -108,6 +109,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
               </div>
             </div>
 
+            <div className={styles.roleMenuList}>
             {DEMO_USERS.map((u) => {
               const isSelected = u.id === currentUser.id;
               return (
@@ -134,7 +136,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
                         {u.role}
                       </span>
                     </div>
-                    <p className={styles.roleAccountScope}>{u.role === 'Platform Admin' ? (language === 'vi' ? 'Toàn nền tảng' : 'Platform-wide') : demoEnterprises.filter(e => u.role === 'Deployment Staff' ? e.deploymentStaffId === u.id : e.id === u.enterpriseId).map(e => e.name).join(' · ')}</p>
+                    <p className={styles.roleAccountScope}>{u.role === 'Platform Admin' ? (language === 'vi' ? 'Toàn nền tảng' : 'Platform-wide') : enterprises.filter(e => u.role === 'Deployment Staff' ? e.deploymentStaffId === u.id : e.id === u.enterpriseId).map(e => e.name).join(' · ') || (language === 'vi' ? 'Chưa được phân công doanh nghiệp' : 'No enterprise assigned')}</p>
                     <p className={styles.roleItemDesc}>{u.description}</p>
                   </div>
 
@@ -148,6 +150,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser }: RoleSwitcherProps) {
                 </button>
               );
             })}
+            </div>
 
             <div className={styles.roleMenuFooter}>
               <button

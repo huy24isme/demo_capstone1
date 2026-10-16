@@ -14,7 +14,7 @@ import type {
   UserProfile,
 } from "./types";
 import { canUpdateCase } from "@/lib/case-workflow";
-import { demoEnterprises, visibleEnterprises, canDeploy, type Enterprise } from '@/data/fraudguard-enterprises';
+import { demoEnterprises, visibleEnterprises, canDeploy, transactionsForEnterprise, type Enterprise } from '@/data/fraudguard-enterprises';
 import { Sidebar } from "./Sidebar";
 import { ProductHeader } from "./ProductHeader";
 import { DashboardToolbar } from "./DashboardToolbar";
@@ -111,11 +111,12 @@ function FraudGuardDashboardContent({
   const accessibleEnterprises = visibleEnterprises(currentUser, enterprises);
   const deploymentEnterprise = accessibleEnterprises.find(e => e.id === deploymentEnterpriseId) ?? accessibleEnterprises[0];
   const assignedProjectIds = accessibleEnterprises.flatMap(e => e.projectIds);
-  const enterpriseTransactions = useMemo(() => { const ids = enterprises.filter(e => e.id === currentUser.enterpriseId).flatMap(e => e.projectIds); return transactions.filter(tx => ids.includes(tx.projectId)); }, [transactions, enterprises, currentUser.enterpriseId]);
+  const enterpriseTransactions = useMemo(() => transactionsForEnterprise(transactions, currentUser, enterprises), [transactions, enterprises, currentUser]);
   const scopedRules = rules.filter(r => !r.enterpriseId || r.enterpriseId === deploymentEnterprise?.id).filter(r => r.appliesTo.projects.includes('*') || r.appliesTo.projects.some(id => deploymentEnterprise?.projectIds.includes(id)));
   const handleSwitchUser = useCallback((user: UserProfile) => {
     setCurrentUser(user);
     setDeploymentEnterpriseId('');
+    setFilters(initialFilters);
     setDrawerOpen(false);
     setSelectedTransaction(null);
     if (user.role === "Platform Admin") {
@@ -318,9 +319,10 @@ function FraudGuardDashboardContent({
 
   // Drawer handlers
   const handleReview = useCallback((transaction: TransactionRisk) => {
+    if (!enterpriseTransactions.some(item => item.id === transaction.id)) return;
     setSelectedTransaction(transaction);
     setDrawerOpen(true);
-  }, []);
+  }, [enterpriseTransactions]);
 
   const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false);
@@ -626,6 +628,7 @@ function FraudGuardDashboardContent({
         />
         <div className={styles.workspace}>
           <ProductHeader
+            enterprises={enterprises}
             activeViewTitle={currentViewTitle}
             theme={theme}
             onToggleTheme={toggleTheme}

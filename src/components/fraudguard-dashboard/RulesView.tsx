@@ -57,7 +57,7 @@ function renderConditions(
         <span
           style={{
             color: "var(--security-purple)",
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: 600,
           }}
         >
@@ -71,7 +71,7 @@ function renderConditions(
               <span
                 style={{
                   color: "var(--security-purple)",
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 600,
                   marginRight: 8,
                 }}
@@ -259,7 +259,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
       {/* Stats */}
       <section
         className={styles.metricsGrid}
-        style={{ marginTop: 24, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+        style={{ marginTop: 24 }}
       >
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.rulesView.kpis.total}</div>
@@ -365,7 +365,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
             <article
               key={rule.id}
               className={styles.panel}
-              style={{ padding: "14px 17px", opacity: rule.enabled ? 1 : 0.65 }}
+              style={{ padding: "16px", opacity: rule.enabled ? 1 : 0.65 }}
             >
               {/* Header */}
               <div
@@ -392,7 +392,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                       className={styles.ruleTag}
                       style={{
                         color: "var(--security-blue)",
-                        borderColor: "#2d5a7b",
+                        borderColor: "var(--security-border-strong)",
                       }}
                     >
                       {rule.version || "v1.0"}{rule.draft ? (language === "vi" ? " · Có bản nháp" : " · Draft pending") : ""}
@@ -412,8 +412,8 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                         style={{
                           background: "rgba(237, 167, 101, 0.15)",
                           color: "var(--security-orange)",
-                          borderColor: "#715139",
-                          fontSize: 9,
+                          borderColor: "var(--high-border)",
+                          fontSize: 11,
                         }}
                       >
                         {rule.status.toUpperCase()}
@@ -421,12 +421,12 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                     )}
                     <span
                       className={`${styles.badge} ${rule.enabled ? styles.low : styles.medium}`}
-                      style={{ fontSize: 9 }}
+                      style={{ fontSize: 11 }}
                     >
                       {rule.enabled ? "ENABLED" : "DISABLED"}
                     </span>
                     <span className={styles.categoryBadge}>{rule.category}</span>
-                    <span style={{ fontSize: 10, color: "var(--security-subtle)" }}>
+                    <span style={{ fontSize: 11, color: "var(--security-subtle)" }}>
                       {rule.conditionGroup.logic}
                     </span>
                   </div>
@@ -561,7 +561,7 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
                   <div
                     style={{
                       marginTop: 10,
-                      fontSize: 10,
+                      fontSize: 11,
                       color: "var(--security-subtle)",
                     }}
                   >
