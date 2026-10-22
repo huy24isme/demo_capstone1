@@ -4,11 +4,12 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import { Download, FileSpreadsheet } from "lucide-react";
 import type { FraudGuardFilters, TransactionRisk } from "./types";
 import { exportTransactionsCSV, downloadCSVTemplate } from "@/lib/export-csv";
-import { DataIngestionModal } from "./DataIngestionModal";
+import { DataIngestionModal, type ImportActions } from "./DataIngestionModal";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface ToolbarProps {
+  importActions?: ImportActions;
   filters: FraudGuardFilters;
   projects: Array<{ id: string; name: string }>;
   transactionTypes: string[];
@@ -38,6 +39,7 @@ function hasActiveFilters(filters: FraudGuardFilters): boolean {
 }
 
 export function DashboardToolbar({
+  importActions,
   filters,
   projects,
   transactionTypes,
@@ -158,10 +160,10 @@ export function DashboardToolbar({
         </div>
       </div>
 
-      <DataIngestionModal
+      {ingestionModalOpen && <DataIngestionModal actions={importActions} projects={projects}
         open={ingestionModalOpen}
         onClose={() => setIngestionModalOpen(false)}
-      />
+      />}
     </>
   );
 }

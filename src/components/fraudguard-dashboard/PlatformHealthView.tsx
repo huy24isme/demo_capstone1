@@ -149,7 +149,7 @@ export function PlatformHealthView() {
               </div>
               <span className={`${styles.serviceStatusBadge} ${styles.serviceStatusHealthy}`}>
                 <span className={styles.statusPulseHealthy} />
-                {svc.status}
+                {language === 'vi' && svc.status === 'Healthy' ? 'Hoạt động tốt' : svc.status}
               </span>
             </div>
 
@@ -212,11 +212,11 @@ export function PlatformHealthView() {
           <div className={styles.legend}>
             <span>
               <span className={styles.legendDot} style={{ background: "var(--security-purple)" }} />
-              AI Detection
+              {t.platformHealthView.chart.aiLabel}
             </span>
             <span>
               <span className={styles.legendDot} style={{ background: "var(--security-orange)" }} />
-              Rule Fallback
+              {t.platformHealthView.chart.fallbackLabel}
             </span>
           </div>
         </div>
@@ -313,7 +313,7 @@ export function PlatformHealthView() {
                     </td>
                     <td>
                       <span style={{ fontSize: 12, color: "var(--security-text)" }}>
-                        {item.scoringEngine}
+                        {language === 'vi' ? (item.scoringEngine === 'AI Detection + Fallback' ? 'AI và quy tắc dự phòng' : item.scoringEngine === 'Dynamic Rules' ? 'Kiểm tra bằng quy tắc' : item.scoringEngine) : item.scoringEngine}
                       </span>
                     </td>
                     <td>
@@ -337,7 +337,7 @@ export function PlatformHealthView() {
                     </td>
                     <td>
                       <span style={{ fontSize: 12, fontWeight: 500 }}>
-                        {item.activeProjectsCount} projects
+                        {item.activeProjectsCount} {language === 'vi' ? 'dự án' : 'projects'}
                       </span>
                     </td>
                     <td>
@@ -346,7 +346,7 @@ export function PlatformHealthView() {
                           item.status === "Active" ? styles.low : styles.high
                         }`}
                       >
-                        {item.status}
+                        {language === 'vi' ? (item.status === 'Active' ? 'Đang hoạt động' : item.status === 'Warning' ? 'Cần chú ý' : item.status) : item.status}
                       </span>
                     </td>
                     <td>

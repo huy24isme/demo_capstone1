@@ -14,16 +14,18 @@ interface AlertsViewProps {
 
 export function AlertsView({ transactions, onReview }: AlertsViewProps) {
   const { t, language } = useLanguage();
+  const [filterSource, setFilterSource] = useState("all");
   const [filterRisk, setFilterRisk] = useState<string>("all");
   const [filterProject, setFilterProject] = useState<string>("all");
 
   const alerts = useMemo(() => {
     return transactions
       .filter((t) => t.alertId)
+      .filter((t) => filterSource === "all" || (filterSource === "AI" ? t.scoringSource === "AI" : t.scoringSource !== "AI"))
       .filter((t) => filterRisk === "all" || t.riskLevel === filterRisk)
       .filter((t) => filterProject === "all" || t.projectId === filterProject)
       .sort((a, b) => new Date(b.processedAt).getTime() - new Date(a.processedAt).getTime());
-  }, [transactions, filterRisk, filterProject]);
+  }, [transactions, filterRisk, filterProject, filterSource]);
 
   const projects = useMemo(() => {
     const map = new Map<string, string>();
@@ -35,7 +37,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
     () => ({
       total: alerts.length,
       anomaly: alerts.filter((t) => t.riskLevel === "Abnormal").length,
-      withoutCase: alerts.filter((t) => !t.caseId).length,
+      withoutCase: alerts.filter((t) => t.scoringSource === "AI" && !t.caseId).length,
     }),
     [alerts],
   );
@@ -85,15 +87,20 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
           <span className={styles.statDescription}>{t.alertsView.kpis.anomalyDesc}</span>
         </article>
         <article className={`${styles.statCard} ${styles.statWarning}`}>
-          <div className={styles.statLabel}>{t.alertsView.kpis.withoutCase}</div>
+          <div className={styles.statLabel}>{language === 'vi' ? 'Cảnh báo AI chưa có hồ sơ' : 'AI alerts without a case'}</div>
           <strong className={styles.statValue}>{stats.withoutCase}</strong>
-          <span className={styles.statDescription}>{t.alertsView.kpis.withoutCaseDesc}</span>
+          <span className={styles.statDescription}>{language === 'vi' ? 'Xem xét và mở điều tra khi cần' : 'Review and investigate when needed'}</span>
         </article>
       </section>
 
       {/* Filters */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarGroup}>
+          <select className={styles.control} aria-label={language === 'vi' ? 'Loại cảnh báo' : 'Alert type'} value={filterSource} onChange={e => setFilterSource(e.target.value)}>
+            <option value="all">{language === 'vi' ? 'Tất cả loại cảnh báo' : 'All alert types'}</option>
+            <option value="RULE">{language === 'vi' ? 'Cảnh báo bằng quy tắc' : 'Rule alerts'}</option>
+            <option value="AI">{language === 'vi' ? 'Cảnh báo AI' : 'AI alerts'}</option>
+          </select>
           <select
             className={styles.control}
             aria-label={t.alertsView.filterRiskLabel}
@@ -198,7 +205,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
                     className={styles.muted}
                     style={{ fontSize: 11, textAlign: "center" }}
                   >
-                    {alert.caseId ? getStatusLabel(alert.caseStatus) : t.alertsView.noCaseLabel}
+                    {alert.scoringSource !== 'AI' ? (language === 'vi' ? 'Theo dõi cảnh báo' : 'Alert monitoring') : alert.caseId ? getStatusLabel(alert.caseStatus) : t.alertsView.noCaseLabel}
                   </span>
                 </div>
               </div>

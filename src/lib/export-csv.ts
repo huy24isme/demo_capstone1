@@ -60,6 +60,7 @@ export function exportTransactionsCSV(
  */
 export function downloadCSVTemplate() {
   const headers = [
+    "transaction_reference",
     "timestamp",
     "amount",
     "currency",
@@ -109,9 +110,9 @@ export function downloadCSVTemplate() {
 
   const csvContent = [
     headers.join(","),
-    ...sampleRows.map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-    ),
+    ...sampleRows.map((values, index) =>
+      ["DEMO-IMPORT-" + (index + 1), ...values].map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+
   ].join("\n");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

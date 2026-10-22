@@ -4,11 +4,13 @@ import { useMemo } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Shield,
+  Building2,
   Activity,
   AlertTriangle,
   Briefcase,
   Sliders,
   FolderKanban,
+  Users,
   FileText,
   History,
   LogOut,
@@ -38,11 +40,12 @@ interface NavSection {
 export function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
   const nav = t?.nav;
   if (role === "Platform Admin") return [{ title: nav?.sections.platformSystem || "PLATFORM", items: [
+    { id: "onboarding", label: nav?.items.onboarding || "Enterprise setup", icon: Building2 },
     { id: "platform-health", label: nav?.items.platformHealth || "Platform health", icon: Server },
     { id: "rule-sets", label: nav?.items.ruleSets || "Enterprise rule sets", icon: FolderKanban },
     { id: "audit-trail", label: nav?.items.auditTrail || "Audit trail", icon: History },
   ] }];
-  if (role === "Deployment Staff") return [{ title: nav?.sections.ruleLifecycle || "DEPLOYMENT", items: [
+  if (role === "Implementation Staff") return [{ title: nav?.sections.ruleLifecycle || "DEPLOYMENT", items: [
     { id: "rule-sets", label: nav?.items.ruleSets || "Enterprise rule sets", icon: FolderKanban },
     { id: "onboarding", label: nav?.items.onboarding || "Onboarding", icon: FolderKanban },
     { id: "rule-templates", label: nav?.items.ruleTemplates || "Rule library", icon: Sliders },
@@ -51,7 +54,7 @@ export function getSectionsForRole(role?: string, t?: TranslationKey): NavSectio
     { id: "audit-trail", label: nav?.items.auditTrail || "Audit trail", icon: History },
   ] }];
 
-  if (role === "Operation") {
+  if (role === "Operator") {
     return [
       {
         title: nav?.sections.operationQueue || "OPERATION QUEUE",
@@ -119,6 +122,7 @@ export function getSectionsForRole(role?: string, t?: TranslationKey): NavSectio
         { id: "rule-sets", label: nav?.items.ruleSets === 'Tập rule doanh nghiệp' ? 'Quy tắc phát hiện' : 'Detection rules', icon: FolderKanban },
 
         { id: "projects", label: nav?.items.projects || "Projects & Integrations", icon: FolderKanban },
+        { id: "members", label: t?.brandName === "FraudGuard" && nav?.items.projects?.includes("Dự án") ? "Thành viên doanh nghiệp" : "Enterprise members", icon: Users },
       ],
     },
     {
@@ -169,11 +173,11 @@ export function Sidebar({
             <span className={styles.logoSub}>
               {currentUser?.role === "Platform Admin"
                 ? t.roles.platformAdmin
-                : currentUser?.role === "Deployment Staff"
+                : currentUser?.role === "Implementation Staff"
                 ? (language === "vi" ? "Triển khai" : "Deployment")
                 : currentUser?.role === "Viewer"
                 ? t.roles.viewer
-                : currentUser?.role === "Operation"
+                : currentUser?.role === "Operator"
                 ? t.roles.operation
                 : currentUser?.role === "Investigator"
                 ? t.roles.investigator
@@ -182,11 +186,11 @@ export function Sidebar({
           <span className={styles.planBadge}>
             {currentUser?.role === "Platform Admin"
               ? t.roles.superBadge
-              : currentUser?.role === "Deployment Staff"
+              : currentUser?.role === "Implementation Staff"
                 ? "DEPLOY"
                 : currentUser?.role === "Viewer"
               ? t.roles.auditBadge
-              : currentUser?.role === "Operation"
+              : currentUser?.role === "Operator"
               ? t.roles.opsBadge
               : currentUser?.role === "Investigator"
               ? t.roles.fieldBadge

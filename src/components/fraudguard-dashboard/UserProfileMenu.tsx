@@ -94,11 +94,11 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
     switch (currentUser?.role) {
       case "Platform Admin":
         return styles.roleBadgePlatformAdmin;
-      case "Deployment Staff":
+      case "Implementation Staff":
         return styles.roleBadgeOperation;
       case "SME Admin":
         return styles.roleBadgeSMEAdmin;
-      case "Operation":
+      case "Operator":
         return styles.roleBadgeOperation;
       case "Investigator":
         return styles.roleBadgeInvestigator;

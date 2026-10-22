@@ -135,7 +135,7 @@ export function TransactionRiskTable({
       case "alerts":
         return transactions.filter((t) => t.alertId);
       case "cases":
-        return transactions.filter((t) => t.caseId);
+        return transactions.filter((t) => t.caseId && t.scoringSource === "AI" && t.riskLevel === "Abnormal");
       default:
         return transactions;
     }
@@ -163,7 +163,7 @@ export function TransactionRiskTable({
     {
       id: "cases",
       label: t.table.tabs.cases,
-      count: transactions.filter((t) => t.caseId).length,
+      count: transactions.filter((t) => t.caseId && t.scoringSource === "AI" && t.riskLevel === "Abnormal").length,
     },
   ];
 

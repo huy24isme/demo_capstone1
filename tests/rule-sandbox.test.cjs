@@ -237,7 +237,7 @@ test('custom dataset supports new rules, rejects out-of-scope samples, and edits
 
 const cases = load('src/lib/case-workflow.ts');
 test('case mutations require the assigned investigator and nonempty authored findings', () => {
-  const previous = { id: 'tx', caseId: 'case', caseStatus: 'Investigating', assignedInvestigator: 'Owner', riskLevel: 'Abnormal' };
+  const previous = { id: 'tx', scoringSource: 'AI', caseId: 'case', caseStatus: 'Investigating', assignedInvestigator: 'Owner', riskLevel: 'Abnormal' };
   const owner = { role: 'Investigator', name: 'Owner' };
   const report = { ...previous, caseStatus: 'Reported', investigationReport: { notes: 'Observed evidence', submittedBy: 'Owner' } };
   assert.equal(cases.canUpdateCase(previous, report, owner), true);
@@ -246,8 +246,8 @@ test('case mutations require the assigned investigator and nonempty authored fin
   for (const role of ['Viewer', 'Platform Admin']) assert.equal(cases.canUpdateCase(previous, report, { role, name: 'Owner' }), false);
 });
 test('final case decisions need a reason; closed cases and normal transactions cannot be mutated', () => {
-  const previous = { id: 'tx', caseId: 'case', caseStatus: 'Open', riskLevel: 'Abnormal' };
-  const actor = { role: 'Operation', name: 'Lead' };
+  const previous = { id: 'tx', scoringSource: 'AI', caseId: 'case', caseStatus: 'Open', riskLevel: 'Abnormal' };
+  const actor = { role: 'Operator', name: 'Lead' };
   const final = { ...previous, caseStatus: 'Confirmed Fraud', caseDecision: { directive: 'Reviewed evidence' } };
   assert.equal(cases.canUpdateCase(previous, final, actor), true);
   assert.equal(cases.canUpdateCase(previous, { ...final, caseDecision: { directive: '' } }, actor), false);
@@ -299,7 +299,7 @@ test('dataset parser accepts unlabeled samples but rejects duplicate IDs and inv
 const enterpriseData = load('src/data/fraudguard-enterprises.ts');
 test('SME transaction scope excludes foreign projects and fails closed without an enterprise', () => {
  const data = load('src/data/fraudguard-transactions.ts').fraudGuardTransactions;
- for (const role of ['SME Admin', 'Operation', 'Investigator', 'Viewer']) {
+ for (const role of ['SME Admin', 'Operator', 'Investigator', 'Viewer']) {
    const abc = enterpriseData.transactionsForEnterprise(data, { role, enterpriseId: 'tenant-abc' }, enterpriseData.demoEnterprises);
    assert.ok(abc.length > 0);
    assert.ok(abc.every(tx => tx.projectId === 'proj-abc-cod'));
@@ -363,11 +363,11 @@ test('rule set UI creates, tests, reviews, publishes and activates a version', (
  const Tester = () => null;
  const component = load('src/components/fraudguard-dashboard/RuleSetsView.tsx', {
   './ReadableConditions': load('src/components/fraudguard-dashboard/ReadableConditions.tsx', { './SecurityDashboard.module.css': { default: {} } }),
-  react, './EnterpriseRulesView': { EnterpriseRulesView: () => null }, '@/data/fraudguard-enterprises': enterpriseData, '@/data/fraudguard-roles': roleData, '@/lib/rule-set-lifecycle': managed, './RuleSetTestingView': { RuleSetTestingView: Tester }, '@/lib/rule-lifecycle': lifecycle,
+  react, './EnterpriseRulesView': { EnterpriseRulesView: () => null }, '@/data/fraudguard-enterprises': enterpriseData, '@/data/fraudguard-roles': roleData, '@/lib/rule-set': ruleSet, '@/lib/rule-set-lifecycle': managed, './RuleSetTestingView': { RuleSetTestingView: Tester }, '@/lib/rule-lifecycle': lifecycle,
   './i18n/LanguageContext': { useLanguage: () => ({ language: 'vi' }) }, './SecurityDashboard.module.css': { default: {} }
  }).RuleSetsView;
  const s = draftSet();
- const props = { sets: [s], rules: s.draft.rules, projects: [{ id: 'p1', name: 'Wallet' }], enterprises: [{ id: 'e1', name: 'Enterprise', projectIds: ['p1'], deploymentStaffId: 'staff' }], currentUser: { id: 'staff', role: 'Deployment Staff' }, onAssign() {}, reviewer: 'Admin', onOpenLibrary() {}, onChange(next) { props.sets = next; } };
+ const props = { sets: [s], rules: s.draft.rules, projects: [{ id: 'p1', name: 'Wallet' }], enterprises: [{ id: 'e1', name: 'Enterprise', projectIds: ['p1'], deploymentStaffId: 'staff' }], currentUser: { id: 'staff', role: 'Implementation Staff' }, onAssign() {}, reviewer: 'Admin', onOpenLibrary() {}, onChange(next) { props.sets = next; } };
  function render() { cursor = 0; tree = component(props); }
  function nodes() { const out = []; function walk(n) { if (Array.isArray(n)) n.forEach(walk); else if (n?.props) { out.push(n); walk(n.props.children); } } walk(tree); return out; }
  function button(text) { return nodes().find(n => n.type === 'button' && (Array.isArray(n.props.children) ? n.props.children.filter(child => typeof child === 'string').join('') : n.props.children) === text); }
@@ -386,12 +386,12 @@ test('rule set UI creates, tests, reviews, publishes and activates a version', (
 });
 
 test('enterprise roles separate platform administration from assigned deployment', () => {
- const admin = { id: 'admin', role: 'Platform Admin' }, staff = { id: 'staff', role: 'Deployment Staff' };
+ const admin = { id: 'admin', role: 'Platform Admin' }, staff = { id: 'staff', role: 'Implementation Staff' };
  const enterprises = [{ id: 'e1', name: 'One', projectIds: ['p1','p2'], deploymentStaffId: 'staff' }, { id: 'e2', name: 'Two', projectIds: ['p3'], deploymentStaffId: 'other' }];
  assert.equal(roleData.getRolePermissions('Platform Admin').canManageRules, false);
  assert.equal(roleData.getRolePermissions('Platform Admin').canAccessRuleTesting, false);
- assert.equal(roleData.getRolePermissions('Deployment Staff').canManageRules, true);
- assert.equal(roleData.getRolePermissions('Deployment Staff').canManageCases, false);
+ assert.equal(roleData.getRolePermissions('Implementation Staff').canManageRules, true);
+ assert.equal(roleData.getRolePermissions('Implementation Staff').canManageCases, false);
  assert.equal(enterpriseData.visibleEnterprises(admin, enterprises).length, 2);
  assert.equal(enterpriseData.visibleEnterprises(staff, enterprises).length, 1);
  const one = draftSet();
@@ -462,4 +462,118 @@ test('readable conditions preserve nested AND/OR and strict versus inclusive com
  const html = renderToStaticMarkup(React.createElement(readable.ReadableConditions, { node, vi: true }));
  assert.match(html, /ít nhất một/); assert.match(html, /tất cả điều kiện/);
  assert.match(html, /lớn hơn/); assert.match(html, /từ/); assert.match(html, /Không/);
+});
+
+
+test('initial and switched demo accounts land on their role homepage', () => {
+  const { DEFAULT_DEMO_USER, DEMO_USERS, getRoleHomeView } = load('src/data/fraudguard-roles.ts');
+  assert.equal(DEFAULT_DEMO_USER.id, 'usr-deployment');
+  assert.equal(getRoleHomeView(DEFAULT_DEMO_USER.role), 'rule-sets');
+  const expected = {
+    'Platform Admin': 'platform-health',
+    'Implementation Staff': 'rule-sets',
+    'Operator': 'active-cases',
+    'Investigator': 'active-cases',
+    'SME Admin': 'risk-overview',
+    'Viewer': 'risk-overview',
+  };
+  for (const user of DEMO_USERS) assert.equal(getRoleHomeView(user.role), expected[user.role]);
+});
+
+ test('rule and fallback alerts cannot enter investigation', () => {
+ for (const scoringSource of ['RULE','RULE_FALLBACK']) {
+ const tx = { id: 'tx', scoringSource, riskLevel: 'Abnormal' };
+ for (const role of ['Operator','SME Admin','Investigator']) assert.equal(cases.canUpdateCase(tx, {...tx, caseId:'case', caseStatus:'Open'}, {role,name:'Owner'}),false);
+ }
+ });
+ test('operator can investigate an AI alert and submit their own findings', () => {
+ const tx = { id:'tx', scoringSource:'AI', riskLevel:'Abnormal' };
+ const actor={role:'Operator',name:'Owner'};
+ const started={...tx,caseId:'case',caseStatus:'Investigating',assignedInvestigator:'Owner'};
+ assert.equal(cases.canUpdateCase(tx,started,actor),true);
+ assert.equal(cases.canUpdateCase(started,{...started,investigationNotes:[]},actor),true);
+ assert.equal(cases.canUpdateCase(started,{...started,caseStatus:'Reported',investigationReport:{notes:'Evidence',submittedBy:'Owner'}},actor),true);
+ assert.equal(cases.canUpdateCase(started,{...started,caseStatus:'Reported',investigationReport:{notes:' ',submittedBy:'Owner'}},actor),false);
+ assert.equal(cases.canUpdateCase(started,{...started,caseStatus:'Reported',investigationReport:{notes:'Evidence',submittedBy:'Other'}},{...actor,name:'Other'}),false);
+ });
+
+function caseDrawerHarness(source, role = 'Operator') {
+ const states=[]; let cursor=0, tree;
+ const translations=load('src/components/fraudguard-dashboard/i18n/translations.ts').translations;
+ const props={open:true,currentRole:role,currentUserName:'Owner',onClose:()=>{},transaction:{id:'tx',transactionReference:'TX',scoringSource:source,riskLevel:'Abnormal',triggeredRules:[],processedAt:new Date().toISOString(),caseId:'case',caseStatus:'Open'},onUpdateTransaction(next){assert.equal(cases.canUpdateCase(props.transaction,next,{role,name:'Owner'}),true);props.transaction=next;}};
+ const component=load('src/components/fraudguard-dashboard/AlertCaseDrawer.tsx',{
+ react:{useState(initial){const slot=cursor++;if(!(slot in states))states[slot]=initial;return [states[slot],v=>states[slot]=v];},useEffect(){}},
+ './useDialogFocus':{useDialogFocus:()=>null}, './RuleEvaluationDetails':{RuleEvaluationDetails:()=>null}, './RiskLevelBadge':{RiskLevelBadge:()=>null}, './ScoringSourceBadge':{ScoringSourceBadge:()=>null}, './ToastProvider':{useToast:()=>({toast(){}})}, './i18n/LanguageContext':{useLanguage:()=>({language:'en',t:translations.en})}, './SecurityDashboard.module.css':{default:{}}
+ }).AlertCaseDrawer;
+ function render(){cursor=0;tree=component(props);}
+ function nodes(){const result=[];function walk(n){if(Array.isArray(n))n.forEach(walk);else if(n?.props){result.push(n);walk(n.props.children);}}walk(tree);return result;}
+ function click(name){const b=nodes().find(n=>n.type==='button'&&n.props.onClick?.name===name);assert.ok(b,name);assert.ok(!b.props.disabled);b.props.onClick();render();}
+ render();return {props,nodes,click,render};
+}
+test('rule and fallback detail UI hides case creation, assignment and self-investigation',()=>{
+ for(const source of ['RULE','RULE_FALLBACK']){
+ const ui=caseDrawerHarness(source);
+ const actions=ui.nodes().filter(n=>n.type==='button').map(n=>n.props.onClick?.name);
+ for(const action of ['handleCreateCase','handleAssignInvestigator','handleSelfInvestigate','handleSubmitInvestigationReport'])assert.ok(!actions.includes(action),action);
+ }
+});
+test('operator detail UI supports self-investigation, notes and report submission end to end',()=>{
+ const ui=caseDrawerHarness('AI');ui.click('handleSelfInvestigate');
+ assert.equal(ui.props.transaction.assignedInvestigator,'Owner');
+ const inputs=ui.nodes().filter(n=>n.type==='textarea'||n.type==='input'&&!n.props.type);
+ assert.ok(inputs.length>=2);
+ for(const input of inputs) input.props.onChange({target:{value:'Evidence reviewed'}});
+ ui.render();ui.click('handleAddInvestigatorNote');
+ assert.ok(ui.props.transaction.investigationNotes.some(n=>n.text==='Evidence reviewed'));
+ ui.click('handleSubmitInvestigationReport');
+ assert.equal(ui.props.transaction.caseStatus,'Reported');
+ assert.equal(ui.props.transaction.investigationReport.submittedBy,'Owner');
+});
+
+test('demo membership enforces enterprise boundary, role restrictions and unique identity',()=>{
+ const {canSaveMember,DEMO_USERS}=load('src/data/fraudguard-roles.ts');
+ assert.equal(new Set(DEMO_USERS.map(u=>u.role)).size,5);
+ assert.ok(!DEMO_USERS.some(u=>['Viewer','Operation','Deployment Staff'].includes(u.role)));
+ const admin=DEMO_USERS.find(u=>u.id==='usr-sme-admin');
+ const member={...admin,id:'new',name:'New person',email:'new@example.com',role:'Operator'};
+ assert.equal(canSaveMember(admin,member,DEMO_USERS),true);
+ assert.equal(canSaveMember({...admin,role:'Operator'},member,DEMO_USERS),false);
+ assert.equal(canSaveMember(admin,{...member,enterpriseId:'tenant-techpay'},DEMO_USERS),false);
+ assert.equal(canSaveMember(admin,{...member,role:'Platform Admin'},DEMO_USERS),false);
+ assert.equal(canSaveMember(admin,{...member,id:admin.id},DEMO_USERS),false);
+ assert.equal(canSaveMember(admin,{...member,email:admin.email},DEMO_USERS),false);
+ assert.equal(canSaveMember(admin,{...member,email:'bad'},DEMO_USERS),false);
+});
+
+test('unconfirmed onboarding permits drafts but blocks publishing, activation and handover',()=>{
+ const owner={id:'e1',name:'Business',projectIds:['p1'],deploymentStaffId:'staff',specification:{requirements:'',fields:'',conditions:'',sampleJson:'',updatedAt:'now'}};
+ const actor={id:'staff',role:'Implementation Staff'};const draft=draftSet();
+ assert.equal(managed.canChangeEnterpriseSets([], [draft], actor, [owner]),true);
+ const published={...draft,versions:[{version:1,rules:draft.draft.rules}]};
+ assert.equal(managed.canChangeEnterpriseSets([draft],[published],actor,[owner]),false);
+ assert.equal(managed.canChangeEnterpriseSets([published],[{...published,activeVersion:1}],actor,[owner]),false);
+ assert.equal(managed.canChangeEnterpriseSets([published],[{...published,handover:{version:1,by:'staff',at:'now'}}],actor,[owner]),false);
+ assert.equal(managed.canChangeEnterpriseSets([draft],[published],actor,[{...owner,specification:{...owner.specification,confirmedAt:'now'}}]),true);
+ assert.equal(managed.canChangeEnterpriseSets([], [draft], {id:'other',role:'Implementation Staff'}, [owner]),false);
+});
+
+const importPipeline = load('src/lib/transaction-import.ts', { './rule-set': ruleSet, './ingestion-validation': load('src/lib/ingestion-validation.ts') });
+test('file ingestion previews normal and rule alerts without creating investigation cases',()=>{
+ const rules=[active('import-rule',condition('amount','>',10))];
+ const rows=importPipeline.previewTransactionImport('transaction_reference,transaction_type,amount,user_hash\nA,payment,20,00123\nB,payment,5,00456','samples.csv','p1','Wallet',rules,[]);
+ assert.equal(rows[0].transaction.riskLevel,'Abnormal');assert.ok(rows[0].transaction.alertId);assert.equal(rows[0].transaction.caseId,undefined);
+ assert.equal(rows[0].transaction.entityReference,'00123');assert.equal(rows[1].transaction.riskLevel,'Normal');assert.equal(rows[1].transaction.alertId,undefined);
+ assert.equal(rows[0].transaction.scoringSource,'RULE');
+});
+test('ingestion blocks cross-scope data, missing rule fields, duplicate references and unsupported files',()=>{
+ const rules=[active('import-rule',condition('amount','>',10))];
+ const row={ref:'A',projectId:'p1',transactionType:'payment',fields:{amount:20}};
+ const preview=(data,existing=[])=>importPipeline.previewTransactionImport(JSON.stringify(data),'samples.json','p1','Wallet',rules,existing);
+ assert.ok(preview([{...row,projectId:'other'}])[0].error);
+ assert.ok(preview([{...row,fields:{}}])[0].error);
+ assert.ok(preview([row,row])[1].error);
+ const first=preview([row])[0].transaction;
+ assert.ok(preview([row],[first])[0].error);
+ assert.ok(preview([{...row,transactionType:'unsupported'}])[0].error);
+ assert.throws(()=>importPipeline.previewTransactionImport('','data.xlsx','p1','Wallet',rules,[]));
 });

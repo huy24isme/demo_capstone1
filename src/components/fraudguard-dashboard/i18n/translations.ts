@@ -385,62 +385,62 @@ const rawTranslations = {
     "nextPage": "Trang sau"
   },
   "platformHealthView": {
-    "title": "Sức khỏe Nền tảng & Cụm Dịch vụ",
-    "subtitle": "Giám sát cụm máy chủ microservices, độ trễ AI inference, cơ chế tự động Fallback và danh sách doanh nghiệp SME.",
+    "title": "Tình trạng hệ thống",
+    "subtitle": "Theo dõi hoạt động hệ thống, tốc độ xử lý và các doanh nghiệp sử dụng dịch vụ.",
     "btnRefresh": "Làm mới chỉ số",
-    "toastRefreshed": "Đã đồng bộ metrics cụm server mới nhất",
+    "toastRefreshed": "Đã cập nhật chỉ số hệ thống",
     "kpis": {
-      "uptime": "SLA Uptime (30 ngày)",
+      "uptime": "Tỷ lệ hoạt động trong 30 ngày",
       "uptimeDesc": "0 sự cố gián đoạn dịch vụ",
-      "latency": "Độ trễ AI Inference (P95)",
-      "latencyDesc": "P99: 68ms · Model v2.4 ONNX",
-      "fallback": "Tỷ lệ Rule Fallback",
-      "fallbackDesc": "Yêu cầu tự động dự phòng hôm nay",
-      "activeTenants": "Doanh nghiệp SME hoạt động",
-      "activeTenantsDesc": "Doanh nghiệp đang vận hành"
+      "latency": "Thời gian AI xử lý (95% yêu cầu)",
+      "latencyDesc": "99% yêu cầu được xử lý trong 68 ms",
+      "fallback": "Tỷ lệ xử lý dự phòng",
+      "fallbackDesc": "Yêu cầu được xử lý bằng quy tắc khi AI không phản hồi",
+      "activeTenants": "Tổng số doanh nghiệp",
+      "activeTenantsDesc": "Doanh nghiệp trong danh sách bên dưới"
     },
-    "failoverTitle": "Cơ chế Dự phòng Không Gián đoạn (RULE_FALLBACK Protocol)",
-    "failoverDesc": "Khi AI không khả dụng hoặc quá thời gian chờ, hệ thống chuyển sang Rule Engine và ghi nhận nguồn RULE_FALLBACK.",
-    "failoverBadge": "Sẵn sàng dự phòng cao",
-    "microservicesTitle": "Cụm Dịch vụ Microservices",
-    "microservicesDesc": "Kiểm tra độ trễ và nhịp tim từng dịch vụ thành phần",
+    "failoverTitle": "Xử lý dự phòng khi AI không phản hồi",
+    "failoverDesc": "Khi AI không hoạt động hoặc phản hồi quá chậm, hệ thống dùng quy tắc để tiếp tục kiểm tra giao dịch.",
+    "failoverBadge": "Sẵn sàng xử lý dự phòng",
+    "microservicesTitle": "Các dịch vụ hệ thống",
+    "microservicesDesc": "Theo dõi tốc độ phản hồi và kết nối của từng dịch vụ",
     "tableServices": {
       "service": "Dịch vụ",
       "status": "Trạng thái",
       "latency": "Độ trễ",
-      "uptime": "Uptime 30 ngày",
-      "heartbeat": "Nhịp tim gần nhất",
+      "uptime": "Tỷ lệ hoạt động trong 30 ngày",
+      "heartbeat": "Lần phản hồi gần nhất",
       "action": "Thao tác",
-      "btnPing": "Ping Check"
+      "btnPing": "Kiểm tra kết nối"
     },
     "metrics": {
       "latency": "Độ trễ",
-      "throughput": "Throughput",
-      "cpuLoad": "Tải CPU",
+      "throughput": "Lượng xử lý mỗi giây",
+      "cpuLoad": "Mức sử dụng CPU",
       "memory": "Bộ nhớ",
       "uptime": "Thời gian chạy",
-      "btnPing": "Ping Check",
+      "btnPing": "Kiểm tra kết nối",
       "pinging": "Đang kiểm tra…"
     },
     "chart": {
-      "title": "Giám sát Lưu lượng Phát hiện & Tỷ lệ Fallback 24h",
-      "subtitle": "Phân bổ số lượng giao dịch phân tích bằng AI vs Dynamic Rule Fallback theo khung giờ",
-      "aiLabel": "AI Detection (Yêu cầu)",
-      "fallbackLabel": "Rule Fallback (Yêu cầu)"
+      "title": "Số yêu cầu xử lý trong 24 giờ",
+      "subtitle": "So sánh số yêu cầu do AI và quy tắc dự phòng xử lý theo giờ",
+      "aiLabel": "Xử lý bằng AI",
+      "fallbackLabel": "Xử lý bằng quy tắc dự phòng"
     },
-    "tenantsTitle": "Danh sách Khách hàng Doanh nghiệp (SME Tenants)",
-    "tenantsDesc": "Phân vùng dữ liệu độc lập và hạn ngạch theo gói dịch vụ",
+    "tenantsTitle": "Danh sách doanh nghiệp",
+    "tenantsDesc": "Mỗi doanh nghiệp có dữ liệu riêng và hạn mức theo gói dịch vụ.",
     "tableTenants": {
-      "name": "Tổ chức / Doanh nghiệp",
+      "name": "Doanh nghiệp",
       "plan": "Gói dịch vụ",
-      "scoringEngine": "Cơ chế Phát hiện",
-      "quota": "Hạn ngạch tiêu thụ (Tháng)",
+      "scoringEngine": "Cách kiểm tra giao dịch",
+      "quota": "Hạn mức đã dùng trong tháng",
       "activeProjects": "Số dự án",
       "status": "Trạng thái",
       "actions": "Thao tác",
-      "btnInspect": "Kiểm tra Tenant",
+      "btnInspect": "Xem chi tiết",
       "code": "Mã",
-      "joined": "Ngày gia nhập"
+      "joined": "Ngày tham gia"
     }
   },
   "projectsView": {
@@ -546,7 +546,7 @@ const rawTranslations = {
   },
   "ruleTestingView": {
     "title": "Môi trường Kiểm thử Quy tắc",
-    "subtitle": "Môi trường kiểm thử biệt lập dành cho Deployment Staff. Kiểm tra và tinh chỉnh Rule với test data mà không ảnh hưởng tới dữ liệu vận hành thực tế.",
+    "subtitle": "Môi trường kiểm thử biệt lập dành cho Implementation Staff. Kiểm tra và tinh chỉnh Rule với test data mà không ảnh hưởng tới dữ liệu vận hành thực tế.",
     "kpis": {
       "targetProject": "Dự án mục tiêu",
       "targetProjectDesc": "Giám sát đơn hàng COD",
@@ -595,7 +595,7 @@ const rawTranslations = {
       "afterTitle": "SAU BÀN GIAO (PRODUCTION)",
       "beforeTitle": "TRƯỚC BÀN GIAO (STAGING / SETUP)",
       "afterDesc": "Workspace đã trở thành môi trường vận hành riêng của SME. Platform Admin bị giới hạn, không truy cập trực tiếp vào hồ sơ giao dịch hay đóng case của khách hàng. Mọi thay đổi Rule về sau phải qua Change Request và kiểm thử tại Rule Testing Sandbox.",
-      "beforeDesc": "Workspace đang trong giai đoạn triển khai kỹ thuật. Deployment Staff được phân công cấu hình schema, thiết lập detection rule, nạp sample data và chạy thử nghiệm để tinh chỉnh ngưỡng trước khi bàn giao."
+      "beforeDesc": "Workspace đang trong giai đoạn triển khai kỹ thuật. Implementation Staff được phân công cấu hình schema, thiết lập detection rule, nạp sample data và chạy thử nghiệm để tinh chỉnh ngưỡng trước khi bàn giao."
     },
     "caseStudy": {
       "title": "ABC Fashion — Giám sát Đơn hàng COD",
@@ -1303,7 +1303,7 @@ const rawTranslations = {
   },
   "ruleTestingView": {
     "title": "Rule Testing Sandbox",
-    "subtitle": "Isolated sandbox testing environment for Deployment Staff. Test and refine rules without impacting production data.",
+    "subtitle": "Isolated sandbox testing environment for Implementation Staff. Test and refine rules without impacting production data.",
     "kpis": {
       "targetProject": "Target Project",
       "targetProjectDesc": "COD Order Monitoring",
@@ -1352,7 +1352,7 @@ const rawTranslations = {
       "afterTitle": "AFTER HANDOVER (PRODUCTION)",
       "beforeTitle": "BEFORE HANDOVER (STAGING / SETUP)",
       "afterDesc": "Workspace is now under independent SME operation. Platform Admin access is restricted from viewing customer transactions or closing cases. Subsequent rule modifications require Change Requests and Sandbox validation.",
-      "beforeDesc": "Workspace is in the technical setup phase. Assigned Deployment Staff can configure schema, setup detection rules, ingest sample data, and run calibration tests before handover."
+      "beforeDesc": "Workspace is in the technical setup phase. Assigned Implementation Staff can configure schema, setup detection rules, ingest sample data, and run calibration tests before handover."
     },
     "caseStudy": {
       "title": "ABC Fashion — COD Order Monitoring",

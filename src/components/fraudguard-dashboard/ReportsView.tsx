@@ -150,7 +150,7 @@ export function ReportsView({
     if (!isInvestigator) return [];
     return transactions.filter(
       (tx) =>
-        tx.caseId &&
+        tx.scoringSource === "AI" && tx.caseId &&
         (tx.assignedInvestigator === investigatorName),
     );
   }, [transactions, isInvestigator, investigatorName]);
@@ -294,11 +294,11 @@ export function ReportsView({
       {
         name: t.reportsView.execCharts.legendOpen,
         count: filteredMacro.filter(
-          (tx) => !!tx.caseId && tx.caseStatus === "Open",
+          (tx) => tx.scoringSource === "AI" && !!tx.caseId && tx.caseStatus === "Open",
         ).length,
         color: "#ad8af3",
       },
-      { name: language === "vi" ? "Đã xử lý" : "Resolved", count: filteredMacro.filter(tx => !!tx.caseId && tx.caseStatus === "Resolved").length, color: "#71b9f4" },
+      { name: language === "vi" ? "Đã xử lý" : "Resolved", count: filteredMacro.filter(tx => tx.scoringSource === "AI" && !!tx.caseId && tx.caseStatus === "Resolved").length, color: "#71b9f4" },
     ].filter((d) => d.count > 0);
   }, [filteredMacro, t, language]);
 

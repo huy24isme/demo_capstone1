@@ -34,6 +34,7 @@ import {
 
 interface AlertCaseDrawerProps {
   transaction: TransactionRisk | null;
+  investigators?: string[];
   open: boolean;
   onClose: () => void;
   onUpdateTransaction: (updated: TransactionRisk) => void;
@@ -43,12 +44,7 @@ interface AlertCaseDrawerProps {
 
 }
 
-export const AVAILABLE_INVESTIGATORS = [
-  "Nguyễn Văn An",
-  "Lê Quốc Bảo",
-  "Trần Thu Hà",
-  "Phạm Minh Tuấn",
-];
+
 
 interface RuleEvidenceDetail {
   code: string;
@@ -123,12 +119,13 @@ function getFindingInfo(finding: InvestigationFinding, t: TranslationKey) {
 }
 
 export function AlertCaseDrawer({
+  investigators = [],
   transaction,
   open,
   onClose,
   onUpdateTransaction,
   permissions,
-  currentRole = "Operation",
+  currentRole = "Operator",
   currentUserName = "Trần Mai Anh",
 
 }: AlertCaseDrawerProps) {
@@ -144,7 +141,7 @@ export function AlertCaseDrawer({
 
   // Operation zone local inputs
   const [selectedInvestigator, setSelectedInvestigator] = useState(
-    transaction?.assignedInvestigator || AVAILABLE_INVESTIGATORS[0],
+    transaction?.assignedInvestigator || investigators[0] || '',
   );
   const [operationFeedback, setOperationFeedback] = useState("");
   const [isMutating, setIsMutating] = useState(false);
@@ -153,7 +150,7 @@ export function AlertCaseDrawer({
   // Sync state when transaction opens/changes
   useEffect(() => {
     if (transaction) {
-      setSelectedInvestigator(transaction.assignedInvestigator || AVAILABLE_INVESTIGATORS[0]);
+      setSelectedInvestigator(transaction.assignedInvestigator || investigators[0] || '');
       if (transaction.investigationReport) {
         setSelectedFinding(transaction.investigationReport.finding);
         setEvidenceNotes(transaction.investigationReport.evidenceNotes || "");
@@ -175,13 +172,20 @@ export function AlertCaseDrawer({
   // Role permissions
   const isPlatformAdmin = currentRole === "Platform Admin";
   const isSMEAdmin = currentRole === "SME Admin";
-  const isOperation = (currentRole === "Operation" || isSMEAdmin) && permissions?.canManageCases !== false;
+  const isAIAlert = transaction.scoringSource === "AI" && transaction.riskLevel === "Abnormal";
+  const isOperation = isAIAlert && (currentRole === "Operator" || isSMEAdmin) && permissions?.canManageCases !== false;
   const isInvestigator = currentRole === "Investigator";
+  const canWorkOnCase = isAIAlert && (isInvestigator || currentRole === "Operator") && transaction.assignedInvestigator === currentUserName;
+  const canSelfInvestigate = isAIAlert && currentRole === "Operator" && (!transaction.caseId || transaction.caseStatus === "Open");
   const isViewer = currentRole === "Viewer" || isPlatformAdmin || permissions?.isReadOnly;
 
   const currentStep = getWorkflowStepIndex(transaction.caseStatus);
 
   // Handlers
+  const handleSelfInvestigate = () => {
+    if (!canSelfInvestigate || !currentUserName) return;
+    onUpdateTransaction({ ...transaction, caseId: transaction.caseId || 'CASE-' + crypto.randomUUID(), caseStatus: 'Investigating', assignedInvestigator: currentUserName, assignedAt: new Date().toISOString(), investigationNotes: [...(transaction.investigationNotes || []), { text: language === 'vi' ? 'Nhân viên vận hành bắt đầu tự điều tra.' : 'Operator started investigating.', author: currentUserName, time: new Date().toISOString() }] });
+  };
   const handleCreateCase = () => {
     if (!isOperation || transaction.caseId || transaction.riskLevel !== "Abnormal") return;
     setIsMutating(true);
@@ -226,7 +230,7 @@ export function AlertCaseDrawer({
 
   // Investigator: Accept case & start field investigation
   const handleStartInvestigating = () => {
-    if (!isInvestigator || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Assigned") return;
+    if (!canWorkOnCase || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Assigned") return;
     setIsMutating(true);
     {
       const startNote: CaseNote = {
@@ -255,7 +259,7 @@ export function AlertCaseDrawer({
 
   // Add field notes
   const handleAddInvestigatorNote = () => {
-    if (!investigatorNote.trim() || !isInvestigator || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Investigating") return;
+    if (!investigatorNote.trim() || !canWorkOnCase || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Investigating") return;
     const newNote: CaseNote = {
       text: investigatorNote.trim(),
       time: new Date().toISOString(),
@@ -281,7 +285,7 @@ export function AlertCaseDrawer({
 
   // Investigator: Submit official investigation report
   const handleSubmitInvestigationReport = () => {
-    if (!isInvestigator || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Investigating" || !reportNote.trim()) {
+    if (!canWorkOnCase || transaction.assignedInvestigator !== currentUserName || transaction.caseStatus !== "Investigating" || !reportNote.trim()) {
       toast("error", language === "vi" ? "Hãy nhập kết quả điều tra cho hồ sơ được giao." : "Enter findings for your assigned case."); return;
     }
     setIsMutating(true);
@@ -312,8 +316,8 @@ export function AlertCaseDrawer({
       toast(
         "success",
         language === "vi"
-          ? `Đã gửi Báo cáo điều tra tới Trưởng nhóm Vận hành`
-          : `Investigation report submitted to Operations Lead`,
+          ? `Đã lưu báo cáo điều tra`
+          : `Investigation report saved`,
       );
     }
   };
@@ -433,7 +437,7 @@ export function AlertCaseDrawer({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <h2 className={styles.drawerTitle}>{t.drawer.title}</h2>
-              {transaction.caseStatus && (
+              {isAIAlert && transaction.caseStatus && (
                 <span
                   className={styles.badge}
                   style={{
@@ -450,7 +454,7 @@ export function AlertCaseDrawer({
             </div>
             <span style={{ fontSize: 11, color: "var(--security-muted)" }}>
               {transaction.transactionReference}{" "}
-              {transaction.caseId ? `· Case ID: ${transaction.caseId}` : ""}
+              {isAIAlert && transaction.caseId ? `· Case ID: ${transaction.caseId}` : ""}
             </span>
           </div>
           <button
@@ -465,7 +469,7 @@ export function AlertCaseDrawer({
 
         <div className={styles.drawerBody}>
           {/* Workflow Stepper */}
-          {transaction.caseId && (
+          {isAIAlert && transaction.caseId && (
             <div className={styles.stepperContainer} aria-label="Workflow progress">
               {WORKFLOW_STEP_KEYS.map((step, idx) => {
                 const isCompleted = idx < currentStep;
@@ -572,7 +576,7 @@ export function AlertCaseDrawer({
             )}
           </div>
 
-          {transaction.ruleEvaluation && <div className={styles.drawerSection}><RuleEvaluationDetails evaluation={transaction.ruleEvaluation} technical={currentRole === 'Platform Admin' || currentRole === 'Deployment Staff'} /></div>}
+          {transaction.ruleEvaluation && <div className={styles.drawerSection}><RuleEvaluationDetails evaluation={transaction.ruleEvaluation} technical={currentRole === 'Platform Admin' || currentRole === 'Implementation Staff'} /></div>}
           {/* Detection result & Evidence breakdown */}
           <div className={styles.drawerSection}>
             <h3 className={styles.drawerSectionTitle}>{t.drawer.evidenceTitle}</h3>
@@ -633,7 +637,8 @@ export function AlertCaseDrawer({
           {/* ───────────────────────────────────────────────────────────── */}
           {/* CASE CREATION (If alert has no case yet)                      */}
           {/* ───────────────────────────────────────────────────────────── */}
-          {!transaction.caseId ? (
+          {canSelfInvestigate && <div className={styles.drawerSection}><button type="button" className={styles.drawerPrimaryBtn} onClick={handleSelfInvestigate}>{language === 'vi' ? 'Tự điều tra' : 'Investigate myself'}</button><p className={styles.muted}>{language === 'vi' ? 'Tự ghi nhận kết quả hoặc tạo hồ sơ bên dưới để phân công điều tra.' : 'Record your own findings, or create a case below to assign an investigator.'}</p></div>}
+          {!isAIAlert ? <div className={styles.drawerSection}><p className={styles.muted}>{language === 'vi' ? 'Xem kết quả và lý do phát hiện ở trên. Quy trình điều tra chỉ dành cho giao dịch có cảnh báo AI bất thường.' : 'Rule results support monitoring and detection history. Investigation is available for AI alerts.'}</p></div> : !transaction.caseId ? (
             <div className={styles.drawerSection}>
               <h3 className={styles.drawerSectionTitle}>{t.drawer.createCaseTitle}</h3>
               <p style={{ fontSize: 12, color: "var(--security-muted)", marginBottom: 12 }}>
@@ -653,7 +658,7 @@ export function AlertCaseDrawer({
               {/* ───────────────────────────────────────────────────────────── */}
               {/* BRANCH 1: INVESTIGATOR VIEW (Field Investigation Workbench)   */}
               {/* ───────────────────────────────────────────────────────────── */}
-              {isInvestigator && (
+              {canWorkOnCase && (
                 <div
                   className={styles.drawerSection}
                   style={{
@@ -677,7 +682,7 @@ export function AlertCaseDrawer({
                         className={styles.drawerSectionTitle}
                         style={{ margin: 0, color: "var(--security-blue)", fontSize: 13 }}
                       >
-                        {t.drawer.investigatorWorkbench}
+                        {currentRole === 'Operator' ? (language === 'vi' ? 'Điều tra của tôi' : 'My investigation') : t.drawer.investigatorWorkbench}
                       </h3>
                       <span style={{ fontSize: 11, color: "var(--security-muted)" }}>
                         {t.drawer.assignedTo}:{" "}
@@ -692,7 +697,7 @@ export function AlertCaseDrawer({
                         borderColor: "#2d5a7b",
                       }}
                     >
-                      {t.drawer.investigatorRoleBadge}
+                      {currentRole === 'Operator' ? 'Operator' : t.drawer.investigatorRoleBadge}
                     </span>
                   </div>
 
@@ -1164,7 +1169,7 @@ export function AlertCaseDrawer({
                           onChange={(e) => setSelectedInvestigator(e.target.value)}
                           style={{ flex: 1, minHeight: 32 }}
                         >
-                          {AVAILABLE_INVESTIGATORS.map((inv) => (
+                          {investigators.map((inv) => (
                             <option key={inv} value={inv}>
                               {inv} {inv === "Nguyễn Văn An" ? t.drawer.codExpert : ""}
                             </option>

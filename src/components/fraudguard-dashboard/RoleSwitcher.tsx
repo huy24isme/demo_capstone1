@@ -3,19 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, FileSpreadsheet } from "lucide-react";
 import type { UserProfile } from "./types";
-import { DEMO_USERS } from "../../data/fraudguard-roles";
+
 import type { Enterprise } from '@/data/fraudguard-enterprises';
 import { PermissionMatrixModal } from "./PermissionMatrixModal";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface RoleSwitcherProps {
+  users: UserProfile[];
   enterprises: Enterprise[];
   currentUser: UserProfile;
   onSwitchUser: (user: UserProfile) => void;
 }
 
-export function RoleSwitcher({ currentUser, onSwitchUser, enterprises }: RoleSwitcherProps) {
+export function RoleSwitcher({ users, currentUser, onSwitchUser, enterprises }: RoleSwitcherProps) {
   const { t, language } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
@@ -49,11 +50,11 @@ export function RoleSwitcher({ currentUser, onSwitchUser, enterprises }: RoleSwi
     switch (role) {
       case "Platform Admin":
         return styles.roleBadgePlatformAdmin;
-      case "Deployment Staff":
+      case "Implementation Staff":
         return styles.roleBadgeOperation;
       case "SME Admin":
         return styles.roleBadgeSMEAdmin;
-      case "Operation":
+      case "Operator":
         return styles.roleBadgeOperation;
       case "Investigator":
         return styles.roleBadgeInvestigator;
@@ -110,7 +111,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser, enterprises }: RoleSwi
             </div>
 
             <div className={styles.roleMenuList}>
-            {DEMO_USERS.map((u) => {
+            {users.map((u) => {
               const isSelected = u.id === currentUser.id;
               return (
                 <button
@@ -136,7 +137,7 @@ export function RoleSwitcher({ currentUser, onSwitchUser, enterprises }: RoleSwi
                         {u.role}
                       </span>
                     </div>
-                    <p className={styles.roleAccountScope}>{u.role === 'Platform Admin' ? (language === 'vi' ? 'Toàn nền tảng' : 'Platform-wide') : enterprises.filter(e => u.role === 'Deployment Staff' ? e.deploymentStaffId === u.id : e.id === u.enterpriseId).map(e => e.name).join(' · ') || (language === 'vi' ? 'Chưa được phân công doanh nghiệp' : 'No enterprise assigned')}</p>
+                    <p className={styles.roleAccountScope}>{u.role === 'Platform Admin' ? (language === 'vi' ? 'Toàn nền tảng' : 'Platform-wide') : enterprises.filter(e => u.role === 'Implementation Staff' ? e.deploymentStaffId === u.id : e.id === u.enterpriseId).map(e => e.name).join(' · ') || (language === 'vi' ? 'Chưa được phân công doanh nghiệp' : 'No enterprise assigned')}</p>
                     <p className={styles.roleItemDesc}>{u.description}</p>
                   </div>
 

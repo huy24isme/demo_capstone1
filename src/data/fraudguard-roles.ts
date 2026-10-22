@@ -1,5 +1,6 @@
 import type {
   RolePermissions,
+  SecondaryView,
   UserProfile,
   UserRole,
 } from "../components/fraudguard-dashboard/types";
@@ -20,7 +21,7 @@ export const DEMO_USERS: UserProfile[] = [
     id: "usr-deployment",
     name: "Nguyễn Minh Hà",
     email: "ha.nm@fraudguard.io",
-    role: "Deployment Staff",
+    role: "Implementation Staff",
     title: "Nhân viên triển khai",
     avatarLetter: "H",
     avatarBg: "#2563eb",
@@ -31,7 +32,7 @@ export const DEMO_USERS: UserProfile[] = [
     id: "usr-deployment-2",
     name: "Phạm Thu Linh",
     email: "linh.pt@fraudguard.io",
-    role: "Deployment Staff",
+    role: "Implementation Staff",
     title: "Nhân viên triển khai",
     avatarLetter: "L",
     avatarBg: "#0284c7",
@@ -68,7 +69,7 @@ export const DEMO_USERS: UserProfile[] = [
     enterpriseId: "tenant-abc",
     name: "Đặng Tuấn Kiệt",
     email: "kiet.dt@abcfashion.vn",
-    role: "Operation",
+    role: "Operator",
     title: "Risk Operations Team Leader",
     avatarLetter: "K",
     avatarBg: "#2563eb", // Blue
@@ -85,21 +86,22 @@ export const DEMO_USERS: UserProfile[] = [
     avatarLetter: "N",
     avatarBg: "#0284c7", // Sky blue
     description:
-      "Điều tra viên hiện trường: Tiếp nhận case được giao (My Cases), xác minh chứng cứ đơn COD, ghi chú và gửi báo cáo kết luận về cho Operation.",
+      "Điều tra viên hiện trường: Tiếp nhận case được giao (My Cases), xác minh chứng cứ đơn COD, ghi chú và gửi báo cáo kết luận về cho Operator.",
   },
-  {
-    id: "usr-viewer",
-    enterpriseId: "tenant-abc",
-    name: "Vũ Minh Quân",
-    email: "quan.vm@external-audit.vn",
-    role: "Viewer",
-    title: "External Auditor / Executive",
-    avatarLetter: "Q",
-    avatarBg: "#059669", // Emerald green
-    description:
-      "Kiểm toán viên / Ban lãnh đạo: Chế độ chỉ đọc (Read-only). Xem danh sách giao dịch, báo cáo, và xuất dữ liệu mà không có quyền thay đổi.",
-  },
+
 ];
+
+export const DEFAULT_DEMO_USER = DEMO_USERS.find(user => user.id === "usr-deployment")!;
+
+export function getRoleHomeView(role: UserRole): SecondaryView {
+  switch (role) {
+    case "Platform Admin": return "platform-health";
+    case "Implementation Staff": return "rule-sets";
+    case "Operator":
+    case "Investigator": return "active-cases";
+    default: return "risk-overview";
+  }
+}
 
 export function getRolePermissions(role: UserRole): RolePermissions {
   switch (role) {
@@ -117,7 +119,7 @@ export function getRolePermissions(role: UserRole): RolePermissions {
         canAccessRuleTesting: false,
         canAccessOnboarding: false,
       };
-    case "Deployment Staff":
+    case "Implementation Staff":
       return {
         canManageProjects: true,
         canManageRules: true,
@@ -145,7 +147,7 @@ export function getRolePermissions(role: UserRole): RolePermissions {
         canAccessRuleTesting: false,
         canAccessOnboarding: false,
       };
-    case "Operation":
+    case "Operator":
       return {
         canManageProjects: false,
         canManageRules: false,
@@ -199,7 +201,6 @@ export interface PermissionMatrixItem {
   smeAdmin: string;
   operation: string;
   investigator: string;
-  viewer: string;
 }
 
 export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
@@ -211,7 +212,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Gửi đặc tả",
     operation: "Không",
     investigator: "Không",
-    viewer: "Không",
   },
   {
     capability: "Kiểm thử Sandbox & Quản lý Version Rule (v1, v2...)",
@@ -221,7 +221,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Gửi Change Request",
     operation: "Không",
     investigator: "Không",
-    viewer: "Không",
   },
   {
     capability: "Xem Dashboard tổng quan & Phân tích rủi ro",
@@ -231,7 +230,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Toàn doanh nghiệp",
     operation: "Toàn doanh nghiệp",
     investigator: "Chỉ theo dõi ca trực",
-    viewer: "Có (Read-only)",
   },
   {
     capability: "Xem danh sách giao dịch & AI Detection Explanation",
@@ -241,7 +239,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Có",
     operation: "Có",
     investigator: "Theo ca trực / case",
-    viewer: "Có (Read-only)",
   },
   {
     capability: "Phân công Case cho Điều tra viên (Assign Case)",
@@ -251,7 +248,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Có quyền",
     operation: "Có (Trách nhiệm chính)",
     investigator: "Không",
-    viewer: "Không",
   },
   {
     capability: "Xem Hàng đợi Case (Case Queue)",
@@ -261,7 +257,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Toàn bộ",
     operation: "Toàn bộ (Mọi trạng thái)",
     investigator: "Chỉ 'My Cases' được giao",
-    viewer: "Toàn bộ (Read-only)",
   },
   {
     capability: "Thêm ghi chú điều tra & Gửi báo cáo kết luận (Submit Report)",
@@ -271,7 +266,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Có quyền",
     operation: "Có quyền",
     investigator: "Có (Nhiệm vụ chính)",
-    viewer: "Không (Read-only)",
   },
   {
     capability:
@@ -282,7 +276,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Có quyền",
     operation: "Có (Duyệt báo cáo)",
     investigator: "Không có quyền đóng",
-    viewer: "Không",
   },
   {
     capability: "Quản trị Project, thành viên & API Keys doanh nghiệp",
@@ -292,7 +285,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Có (Toàn quyền)",
     operation: "Không",
     investigator: "Không",
-    viewer: "Không",
   },
   {
     capability: "Xem Báo cáo phân tích & Xuất dữ liệu CSV",
@@ -302,7 +294,6 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Toàn doanh nghiệp",
     operation: "Toàn doanh nghiệp",
     investigator: "Không",
-    viewer: "Có (Read-only)",
   },
   {
     capability: "Xem Security Audit Trail (Nhật ký tuân thủ)",
@@ -312,6 +303,13 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     smeAdmin: "Trong doanh nghiệp",
     operation: "Trong doanh nghiệp",
     investigator: "Không",
-    viewer: "Read-only",
   },
 ];
+
+export function canSaveMember(actor: UserProfile, member: UserProfile, users: UserProfile[]): boolean {
+  if (actor.role !== 'SME Admin' || !actor.enterpriseId || member.enterpriseId !== actor.enterpriseId || member.id === actor.id || !['SME Admin','Operator','Investigator'].includes(member.role)) return false;
+  if (!member.name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email)) return false;
+  const previous = users.find(u => u.id === member.id);
+  if (previous && previous.enterpriseId !== actor.enterpriseId) return false;
+  return !users.some(u => u.id !== member.id && (u.email.toLowerCase() === member.email.toLowerCase() || u.enterpriseId === member.enterpriseId && u.name.toLowerCase() === member.name.toLowerCase()));
+}

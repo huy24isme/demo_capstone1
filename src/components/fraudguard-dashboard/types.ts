@@ -157,6 +157,7 @@ export interface RuleTemplate {
 /* ── View types ── */
 
 export type SecondaryView =
+  | "members"
   | "risk-overview"
   | "recent-alerts"
   | "active-cases"
@@ -221,9 +222,9 @@ export interface AuditLogEntry {
 
 export type UserRole =
   | "Platform Admin"
-  | "Deployment Staff"
+  | "Implementation Staff"
   | "SME Admin"
-  | "Operation"
+  | "Operator"
   | "Investigator"
   | "Viewer";
 

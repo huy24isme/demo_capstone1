@@ -7,7 +7,7 @@ export const initialAuditLogs: AuditLogEntry[] = [
     actor: {
       name: "Đặng Tuấn Kiệt",
       email: "kiet.dt@abcfashion.vn",
-      role: "Operation",
+      role: "Operator",
     },
     action: "CASE_STATUS_UPDATED",
     target: "CASE-FG-1023",
@@ -59,7 +59,7 @@ export const initialAuditLogs: AuditLogEntry[] = [
     actor: {
       name: "Đặng Tuấn Kiệt",
       email: "kiet.dt@abcfashion.vn",
-      role: "Operation",
+      role: "Operator",
     },
     action: "CASE_STATUS_UPDATED",
     target: "CASE-2026-0895",
@@ -98,7 +98,7 @@ export const initialAuditLogs: AuditLogEntry[] = [
     actor: {
       name: "Đặng Tuấn Kiệt",
       email: "kiet.dt@abcfashion.vn",
-      role: "Operation",
+      role: "Operator",
     },
     action: "CASE_STATUS_UPDATED",
     target: "CASE-2026-0870",
@@ -111,7 +111,7 @@ export const initialAuditLogs: AuditLogEntry[] = [
     actor: {
       name: "Đặng Tuấn Kiệt",
       email: "kiet.dt@abcfashion.vn",
-      role: "Operation",
+      role: "Operator",
     },
     action: "EXPORT_GENERATED",
     target: "REPORT-SEP-W4",

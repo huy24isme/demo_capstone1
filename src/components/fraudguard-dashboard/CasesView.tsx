@@ -21,12 +21,13 @@ import {
   Eye,
   Send,
 } from "lucide-react";
-import { AVAILABLE_INVESTIGATORS } from "./AlertCaseDrawer";
+
 import { useLanguage } from "./i18n/LanguageContext";
 import type { TranslationKey } from "./i18n/translations";
 
 interface CasesViewProps {
   transactions: TransactionRisk[];
+  investigators?: string[];
   onUpdateTransaction: (updated: TransactionRisk) => void;
   onReview: (transaction: TransactionRisk) => void;
   permissions?: RolePermissions;
@@ -87,11 +88,12 @@ type OperationQueueTab = "all" | "unassigned" | "in-field" | "reported" | "compl
 type InvestigatorTaskTab = "all" | "todo" | "investigating" | "reported" | "completed";
 
 export function CasesView({
+  investigators = [],
   transactions,
   onUpdateTransaction,
   onReview,
   permissions,
-  currentRole = "Operation",
+  currentRole = "Operator",
   currentUserName = "Trần Mai Anh",
 
 }: CasesViewProps) {
@@ -124,7 +126,7 @@ export function CasesView({
 
   // All valid cases across the system
   const allCases = useMemo(() => {
-    return transactions.filter((t) => t.caseId);
+    return transactions.filter((t) => t.caseId && t.scoringSource === "AI" && t.riskLevel === "Abnormal");
   }, [transactions]);
 
   // Projects list for filtering
@@ -1068,7 +1070,7 @@ export function CasesView({
                         <option value="" disabled style={{ background: "var(--security-panel)", color: "var(--security-muted)" }}>
                           {t.actions.assignInvestigator}
                         </option>
-                        {AVAILABLE_INVESTIGATORS.map((inv) => (
+                        {investigators.map((inv) => (
                           <option
                             key={inv}
                             value={inv}

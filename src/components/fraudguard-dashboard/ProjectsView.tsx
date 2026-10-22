@@ -299,7 +299,7 @@ export function ProjectsView({
           filteredProjects.map((project) => {
             const isRevealed = showKey[project.id];
             const quotaRate = Math.round(
-              (project.quota.used / project.quota.total) * 100,
+              project.quota.total > 0 ? (project.quota.used / project.quota.total) * 100 : 0,
             );
             return (
               <article key={project.id} className={styles.projectCard}>

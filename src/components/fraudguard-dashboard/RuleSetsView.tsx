@@ -6,27 +6,29 @@ import { type ManagedRuleSet, snapshotRules, testDraft, canPublishSet, publishSe
 import { RuleSetTestingView } from './RuleSetTestingView';
 import { canDeploy, visibleEnterprises, type Enterprise } from '@/data/fraudguard-enterprises';
 import { DEMO_USERS } from '@/data/fraudguard-roles';
+import { parseRuleSetSamples } from '@/lib/rule-set';
 import { candidateRule } from '@/lib/rule-lifecycle';
 import { useLanguage } from './i18n/LanguageContext';
 import styles from './SecurityDashboard.module.css';
 import { EnterpriseRulesView } from './EnterpriseRulesView';
 import { ReadableConditions, transactionLabel } from './ReadableConditions';
-interface Props { sets: ManagedRuleSet[]; rules: RuleTemplate[]; projects: ProjectItem[]; enterprises: Enterprise[]; currentUser: UserProfile; reviewer: string; onChange: (sets: ManagedRuleSet[], event: string) => void; onOpenLibrary: (enterpriseId: string) => void; onAssign: (enterpriseId: string, staffId: string) => void }
-export function RuleSetsView({ sets, rules, projects, enterprises, currentUser, reviewer, onChange, onOpenLibrary, onAssign }: Props) {
+interface Props { initialEnterpriseId?: string; sets: ManagedRuleSet[]; rules: RuleTemplate[]; projects: ProjectItem[]; enterprises: Enterprise[]; currentUser: UserProfile; reviewer: string; onChange: (sets: ManagedRuleSet[], event: string) => void; onOpenLibrary: (enterpriseId: string) => void; onAssign: (enterpriseId: string, staffId: string) => void }
+export function RuleSetsView({ initialEnterpriseId, sets, rules, projects, enterprises, currentUser, reviewer, onChange, onOpenLibrary, onAssign }: Props) {
   const { language } = useLanguage(); const vi = language === 'vi';
-  const [selected, setSelected] = useState('');
+  const [selected, setSelected] = useState(sets.find(s => s.enterpriseId === initialEnterpriseId)?.id ?? '');
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
   const [enterpriseId, setEnterpriseId] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const allowed = visibleEnterprises(currentUser, enterprises);
-  const isInternal = ['Platform Admin', 'Deployment Staff'].includes(currentUser.role);
+  const isInternal = ['Platform Admin', 'Implementation Staff'].includes(currentUser.role);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
   const [approved, setApproved] = useState(false);
   const selectedSet = sets.find(s => s.id === selected);
   const enterprise = allowed.find(e => e.id === selectedSet?.enterpriseId);
+  const specificationReady = !enterprise?.specification || !!enterprise.specification.confirmedAt;
   const canManage = !!enterprise && canDeploy(currentUser, enterprise);
   const visible = enterprise && isInternal ? selectedSet : undefined;
   const enterpriseName = (id: string) => enterprises.find(e => e.id === id)?.name ?? id;
@@ -49,8 +51,11 @@ export function RuleSetsView({ sets, rules, projects, enterprises, currentUser, 
     try { update({ ...visible, draft: { rules: snapshotRules(rules.filter(r => ids.includes(r.id)), visible.projectIds) } }, 'Cập nhật bản nháp ' + visible.name); } catch(e) { setError((e as Error).message); }
   }
   const eligible = visible ? rules.filter(r => { const c = candidateRule(r); return (!r.enterpriseId || r.enterpriseId === visible.enterpriseId) && (c.appliesTo.projects.includes('*') || c.appliesTo.projects.some(id => visible.projectIds.includes(id))); }) : [];
+  let onboardingSamples;
+  try { if (enterprise?.specification?.confirmedAt) onboardingSamples = parseRuleSetSamples(enterprise.specification.sampleJson); } catch { /* Invalid saved samples remain unavailable. */ }
   const test = visible?.draft?.test;
   const blockers: string[] = [];
+  if (!specificationReady) blockers.push(vi ? 'Xác nhận đặc tả doanh nghiệp trước khi phát hành hoặc bàn giao.' : 'Confirm the enterprise specification before publishing or handing over.');
   if (visible?.draft) {
     if (!visible.draft.rules.length) blockers.push(vi ? 'Tập chưa có rule. Chọn ít nhất một rule trước khi kiểm thử.' : 'Select at least one rule before testing.');
     if (!test) blockers.push(vi ? 'Chưa có kiểm thử hợp lệ cho bản nháp hiện tại. Bấm Chạy kiểm thử sau khi sửa dữ liệu hoặc thành phần tập.' : 'Run a test after editing the dataset or draft members.');
@@ -88,7 +93,7 @@ export function RuleSetsView({ sets, rules, projects, enterprises, currentUser, 
         const status = stageLabels[stage];
         return <tr key={owner.id}>
           <td><div className={styles.setEnterprise}><span className={styles.setEnterpriseIcon}><Building2 size={18} /></span><div><strong>{owner.name}</strong><span className={styles.ruleCaption}>{set?.name ?? (vi ? 'Chưa có tập quy tắc' : 'No rule set yet')}</span></div></div><div className={styles.setProjects}>{owner.projectIds.map(id => <span key={id} className={styles.ruleTag}>{projectName(id)}</span>)}{!owner.projectIds.length && <span className={styles.muted}>{vi ? 'Chưa có dự án' : 'No projects'}</span>}</div></td>
-          <td>{currentUser.role === 'Platform Admin' ? <select aria-label={(vi ? 'Phân công ' : 'Assign ') + owner.name} className={styles.control} value={owner.deploymentStaffId} onChange={e => onAssign(owner.id, e.target.value)}>{DEMO_USERS.filter(u => u.role === 'Deployment Staff').map(u => <option value={u.id} key={u.id}>{u.name}</option>)}</select> : DEMO_USERS.find(u => u.id === owner.deploymentStaffId)?.name ?? owner.deploymentStaffId}</td>
+          <td>{currentUser.role === 'Platform Admin' ? <select aria-label={(vi ? 'Phân công ' : 'Assign ') + owner.name} className={styles.control} value={owner.deploymentStaffId} onChange={e => onAssign(owner.id, e.target.value)}>{DEMO_USERS.filter(u => u.role === 'Implementation Staff').map(u => <option value={u.id} key={u.id}>{u.name}</option>)}</select> : DEMO_USERS.find(u => u.id === owner.deploymentStaffId)?.name ?? owner.deploymentStaffId}</td>
           <td>{set?.activeVersion ? <><span className={styles.setVersion}>v{set.activeVersion}.0</span><span className={styles.ruleCaption}>{set.versions.find(v => v.version === set.activeVersion)?.rules.length ?? 0} {vi ? 'quy tắc' : 'rules'}</span></> : <span className={styles.muted}>{vi ? 'Chưa kích hoạt' : 'Not active'}</span>}</td>
           <td><span className={styles.setStatus} data-stage={stage}><i aria-hidden="true" />{status}</span><span className={styles.ruleCaption}>{set?.draft && handed ? (vi ? 'Bản hiện tại vẫn đã bàn giao' : 'Current release remains handed over') : stage === 'draft' ? (vi ? 'Chuẩn bị phiên bản tiếp theo' : 'Preparing the next release') : stage === 'handover' ? (vi ? 'Sẵn sàng gửi doanh nghiệp' : 'Ready for enterprise handover') : stage === 'activation' ? (vi ? 'Đã phát hành, chưa áp dụng' : 'Published, not yet applied') : ''}</span></td>
           <td>{set ? <button className={`${styles.button} ${styles.setOpenButton}`} aria-label={(vi ? 'Xem chi tiết ' : 'View details for ') + owner.name} onClick={() => { setSelected(set.id); setCreating(false); setNote(''); setApproved(false); setError(''); }}>{vi ? 'Xem chi tiết' : 'View details'}<ArrowRight size={15} /></button> : canDeploy(currentUser, owner) ? <><button className={styles.button} disabled={!owner.projectIds.length} onClick={() => { setEnterpriseId(owner.id); setName(owner.name + ' Rules'); setCreating(true); setSelected(''); }}><Plus size={15} />{vi ? 'Thiết lập' : 'Set up'}</button>{!owner.projectIds.length && <div className={styles.muted}>{vi ? 'Thêm dự án để bắt đầu' : 'Add a project to begin'}</div>}</> : <span className={styles.muted}>{vi ? 'Chưa có tập để xem' : 'No set to view'}</span>}</td>
@@ -124,7 +129,7 @@ export function RuleSetsView({ sets, rules, projects, enterprises, currentUser, 
           </details>;
         })}</div>
       </section> : null}
-      {canManage && visible.activeVersion && visible.handover?.version !== visible.activeVersion && <section className={styles.panel}><p>{vi ? 'Bàn giao phiên bản đang kích hoạt cho SME Portal trong demo. Không tạo tài khoản hoặc cấp quyền backend thật.' : 'Hand over the active version to the demo SME portal. No real backend access is provisioned.'}</p><button className={styles.button} onClick={() => update({ ...visible, handover: { version: visible.activeVersion!, by: reviewer, at: new Date().toISOString() } }, 'Bàn giao tập rule ' + visible.name)}>{vi ? 'Xác nhận bàn giao demo' : 'Confirm demo handover'}</button></section>}
+      {canManage && visible.activeVersion && visible.handover?.version !== visible.activeVersion && <section className={styles.panel}><p>{vi ? 'Bàn giao phiên bản đang kích hoạt cho SME Portal trong demo. Không tạo tài khoản hoặc cấp quyền backend thật.' : 'Hand over the active version to the demo SME portal. No real backend access is provisioned.'}</p><button className={styles.button} disabled={!specificationReady} onClick={() => update({ ...visible, handover: { version: visible.activeVersion!, by: reviewer, at: new Date().toISOString() } }, 'Bàn giao tập rule ' + visible.name)}>{vi ? 'Xác nhận bàn giao demo' : 'Confirm demo handover'}</button></section>}
       {canManage && visible.draft && <>
         <section className={styles.panel}><div className={styles.panelHeader}><h2>{vi ? 'Thành phần bản nháp' : 'Draft members'} · v{Math.max(0, ...visible.versions.map(v => v.version)) + 1}.0</h2><button className={styles.button} onClick={() => onOpenLibrary(visible.enterpriseId)}>{vi ? 'Mở thư viện để tạo / sửa rule' : 'Open rule library'}</button></div>
           <p className={styles.muted}>{vi ? 'Chọn rule để lưu bản sao điều kiện vào tập. [draft] là bản nháp từ thư viện; phiên bản tập rule quản lý bản sao này. Thay đổi thư viện không tự sửa tập đã lưu.' : 'Selection snapshots rule definitions. [draft] identifies a library draft. Library changes do not alter saved sets.'}</p>
@@ -132,14 +137,14 @@ export function RuleSetsView({ sets, rules, projects, enterprises, currentUser, 
           {visible.draft.rules.some(r => !eligible.some(e => e.id === r.id)) && <p className={styles.muted}>{vi ? 'Có bản sao rule không còn trong thư viện / phạm vi hiện tại. Cập nhật từ thư viện để loại bỏ các bản sao đó.' : 'Some snapshots are no longer in the library or scope. Refresh to remove them.'}</p>}
           <button className={styles.button} onClick={() => saveMembers(visible.draft!.rules.map(r => r.id))}>{vi ? 'Cập nhật bản sao từ thư viện (cần kiểm thử lại)' : 'Refresh snapshots from library (retest required)'}</button>
         </section>
-        <RuleSetTestingView key={visible.id + JSON.stringify(visible.draft.rules)} rules={visible.draft.rules} projects={projects.filter(p => visible.projectIds.includes(p.id))} allowedProjectIds={visible.projectIds} enterpriseLabel={enterpriseName(visible.enterpriseId)} initialSamples={visible.draft.test?.samples} draftMode onTestInvalidated={() => { if (visible.draft?.test) update({ ...visible, draft: { rules: visible.draft.rules } }, 'Thay đổi dữ liệu kiểm thử ' + visible.name); }} onTestCompleted={samples => { try { const test = testDraft(visible, samples); update({ ...visible, draft: { ...visible.draft!, test } }, 'Kiểm thử tập ' + visible.name); } catch(e) { setError((e as Error).message); } }} />
+        <RuleSetTestingView key={visible.id + JSON.stringify(visible.draft.rules)} rules={visible.draft.rules} projects={projects.filter(p => visible.projectIds.includes(p.id))} allowedProjectIds={visible.projectIds} enterpriseLabel={enterpriseName(visible.enterpriseId)} initialSamples={visible.draft.test?.samples ?? onboardingSamples} draftMode onTestInvalidated={() => { if (visible.draft?.test) update({ ...visible, draft: { rules: visible.draft.rules } }, 'Thay đổi dữ liệu kiểm thử ' + visible.name); }} onTestCompleted={samples => { try { const test = testDraft(visible, samples); update({ ...visible, draft: { ...visible.draft!, test } }, 'Kiểm thử tập ' + visible.name); } catch(e) { setError((e as Error).message); } }} />
         <section className={styles.panel}><h2>{vi ? 'Review và phát hành' : 'Review and publish'}</h2>
           {visible.draft.test ? <p role="status">{visible.draft.test.samples.length} {vi ? 'mẫu' : 'samples'} · {visible.draft.test.labeled} {vi ? 'có nhãn' : 'labeled'} · {visible.draft.test.mismatched} {vi ? 'lệch kỳ vọng' : 'mismatches'} · {visible.draft.test.complete ? (vi ? 'Đánh giá đầy đủ; tất cả rule đã được chạy' : 'Complete; all rules exercised') : (vi ? 'Chưa đủ: kiểm tra lỗi, phạm vi mẫu và độ bao phủ rule' : 'Incomplete: check errors, scope and rule coverage')}</p> : <p>{vi ? 'Chưa có kết quả kiểm thử bản nháp này.' : 'This draft has not been tested.'}</p>}
           {blockers.length > 0 && <div role="status" className={styles.sandboxAdvanced}><strong>{vi ? 'Các việc cần xử lý trước khi phát hành' : 'Resolve before publication'}</strong><ul>{blockers.map((reason, index) => <li key={index}>{reason}</li>)}</ul><p className={styles.muted}>{vi ? 'Sửa dữ liệu hoặc phạm vi rule, chạy lại kiểm thử, sau đó review và xác nhận. Giao dịch bất thường và mẫu chưa gán nhãn không tự làm khóa phát hành.' : 'Correct data or rule scope, rerun, then review and confirm. Abnormal results and unlabeled samples do not block publication by themselves.'}</p></div>}
           <p className={styles.muted}>{vi ? 'Mọi mẫu phải đánh giá đầy đủ và không lệch nhãn đã cung cấp; tất cả rule trong tập phải được kiểm thử. Mẫu không có nhãn cần người review đối chiếu đặc tả. Phát hành không tự kích hoạt.' : 'All samples must complete without labeled mismatches; every member must be exercised. Unlabeled samples require manual specification review. Publishing does not activate the release.'}</p>
           <label className={styles.drawerLabel}>{vi ? 'Nhận xét review / cơ sở đối chiếu đặc tả' : 'Review notes / specification evidence'}<textarea className={`${styles.control} ${styles.sandboxJson}`} value={note} onChange={e => { setNote(e.target.value); setApproved(false); }} /></label>
           <label className={styles.sandboxActions}><input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} />{vi ? 'Tôi đã kiểm tra kết quả theo đặc tả và chấp thuận phiên bản này.' : 'I reviewed the results against the specification and approve this version.'}</label>
-          <button className={`${styles.drawerPrimaryBtn} ${styles.sandboxAction}`} disabled={!canPublishSet(visible) || !note.trim() || !approved} onClick={() => { try { update(publishSet(visible, reviewer, note), 'Phát hành tập ' + visible.name); } catch(e) { setError((e as Error).message); } }}>{vi ? 'Phát hành phiên bản tập rule' : 'Publish rule set version'}</button>
+          <button className={`${styles.drawerPrimaryBtn} ${styles.sandboxAction}`} disabled={!specificationReady || !canPublishSet(visible) || !note.trim() || !approved} onClick={() => { try { update(publishSet(visible, reviewer, note), 'Phát hành tập ' + visible.name); } catch(e) { setError((e as Error).message); } }}>{vi ? 'Phát hành phiên bản tập rule' : 'Publish rule set version'}</button>
         </section>
       </>}
       <section className={styles.panel}>
@@ -152,7 +157,7 @@ export function RuleSetsView({ sets, rules, projects, enterprises, currentUser, 
             <div className={styles.releaseReview}><span>{vi ? 'Nhận xét review' : 'Review notes'}</span><p>{v.reviewNote}</p></div>
             <h3>{vi ? 'Quy tắc trong phiên bản' : 'Rules in this release'} <span className={styles.muted}>({v.rules.length})</span></h3>
             <div className={styles.releaseRuleList}>{v.rules.map(ruleDetails)}</div>
-            {canManage && <div className={styles.releaseActions}><span className={styles.ruleCaption}>{visible.activeVersion === v.version ? (vi ? 'Doanh nghiệp đang sử dụng phiên bản này.' : 'This release is currently active.') : (vi ? 'Kích hoạt sẽ thay thế phiên bản đang áp dụng.' : 'Activation replaces the currently active release.')}</span><button className={styles.button} disabled={visible.activeVersion === v.version} onClick={() => onChange(activateSet(sets, visible.id, v.version), `Kích hoạt ${visible.name} v${v.version}.0`)}>{vi ? 'Kích hoạt cho doanh nghiệp' : 'Activate for enterprise'}</button></div>}
+            {canManage && <div className={styles.releaseActions}><span className={styles.ruleCaption}>{visible.activeVersion === v.version ? (vi ? 'Doanh nghiệp đang sử dụng phiên bản này.' : 'This release is currently active.') : (vi ? 'Kích hoạt sẽ thay thế phiên bản đang áp dụng.' : 'Activation replaces the currently active release.')}</span><button className={styles.button} disabled={!specificationReady || visible.activeVersion === v.version} onClick={() => onChange(activateSet(sets, visible.id, v.version), `Kích hoạt ${visible.name} v${v.version}.0`)}>{vi ? 'Kích hoạt cho doanh nghiệp' : 'Activate for enterprise'}</button></div>}
           </div>
         </details>)}</div>
       </section>

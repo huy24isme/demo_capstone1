@@ -12,6 +12,7 @@ import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface ProductHeaderProps {
+  users: UserProfile[];
   enterprises: Enterprise[];
   activeViewTitle?: string;
   theme?: "dark" | "light";
@@ -22,6 +23,7 @@ interface ProductHeaderProps {
 }
 
 export function ProductHeader({
+  users,
   enterprises,
   activeViewTitle = "Risk Overview",
   theme = "dark",
@@ -49,7 +51,7 @@ export function ProductHeader({
       <div className={styles.headerRight}>
         {/* Role Switcher (RBAC) */}
         {currentUser && onSwitchUser && (
-          <RoleSwitcher currentUser={currentUser} onSwitchUser={onSwitchUser} enterprises={enterprises} />
+          <RoleSwitcher users={users} currentUser={currentUser} onSwitchUser={onSwitchUser} enterprises={enterprises} />
         )}
 
         {/* Language Toggle Button */}
