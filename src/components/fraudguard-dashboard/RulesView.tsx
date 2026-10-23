@@ -11,6 +11,7 @@ import type {
 } from "./types";
 import { candidateRule, saveRuleDraft } from "@/lib/rule-lifecycle";
 import { RuleBuilder } from "./RuleBuilder";
+import { ReadableConditions } from "./ReadableConditions";
 import { RuleDetailDrawer } from "./RuleDetailDrawer";
 import { useToast } from "./ToastProvider";
 import { useLanguage } from "./i18n/LanguageContext";
@@ -367,6 +368,13 @@ export function RulesView({ initialRules, onRulesChange, permissions, onNavigate
               className={styles.panel}
               style={{ padding: "16px", opacity: rule.enabled ? 1 : 0.65 }}
             >
+              {rule.draft && <section className={styles.workflowDetails} style={{marginBottom: 16}} aria-label={language === 'vi' ? 'Bản nháp đã lưu' : 'Saved draft'}>
+                <strong>{language === 'vi' ? 'Bản nháp đã lưu — nội dung sẽ dùng khi kiểm thử' : 'Saved draft — used for the next test'}</strong>
+                <ReadableConditions node={rule.draft.conditionGroup} vi={language === 'vi'} />
+                <p className={styles.muted}>{language === 'vi' ? 'Phạm vi bản nháp: ' : 'Draft scope: '}{rule.draft.appliesTo.projects.join(', ')}</p>
+                <button className={styles.button} onClick={() => handleEdit(rule)}>{language === 'vi' ? 'Tiếp tục sửa bản nháp' : 'Continue editing draft'}</button>
+              </section>}
+              {rule.draft && <p className={styles.muted}>{language === 'vi' ? 'Thông tin bên dưới thuộc phiên bản đã phát hành; chưa thay đổi theo bản nháp.' : 'The published version below has not changed with the draft.'}</p>}
               {/* Header */}
               <div
                 style={{

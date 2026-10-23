@@ -11,12 +11,16 @@ import {
   RefreshCw,
    Check,
 } from "lucide-react";
-import type { ProjectItem, RolePermissions } from "./types";
+import type { ProjectItem, RolePermissions, TransactionRisk } from "./types";
 import { useToast } from "./ToastProvider";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
+import { enterprisePlan, type Enterprise } from '@/data/fraudguard-enterprises';
+
 interface ProjectsViewProps {
+  enterprise?: Enterprise;
+  transactions: TransactionRisk[];
   initialProjects: ProjectItem[];
   onProjectsChange: React.Dispatch<React.SetStateAction<ProjectItem[]>>;
   permissions?: RolePermissions;
@@ -24,6 +28,7 @@ interface ProjectsViewProps {
 }
 
 export function ProjectsView({
+  enterprise, transactions,
   initialProjects,
   onProjectsChange,
   permissions,
@@ -31,6 +36,7 @@ export function ProjectsView({
 }: ProjectsViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
+  const plan = enterprise ? enterprisePlan(enterprise) : undefined;
   const canManage = permissions ? permissions.canManageProjects : true;
   const { toast } = useToast();
   const projects = initialProjects;
@@ -69,16 +75,16 @@ export function ProjectsView({
   }, [projects, filterEnv, search]);
 
   const stats = useMemo(() => {
-    const totalCalls = projects.reduce((acc, p) => acc + p.quota.used, 0);
-    const totalCap = projects.reduce((acc, p) => acc + p.quota.total, 0);
+    const totalCalls = transactions.filter(tx => projects.some(p => p.id === tx.projectId)).length;
+
     return {
       total: projects.length,
       prod: projects.filter((p) => p.environment === "Production").length,
       staging: projects.filter((p) => p.environment === "Staging").length,
       totalCalls,
-      quotaPercent: totalCap > 0 ? Math.round((totalCalls / totalCap) * 100) : 0,
+
     };
-  }, [projects]);
+  }, [projects, transactions]);
 
   const toggleShowKey = (id: string) => {
     setShowKey((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -175,7 +181,7 @@ export function ProjectsView({
       apiKey: newKey,
       quota: {
         used: 0,
-        total: newProjectEnv === "Production" ? 50000 : 10000,
+        total: 0,
         resetDate: "2026-10-01",
       },
       status: "Active",
@@ -226,31 +232,15 @@ export function ProjectsView({
           </span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statLabel}>{t.projectsView.kpis.calls}</div>
+          <div className={styles.statLabel}>{language==='vi'?'Giao dịch đã lưu':'Saved transactions'}</div>
           <strong className={styles.statValue}>
             {stats.totalCalls.toLocaleString(dateLocale)}
           </strong>
           <span className={styles.statDescription}>
-            {t.projectsView.kpis.callsDesc}
+            {language==='vi'?'Dữ liệu demo trong phạm vi hiển thị':'Demo transactions in the displayed scope'}
           </span>
         </article>
-        <article className={styles.statCard}>
-          <div className={styles.statLabel}>{t.projectsView.kpis.quota}</div>
-          <strong
-            className={styles.statValue}
-            style={{
-              color:
-                stats.quotaPercent > 80
-                  ? "var(--security-orange)"
-                  : "var(--security-green)",
-            }}
-          >
-            {stats.quotaPercent}%
-          </strong>
-          <span className={styles.statDescription}>
-            {t.projectsView.kpis.quotaDesc}
-          </span>
-        </article>
+        <article className={styles.statCard}><div className={styles.statLabel}>{language==='vi'?'Hạn mức phân tích AI':'AI analysis allowance'}</div><strong className={styles.statValue}>{plan==='Free'?(language==='vi'?'Không áp dụng':'Not applicable'):(language==='vi'?'Chưa thiết lập':'Not configured')}</strong><span className={styles.statDescription}>{language==='vi'?'Kiểm tra bằng quy tắc không tính lượt AI.':'Rule checks do not consume AI usage.'}</span></article>
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.projectsView.kpis.status}</div>
           <strong
@@ -298,9 +288,7 @@ export function ProjectsView({
         ) : (
           filteredProjects.map((project) => {
             const isRevealed = showKey[project.id];
-            const quotaRate = Math.round(
-              project.quota.total > 0 ? (project.quota.used / project.quota.total) * 100 : 0,
-            );
+
             return (
               <article key={project.id} className={styles.projectCard}>
                 {/* Header */}
@@ -428,29 +416,7 @@ export function ProjectsView({
                   </div>
                 </div>
 
-                {/* Monthly Quota Bar */}
-                <div className={styles.quotaSection}>
-                  <div className={styles.quotaHeader}>
-                    <span>{t.projectsView.card.quota}</span>
-                    <span>
-                      {project.quota.used.toLocaleString(dateLocale)} /{" "}
-                      {project.quota.total.toLocaleString(dateLocale)} ({quotaRate}%)
-                    </span>
-                  </div>
-                  <div className={styles.quotaBar}>
-                    <div
-                      className={styles.quotaFill}
-                      style={{
-                        width: `${Math.min(quotaRate, 100)}%`,
-                        background:
-                          quotaRate > 80
-                            ? "var(--security-orange)"
-                            : "var(--security-blue)",
-                      }}
-                    />
-                  </div>
-                </div>
-
+                <div className={styles.quotaSection}><p>{language==='vi'?'Gói dịch vụ: ':'Service plan: '}{plan??(language==='vi'?'Chưa chọn':'Not selected')}</p><p>{language==='vi'?'Giao dịch đã lưu: ':'Saved transactions: '}{transactions.filter(tx=>tx.projectId===project.id).length.toLocaleString(dateLocale)}</p><p className={styles.muted}>{plan==='Free'?(language==='vi'?'Chỉ dùng quy tắc. Không áp dụng hạn mức AI.':'Rules only. AI allowance does not apply.'):(language==='vi'?'Lượt có nguồn AI: ':'Transactions with AI source: ')+transactions.filter(tx=>tx.projectId===project.id&&tx.scoringSource==='AI').length.toLocaleString(dateLocale)}</p></div>
               </article>
             );
           })

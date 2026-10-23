@@ -13,6 +13,7 @@ import type {
   UserRole,
 } from "./types";
 import { RuleEvaluationDetails } from "./RuleEvaluationDetails";
+import { transactionLabel } from "./ReadableConditions";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
 import { useToast } from "./ToastProvider";
@@ -460,7 +461,7 @@ export function AlertCaseDrawer({
           <button
             className={styles.drawerCloseBtn}
             onClick={onClose}
-            aria-label="Close drawer"
+            aria-label={language === 'vi' ? 'Đóng chi tiết giao dịch' : 'Close transaction details'}
             type="button"
           >
             ✕
@@ -524,7 +525,7 @@ export function AlertCaseDrawer({
             </div>
             <div className={styles.drawerRow}>
               <span className={styles.drawerLabel}>{t.drawer.txnType}</span>
-              <span>{transaction.transactionType}</span>
+              <span>{transactionLabel(transaction.transactionType, language === 'vi')}</span>
             </div>
             {transaction.channel && (
               <div className={styles.drawerRow}>

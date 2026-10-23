@@ -1,3 +1,5 @@
+"use client";
+import { useLanguage } from "./i18n/LanguageContext";
 import type { ScoringSource } from "./types";
 import styles from "./SecurityDashboard.module.css";
 
@@ -9,14 +11,16 @@ const sourceClass: Record<ScoringSource, string> = {
 
 const sourceLabel: Record<ScoringSource, string> = {
   AI: "AI",
-  RULE: "Rule",
-  RULE_FALLBACK: "Fallback",
+  RULE: "Rules",
+  RULE_FALLBACK: "Fallback rules",
 };
 
 export function ScoringSourceBadge({ source }: { source: ScoringSource }) {
+  const { language } = useLanguage();
+  const label = language === "vi" ? ({ AI: "AI", RULE: "Quy tắc", RULE_FALLBACK: "Quy tắc dự phòng" } as const)[source] : sourceLabel[source];
   return (
     <span className={`${styles.scoringBadge} ${sourceClass[source]}`}>
-      {sourceLabel[source]}
+      {label}
     </span>
   );
 }

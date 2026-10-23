@@ -22,3 +22,7 @@ export function canUpdateCase(previous: TransactionRisk, updated: TransactionRis
   if (updated.caseStatus === 'Investigating') return previous.caseStatus === 'Reported';
   return false;
 }
+
+export function isActiveInvestigation(transaction: TransactionRisk): boolean {
+  return transaction.scoringSource === 'AI' && transaction.riskLevel === 'Abnormal' && !!transaction.caseId && ['Open', 'Assigned', 'Investigating', 'Reported'].includes(transaction.caseStatus ?? '');
+}

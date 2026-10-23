@@ -15,7 +15,7 @@ import type {
 } from "./types";
 import { previewTransactionImport } from "@/lib/transaction-import";
 import { parseRuleSetSamples } from "@/lib/rule-set";
-import { canUpdateCase } from "@/lib/case-workflow";
+import { canUpdateCase, isActiveInvestigation } from "@/lib/case-workflow";
 import { demoEnterprises, visibleEnterprises, canDeploy, transactionsForEnterprise, type Enterprise } from '@/data/fraudguard-enterprises';
 import { MembersView } from "./MembersView";
 import { Sidebar } from "./Sidebar";
@@ -38,7 +38,7 @@ import { AuditTrailView } from "./AuditTrailView";
 import { PlatformHealthView } from "./PlatformHealthView";
 import { initialProjects } from "../../data/fraudguard-projects";
 import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
-import { DEMO_USERS, DEFAULT_DEMO_USER, canSaveMember, getRoleHomeView, getRolePermissions } from "../../data/fraudguard-roles";
+import { DEMO_USERS, DEFAULT_DEMO_USER, canSaveMember, canProvisionEnterpriseAdmin, getRoleHomeView, getRolePermissions } from "../../data/fraudguard-roles";
 import { ToastProvider } from "./ToastProvider";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
 import { OnboardingView } from "./OnboardingView";
@@ -291,13 +291,7 @@ function FraudGuardDashboardContent({
       openAlerts: visibleTransactions.filter(
         (transaction) => transaction.alertId && !transaction.caseId,
       ).length,
-      activeCases: visibleTransactions.filter(
-        (transaction) =>
-          transaction.caseStatus === "Open" ||
-          transaction.caseStatus === "Assigned" ||
-          transaction.caseStatus === "Investigating" ||
-          transaction.caseStatus === "Reported",
-      ).length,
+      activeCases: visibleTransactions.filter(isActiveInvestigation).length,
     };
   }, [visibleTransactions]);
 
@@ -380,9 +374,10 @@ function FraudGuardDashboardContent({
         }} />;
       case "onboarding":
         if (!['Platform Admin','Implementation Staff'].includes(currentUser.role)) return <p>{language === 'vi' ? 'Chỉ nhân sự FraudGuard được thiết lập doanh nghiệp.' : 'Internal staff only.'}</p>;
-        return <OnboardingView enterprises={accessibleEnterprises} users={users} currentUser={currentUser} sets={ruleSets} onCreate={(name,staffId)=>{
-          if(currentUser.role!=='Platform Admin'||!name.trim()||enterprises.some(e=>e.name.toLowerCase()===name.trim().toLowerCase())||!users.some(u=>u.id===staffId&&u.role==='Implementation Staff'))return false;
+        return <OnboardingView enterprises={accessibleEnterprises} users={users} currentUser={currentUser} sets={ruleSets} onCreate={(name,staffId,adminName,adminEmail)=>{
+          if(!canProvisionEnterpriseAdmin(currentUser,adminName,adminEmail,users)||!name.trim()||enterprises.some(e=>e.name.toLowerCase()===name.trim().toLowerCase())||!users.some(u=>u.id===staffId&&u.role==='Implementation Staff'))return false;
           const id=crypto.randomUUID(),projectId='workspace-'+id;
+          setUsers(prev=>[...prev,{id:crypto.randomUUID(),enterpriseId:id,name:adminName.trim(),email:adminEmail.trim().toLowerCase(),role:'SME Admin',title:'Quản trị doanh nghiệp',avatarLetter:adminName.trim().charAt(0).toUpperCase(),avatarBg:'#7c3aed',description:'Tài khoản quản trị demo của '+name.trim()}]);
           setEnterprises(prev=>[...prev,{id,name:name.trim(),deploymentStaffId:staffId,projectIds:[projectId],specification:{requirements:'',fields:'',conditions:'',sampleJson:'',updatedAt:new Date().toISOString()}}]);
           setProjects(prev=>[...prev,{id:projectId,name:name.trim(),code:id,description:'Phạm vi triển khai chính',environment:'Staging',apiKey:'',quota:{used:0,total:0,resetDate:''},status:'Inactive',createdAt:new Date().toISOString()}]);
           recordAudit('PROJECT_UPDATED',id,'Tạo workspace và phân công triển khai: '+staffId);return true;
@@ -447,7 +442,7 @@ function FraudGuardDashboardContent({
         );
       case "projects":
         return (<><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={deploymentEnterprise?.id ?? ''} onChange={e => setDeploymentEnterpriseId(e.target.value)}>{accessibleEnterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>
-          <ProjectsView
+          <ProjectsView enterprise={deploymentEnterprise} transactions={transactions}
             initialProjects={projects.filter(p => deploymentEnterprise?.projectIds.includes(p.id))}
             onProjectsChange={action => { const selectedProjects = projects.filter(p => deploymentEnterprise?.projectIds.includes(p.id)); const next = typeof action === 'function' ? action(selectedProjects) : action; changeProjects([...projects.filter(p => assignedProjectIds.includes(p.id) && !deploymentEnterprise?.projectIds.includes(p.id)), ...next]); }}
             permissions={permissions}
@@ -467,7 +462,7 @@ function FraudGuardDashboardContent({
       case "audit-trail":
         return <AuditTrailView initialLogs={currentUser.role === 'Platform Admin' ? auditLogs : auditLogs.filter(log => log.actor.email === currentUser.email || accessibleEnterprises.some(e => log.target === e.id || log.target === e.name))} />;
       case "platform-health":
-        return <PlatformHealthView />;
+        return <PlatformHealthView enterprises={enterprises} transactions={transactions} onPlanChange={(id,plan)=>{if(currentUser.role!=='Platform Admin'||!['Free','Subscription'].includes(plan))return;setEnterprises(prev=>prev.map(e=>e.id===id?{...e,plan}:e));recordAudit('PROJECT_UPDATED',id,'Đổi gói demo: '+plan);}} />;
       case "risk-overview":
       default:
         return (

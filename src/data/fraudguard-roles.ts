@@ -313,3 +313,7 @@ export function canSaveMember(actor: UserProfile, member: UserProfile, users: Us
   if (previous && previous.enterpriseId !== actor.enterpriseId) return false;
   return !users.some(u => u.id !== member.id && (u.email.toLowerCase() === member.email.toLowerCase() || u.enterpriseId === member.enterpriseId && u.name.toLowerCase() === member.name.toLowerCase()));
 }
+
+export function canProvisionEnterpriseAdmin(actor: UserProfile, name: string, email: string, users: UserProfile[]): boolean {
+  return actor.role === 'Platform Admin' && !!name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && !users.some(user => user.email.toLowerCase() === email.trim().toLowerCase());
+}

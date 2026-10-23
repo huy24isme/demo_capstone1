@@ -18,6 +18,8 @@ export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions
   const [expanded, setExpanded] = useState<string | null>(null);
   const [run, setRun] = useState<{ signature: string; transactions: TransactionRisk[]; expectations: Array<string | undefined> } | null>(null);
   const [added, setAdded] = useState(false);
+  const duplicateRules = new Set(rules.map(r => r.id)).size !== rules.length;
+  const ruleError = duplicateRules ? (vi ? 'Tập quy tắc đang chọn có mã bị trùng. Mở Tập rule doanh nghiệp để kiểm tra bản nháp, kiểm thử và phát hành lại.' : 'The selected rule set contains duplicate IDs. Review its draft, retest and publish a corrected release.') : '';
   const preview = useMemo(() => { try { return { samples: parseRuleSetSamples(input), error: '' }; } catch (e) { return { samples: [], error: e instanceof Error ? e.message : String(e) }; } }, [input]);
   const projectIds = [...new Set([...projects.map(p => p.id), ...preview.samples.map(s => s.projectId), ...rules.flatMap(r => r.appliesTo.projects).filter(id => id !== '*')])];
   const samples = preview.samples.filter(s => allowedProjectIds ? allowedProjectIds.includes(s.projectId) : s.projectId === projectId);
@@ -30,7 +32,7 @@ export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions
   const current = run?.signature === signature ? run : null;
   const applicableCount = new Set(samples.flatMap(s => applicableRules(rules, s).map(r => r.id))).size;
   function execute() {
-    if (preview.error || outsideScope || !samples.length) return;
+    if (ruleError || preview.error || outsideScope || !samples.length) return;
     const batch = crypto.randomUUID();
     setRun({ signature, expectations: samples.map(s => s.expected), transactions: samples.map((sample, index) => detectionTransaction(sample, ({ ...evaluateRuleSet(rules, sample), ruleSet: setContext?.[sample.projectId] }), projects.find(p => p.id === sample.projectId)?.name ?? sample.projectId, 'demo-' + batch + '-' + index)) });
     setAdded(false); setExpanded(null); onTestCompleted?.(samples);
@@ -42,7 +44,7 @@ export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions
     <section className={styles.panel}>
       <div className={`${styles.panelHeader} ${styles.sandboxHeader}`}>
         <h2 className={styles.sandboxTitle}><Sliders size={18} />{vi ? 'Cấu hình kiểm thử tập rule' : 'Rule set test configuration'}</h2>
-        <button type="button" className={`${styles.drawerPrimaryBtn} ${styles.sandboxAction}`} disabled={!!preview.error || outsideScope || !samples.length} onClick={execute}><Play size={14} />{vi ? 'Chạy kiểm thử' : 'Run test'}</button>
+        <button type="button" className={`${styles.drawerPrimaryBtn} ${styles.sandboxAction}`} disabled={!!ruleError || !!preview.error || outsideScope || !samples.length} onClick={execute}><Play size={14} />{vi ? 'Chạy kiểm thử' : 'Run test'}</button>
       </div>
       <div className={styles.sandboxFields}>
         {allowedProjectIds ? <div><span className={styles.drawerLabel}>{vi ? 'Doanh nghiệp kiểm thử' : 'Test enterprise'}</span><p>{enterpriseLabel}</p><p className={styles.muted}>{projects.map(p => p.name).join(', ')}</p></div> : <label className={styles.drawerLabel} htmlFor="rule-set-project">{vi ? 'Project kiểm thử' : 'Test project'}<select id="rule-set-project" disabled={!!lockedProjectId} className={styles.control} value={projectId} onChange={e => { setProjectId(e.target.value); setExpanded(null); }}>{projectIds.map(id => <option value={id} key={id}>{projects.find(p => p.id === id)?.name ?? id}</option>)}</select></label>}
@@ -51,6 +53,7 @@ export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions
       <p className={styles.muted}>{vi ? (draftMode ? 'Kiểm thử bản sao các rule thuộc bản nháp tập rule này, theo loại giao dịch. Chưa ảnh hưởng phiên bản đang hoạt động.' : 'Chỉ chạy bản sao rule của phiên bản tập rule đang được kích hoạt cho doanh nghiệp. Chưa có phiên bản kích hoạt thì không có rule áp dụng.') : (draftMode ? 'Tests draft member snapshots without changing the active release.' : 'Tests snapshots from the active enterprise rule set release. No active release means no applicable rules.')}</p>
       <details className={styles.sandboxAdvanced}><summary>{vi ? 'Dữ liệu nâng cao (JSON)' : 'Advanced data (JSON)'}</summary><p className={styles.muted}>{vi ? 'Mỗi mẫu gồm id, ref, projectId, transactionType và fields. Nhãn expected là tùy chọn: Normal, Abnormal hoặc Undetermined.' : 'Each sample contains id, ref, projectId, transactionType and fields. Optional expected labels: Normal, Abnormal, Undetermined.'}</p><label htmlFor="rule-set-data" className={styles.drawerLabel}>{vi ? 'Nội dung bộ mẫu' : 'Sample data'}</label><textarea id="rule-set-data" className={`${styles.control} ${styles.sandboxJson}`} rows={8} value={input} onChange={event => { onTestInvalidated?.(); setInput(event.target.value); setRun(null); setAdded(false); setFileName(''); setFileError(''); }} /></details>
       {outsideScope && <p role="alert" className={styles.sandboxError}>{vi ? 'Dữ liệu chứa project ngoài doanh nghiệp. Hãy chọn đúng doanh nghiệp hoặc sửa bộ mẫu.' : 'Data includes a project outside this enterprise.'}</p>}
+      {ruleError && <p role="alert" className={styles.sandboxError}>{ruleError}</p>}
       {(fileError || preview.error) && <p role="alert" className={styles.sandboxError}>{fileError || preview.error}</p>}
       {missing.length > 0 && <details className={styles.sandboxAdvanced}><summary>{vi ? `Thiếu dữ liệu ở ${missing.length} lượt đánh giá rule` : `Missing data in ${missing.length} rule evaluations`}</summary><p className={styles.muted}>{vi ? 'Rule thiếu dữ liệu sẽ báo lỗi, không được tính là không khớp.' : 'Rules with missing data return an error, not a non-match.'}</p><ul>{missing.map((message, index) => <li key={index}>{message}</li>)}</ul></details>}
     </section>

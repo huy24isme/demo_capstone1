@@ -6,6 +6,7 @@ import type { FraudGuardFilters, TransactionRisk } from "./types";
 import { exportTransactionsCSV, downloadCSVTemplate } from "@/lib/export-csv";
 import { DataIngestionModal, type ImportActions } from "./DataIngestionModal";
 import { useLanguage } from "./i18n/LanguageContext";
+import { transactionLabel } from "./ReadableConditions";
 import styles from "./SecurityDashboard.module.css";
 
 interface ToolbarProps {
@@ -46,7 +47,7 @@ export function DashboardToolbar({
   onChange,
   visibleTransactions,
 }: ToolbarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [ingestionModalOpen, setIngestionModalOpen] = useState(false);
 
   const patch = (next: Partial<FraudGuardFilters>) =>
@@ -80,7 +81,7 @@ export function DashboardToolbar({
           >
             <option value="all">{t.toolbar.allTypes}</option>
             {transactionTypes.map((type) => (
-              <option key={type}>{type}</option>
+              <option key={type} value={type}>{transactionLabel(type, language === 'vi')}</option>
             ))}
           </select>
 

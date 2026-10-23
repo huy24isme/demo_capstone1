@@ -3300,3 +3300,60 @@
 }
 .sandboxStack button:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 700px) { .sandboxFields { grid-template-columns: 1fr; } }
+
+.onboardingCreateForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px;
+  align-items: end;
+}
+.onboardingCreateForm label { display: grid; gap: 8px; }
+.onboardingCreateForm input, .onboardingCreateForm select { width: 100%; min-height: 40px; }
+.onboardingCreateForm p { grid-column: 1 / -1; margin: 0; }
+.onboardingCreateForm button { justify-self: start; min-height: 40px; }
+@media (max-width: 900px) {
+  .onboardingCreateForm input, .onboardingCreateForm select, .onboardingCreateForm button { min-height: 44px; }
+}
+
+.workflowPanel { margin-bottom: 24px; padding: 24px; }
+.workflowPanel > .panelHeader { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--security-border); flex-wrap: wrap; }
+.workflowPanel > .panelHeader h2 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.workflowPanel .tableWrap { margin-top: 12px; }
+.workflowField { display: grid; gap: 8px; color: var(--security-text-secondary); font-size: 13px; }
+.workflowField .control { width: 100%; min-height: 40px; }
+.workflowDetails { border: 1px solid var(--security-border); border-radius: 4px; padding: 12px 16px; background: var(--security-control); min-width: 0; }
+.workflowDetails summary { cursor: pointer; font-weight: 600; line-height: 24px; }
+.workflowDetails[open] summary { margin-bottom: 12px; }
+.workflowDetails p { line-height: 1.6; overflow-wrap: anywhere; }
+.workflowDetails pre { max-width: 100%; overflow: auto; padding: 16px; background: var(--security-panel); border: 1px solid var(--security-border); border-radius: 4px; font-size: 12px; line-height: 1.6; }
+.workflowDetails input[type=file], .workflowField input[type=file] { display: block; max-width: 100%; margin-top: 8px; padding: 12px; border: 1px dashed var(--security-border-strong); border-radius: 4px; background: var(--security-panel); }
+.workflowDetails input::file-selector-button, .workflowField input::file-selector-button { padding: 8px 12px; margin-right: 12px; border: 1px solid var(--security-border-strong); border-radius: 4px; background: var(--security-control); color: var(--security-text); cursor: pointer; }
+.workflowFeedback, .workflowError { padding: 12px 16px; border-left: 3px solid var(--security-blue); background: var(--security-control); border-radius: 4px; line-height: 1.6; margin: 16px 0 0; }
+.workflowError { border-left-color: var(--security-red); color: var(--security-red); }
+.importBody { display: flex; flex-direction: column; gap: 16px; }
+.importBody > p { margin: 0; line-height: 1.6; }
+.importBody > button { align-self: flex-start; min-height: 40px; }
+.memberIdentity { display: flex; align-items: center; gap: 12px; }
+.memberIdentity > div { display: grid; gap: 4px; }
+.memberInitial { width: 32px; height: 32px; display: grid; place-items: center; flex-shrink: 0; border-radius: 50%; background: var(--security-control); color: var(--security-text-secondary); border: 1px solid var(--security-border); font-weight: 600; }
+@media (max-width: 680px) { .workflowPanel { padding: 16px; } .importBody > button { width: 100%; min-height: 44px; } }
+.pageHeading + .workflowPanel { margin-top: 20px; }
+
+.importModal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(900px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); animation: none; border-radius: var(--panel-radius); }
+.importModal .builderHeader { position: sticky; top: 0; z-index: 1; background: var(--security-panel); }
+.importModal .builderHeader h2 { font-size: 18px; margin: 0; }
+
+.setupIntro { margin: 0 0 24px; max-width: 760px; line-height: 1.6; color: var(--security-text-secondary); }
+.specificationReadOnly { display: grid; gap: 20px; margin: 24px 0; }
+.specificationReadOnly > div { padding-bottom: 20px; border-bottom: 1px solid var(--security-border); }
+.specificationReadOnly dt { font-weight: 600; margin-bottom: 8px; }
+.specificationReadOnly dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; color: var(--security-text-secondary); }
+.setupForm { display: grid; gap: 24px; }
+.setupSection { border: 0; border-top: 1px solid var(--security-border); padding: 16px 0 0; margin: 0; min-width: 0; }
+.setupSection legend { padding: 0 12px 0 0; font-weight: 600; font-size: 14px; }
+.setupSection > p { color: var(--security-text-secondary); margin: 0 0 16px; line-height: 1.6; }
+.setupSection > label { max-width: 600px; }
+.setupFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; border-top: 1px solid var(--security-border); }
+.setupFooter p { flex: 1 1 320px; margin: 0; line-height: 1.6; }
+.setupFooter button { min-height: 40px; }
+@media(max-width:680px) { .setupFooter button { width: 100%; min-height: 44px; } }

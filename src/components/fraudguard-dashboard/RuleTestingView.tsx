@@ -6,6 +6,7 @@ import { RuleSetTestingView } from "./RuleSetTestingView";
 import type { TransactionRisk, RuleTemplate, ProjectItem } from "./types";
 import { evaluateSandboxRule, nextSandboxVersion } from "@/lib/rule-sandbox";
 import { candidateRule, publishRuleDraft } from "@/lib/rule-lifecycle";
+import { ReadableConditions } from "./ReadableConditions";
 import styles from "./SecurityDashboard.module.css";
 import { Play, Check, Sliders } from "lucide-react";
 import { useToast } from "./ToastProvider";
@@ -101,6 +102,9 @@ export function RuleTestingView({ rules, enterprises = [], activeRules, setConte
 
   const [enterpriseId, setEnterpriseId] = useState(enterprises[0]?.id ?? '');
   const enterprise = enterprises.find(e => e.id === enterpriseId);
+  const enterpriseRules = (activeRules ?? []).filter(rule =>
+    rule.appliesTo.projects.some(projectId => enterprise?.projectIds.includes(projectId))
+  );
   const [mode, setMode] = useState<"single" | "set">("set");
   const [selectedRuleId, setSelectedRuleId] = useState(
     rules[0]?.id || "rule-cod-001",
@@ -196,7 +200,7 @@ export function RuleTestingView({ rules, enterprises = [], activeRules, setConte
         <button type="button" className={`${styles.tab} ${mode === 'set' ? styles.tabActive : ''}`} aria-pressed={mode === 'set'} onClick={() => setMode('set')}>{language === 'vi' ? 'Kiểm thử tập rule' : 'Rule set test'}</button>
         <button id="sandbox-single-mode" type="button" className={`${styles.tab} ${mode === 'single' ? styles.tabActive : ''}`} aria-pressed={mode === 'single'} onClick={() => setMode('single')}>{language === 'vi' ? 'Kiểm thử & phát hành từng rule' : 'Single rule testing & publication'}</button>
       </div>
-      {mode === 'set' ? <><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={enterpriseId} onChange={e => setEnterpriseId(e.target.value)}>{enterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>{enterprise ? <RuleSetTestingView key={enterprise.id} projects={projects?.filter(p => enterprise.projectIds.includes(p.id))} allowedProjectIds={enterprise.projectIds} enterpriseLabel={enterprise.name} rules={activeRules ?? []} setContext={setContext} onAddDemoTransactions={onAddDemoTransactions} /> : <p>{language === 'vi' ? 'Chưa được phân công doanh nghiệp.' : 'No enterprise assigned.'}</p>}</> : <>
+      {mode === 'set' ? <><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={enterpriseId} onChange={e => setEnterpriseId(e.target.value)}>{enterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>{enterprise ? <RuleSetTestingView key={enterprise.id} projects={projects?.filter(p => enterprise.projectIds.includes(p.id))} allowedProjectIds={enterprise.projectIds} enterpriseLabel={enterprise.name} rules={enterpriseRules} setContext={setContext} onAddDemoTransactions={onAddDemoTransactions} /> : <p>{language === 'vi' ? 'Chưa được phân công doanh nghiệp.' : 'No enterprise assigned.'}</p>}</> : <>
       {/* Overview Grid */}
       <div className={styles.metricsGrid} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>
@@ -355,7 +359,7 @@ export function RuleTestingView({ rules, enterprises = [], activeRules, setConte
             >
               {rules.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name} ({r.version || "v1.0"})
+                  {r.name} ({r.version || "v1.0"}){r.draft ? (language === 'vi' ? ' · Kiểm thử bản nháp' : ' · Testing draft') : ''}
                 </option>
               ))}
             </select>
@@ -364,6 +368,11 @@ export function RuleTestingView({ rules, enterprises = [], activeRules, setConte
         </div>
       </div>
 
+      {selectedRule && <section className={styles.workflowDetails} aria-label={language === 'vi' ? 'Cấu hình thực sự được kiểm thử' : 'Configuration being tested'}>
+        <strong>{storedRule?.draft ? (language === 'vi' ? 'Đang kiểm thử bản nháp đã lưu' : 'Testing the saved draft') : (language === 'vi' ? 'Đang kiểm thử cấu hình hiện tại' : 'Testing the current configuration')}</strong>
+        <ReadableConditions node={selectedRule.conditionGroup} vi={language === 'vi'} />
+        <p className={styles.muted}>{language === 'vi' ? 'Phạm vi áp dụng: ' : 'Applicable scope: '}{selectedRule.appliesTo.projects.join(', ')} · {selectedRule.appliesTo.transactionTypes.join(', ')}</p>
+      </section>}
       <p className={styles.muted}>
         {language === "vi"
           ? "Thử riêng rule đã chọn trên dữ liệu mẫu, kể cả rule đang tắt. Rule khớp trả về bất thường; không khớp trả về bình thường. Nhãn kỳ vọng do người kiểm thử xác định; dấu — nghĩa là chưa có nhãn kiểm chứng. Chỉ phát hành trong demo khi tất cả mẫu đạt."

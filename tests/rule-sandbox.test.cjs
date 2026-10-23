@@ -72,7 +72,7 @@ test('versions advance from the selected version and reject unsupported formats'
 });
 
 // Exercise the real component handlers without a browser; this is not a DOM/E2E test.
-function harness(initialRules = rules, withPublisher = true) {
+function harness(initialRules = rules, withPublisher = true, extraProps = {}) {
   const states = [], effectDeps = [], toasts = [], published = [];
   let cursor, effects, dirty, tree, props;
   const react = {
@@ -88,6 +88,7 @@ function harness(initialRules = rules, withPublisher = true) {
   };
   const translations = load('src/components/fraudguard-dashboard/i18n/translations.ts').translations;
   const component = load('src/components/fraudguard-dashboard/RuleTestingView.tsx', {
+    './ReadableConditions': load('src/components/fraudguard-dashboard/ReadableConditions.tsx', { './SecurityDashboard.module.css': { default: {} } }),
     react, './RuleSetTestingView': { RuleSetTestingView: () => null }, '@/lib/rule-sandbox': engine, '@/lib/rule-lifecycle': lifecycle, './SecurityDashboard.module.css': { default: {} },
     'lucide-react': { Play: 'icon', Check: 'icon', Sliders: 'icon' },
     './ToastProvider': { useToast: () => ({ toast: (...args) => toasts.push(args) }) },
@@ -102,10 +103,27 @@ function harness(initialRules = rules, withPublisher = true) {
   const action = (name) => nodes().find((n) => n.type === 'button' && n.props.onClick?.name === name);
   const click = (name) => { const button = action(name); assert.ok(button); if (!button.props.disabled) button.props.onClick(); render(); };
   const change = (id, value) => { nodes().find((n) => n.props.id === id).props.onChange({ target: { value } }); render(); };
+  Object.assign(props, extraProps);
   render();
   nodes().find(n => n.props.id === 'sandbox-single-mode').props.onClick(); render();
-  return { action, click, change, nodes, toasts, published };
+  return { action, click, change, nodes, toasts, published, render };
 }
+
+test('sandbox isolates the selected enterprise even when active sets reuse rule IDs', () => {
+  const activeRules = ['p1', 'p2'].map(project => ({ ...rules[0], appliesTo: { ...rules[0].appliesTo, projects: [project] } }));
+  const ui = harness(rules, true, { activeRules, enterprises: [
+    { id: 'e1', name: 'First', projectIds: ['p1'] },
+    { id: 'e2', name: 'Second', projectIds: ['p2'] },
+  ] });
+  ui.nodes().find(n => n.type === 'button' && n.props.children === 'Rule set test').props.onClick(); ui.render();
+  let sandbox = ui.nodes().find(n => n.props.enterpriseLabel === 'First');
+  assert.equal(sandbox.props.rules.length, 1);
+  assert.equal(sandbox.props.rules[0].appliesTo.projects[0], 'p1');
+  ui.nodes().find(n => n.type === 'select' && n.props.value === 'e1').props.onChange({ target: { value: 'e2' } }); ui.render();
+  sandbox = ui.nodes().find(n => n.props.enterpriseLabel === 'Second');
+  assert.equal(sandbox.props.rules.length, 1);
+  assert.equal(sandbox.props.rules[0].appliesTo.projects[0], 'p2');
+});
 
 test('publish requires a passing current test; changing rules invalidates even if reverted', () => {
   const ui = harness(rules.map(r => lifecycle.saveRuleDraft(r, { ...r, description: r.description + " revised" })));
@@ -425,6 +443,14 @@ test('legacy migration preserves single releases, archives ambiguous project set
 const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const readable = load('src/components/fraudguard-dashboard/ReadableConditions.tsx', { './SecurityDashboard.module.css': { default: {} } });
+test('duplicate rule IDs cannot be snapshotted, tested or published as a set',()=>{
+ const duplicateRules=[rules[0],structuredClone(rules[0])];
+ assert.throws(()=>managed.snapshotRules(duplicateRules,['proj-abc-cod']),/Trùng mã/);
+ const set={id:'duplicate-set',enterpriseId:'tenant',projectIds:['proj-abc-cod'],name:'Duplicate',versions:[],draft:{rules:duplicateRules}};
+ assert.throws(()=>managed.testDraft(set,[{id:'sample',ref:'sample',...tx({amount:1,channel:'COD'})}]),/trùng mã/);
+ set.draft.test={signature:managed.setSignature(duplicateRules),complete:true,mismatched:0};
+ assert.equal(managed.canPublishSet(set),false);
+});
 const businessView = load('src/components/fraudguard-dashboard/EnterpriseRulesView.tsx', {
  './ReadableConditions': readable,
  './i18n/LanguageContext': { useLanguage: () => ({ language: 'vi' }) },
@@ -503,7 +529,7 @@ function caseDrawerHarness(source, role = 'Operator') {
  const props={open:true,currentRole:role,currentUserName:'Owner',onClose:()=>{},transaction:{id:'tx',transactionReference:'TX',scoringSource:source,riskLevel:'Abnormal',triggeredRules:[],processedAt:new Date().toISOString(),caseId:'case',caseStatus:'Open'},onUpdateTransaction(next){assert.equal(cases.canUpdateCase(props.transaction,next,{role,name:'Owner'}),true);props.transaction=next;}};
  const component=load('src/components/fraudguard-dashboard/AlertCaseDrawer.tsx',{
  react:{useState(initial){const slot=cursor++;if(!(slot in states))states[slot]=initial;return [states[slot],v=>states[slot]=v];},useEffect(){}},
- './useDialogFocus':{useDialogFocus:()=>null}, './RuleEvaluationDetails':{RuleEvaluationDetails:()=>null}, './RiskLevelBadge':{RiskLevelBadge:()=>null}, './ScoringSourceBadge':{ScoringSourceBadge:()=>null}, './ToastProvider':{useToast:()=>({toast(){}})}, './i18n/LanguageContext':{useLanguage:()=>({language:'en',t:translations.en})}, './SecurityDashboard.module.css':{default:{}}
+ './ReadableConditions':readable, './useDialogFocus':{useDialogFocus:()=>null}, './RuleEvaluationDetails':{RuleEvaluationDetails:()=>null}, './RiskLevelBadge':{RiskLevelBadge:()=>null}, './ScoringSourceBadge':{ScoringSourceBadge:()=>null}, './ToastProvider':{useToast:()=>({toast(){}})}, './i18n/LanguageContext':{useLanguage:()=>({language:'en',t:translations.en})}, './SecurityDashboard.module.css':{default:{}}
  }).AlertCaseDrawer;
  function render(){cursor=0;tree=component(props);}
  function nodes(){const result=[];function walk(n){if(Array.isArray(n))n.forEach(walk);else if(n?.props){result.push(n);walk(n.props.children);}}walk(tree);return result;}
@@ -576,4 +602,65 @@ test('ingestion blocks cross-scope data, missing rule fields, duplicate referenc
  assert.ok(preview([row],[first])[0].error);
  assert.ok(preview([{...row,transactionType:'unsupported'}])[0].error);
  assert.throws(()=>importPipeline.previewTransactionImport('','data.xlsx','p1','Wallet',rules,[]));
+});
+
+test('import dialog requires preview and saves only after explicit confirmation',async()=>{
+ const states=[];let cursor=0,tree,saves=0;
+ const component=load('src/components/fraudguard-dashboard/DataIngestionModal.tsx',{
+ react:{useState(initial){const slot=cursor++;if(!(slot in states))states[slot]=initial;return [states[slot],v=>states[slot]=v];}},
+ './useDialogFocus':{useDialogFocus:()=>null},'./i18n/LanguageContext':{useLanguage:()=>({language:'vi'})},'./SecurityDashboard.module.css':{default:{}}
+ }).DataIngestionModal;
+ const rules=[active('import-rule',condition('amount','>',10))];
+ const preview=(text,name,project)=>importPipeline.previewTransactionImport(text,name,project,'Wallet',rules,[]);
+ const props={open:true,onClose(){},projects:[{id:'p1',name:'Wallet'}],actions:{preview,save(text,name,project){saves++;const rows=preview(text,name,project);assert.ok(rows.every(r=>!r.error));return rows.length;}}};
+ const render=()=>{cursor=0;tree=component(props);};
+ const nodes=()=>{const result=[];function walk(n){if(Array.isArray(n))n.forEach(walk);else if(n?.props){result.push(n);walk(n.props.children);}}walk(tree);return result;};
+ const button=text=>nodes().find(n=>n.type==='button'&&n.props.children===text);
+ render();assert.ok(button('Kiểm tra và xem trước').props.disabled);assert.equal(button('Lưu vào danh sách giao dịch'),undefined);
+ const input=nodes().find(n=>n.type==='input'&&n.props.type==='file');
+ await input.props.onChange({currentTarget:{files:[{size:100,name:'test.csv',text:async()=>'transaction_reference,transaction_type,amount\nA,payment,20'}],value:'file'}});
+ render();assert.equal(saves,0);button('Kiểm tra và xem trước').props.onClick();render();assert.equal(saves,0);
+ assert.ok(!button('Lưu vào danh sách giao dịch').props.disabled);button('Lưu vào danh sách giao dịch').props.onClick();render();assert.equal(saves,1);assert.ok(button('Lưu vào danh sách giao dịch').props.disabled);
+});
+test('file import preserves text identifiers and rejects object metadata',()=>{
+ const rules=[active('import-rule',condition('amount','>',10))];
+ const result=importPipeline.previewTransactionImport('transaction_reference,transaction_type,amount,user_hash\nA,payment,20,true','test.csv','p1','Wallet',rules,[]);
+ assert.equal(result[0].transaction.entityReference,'true');
+ const invalid=importPipeline.previewTransactionImport(JSON.stringify([{ref:{bad:true},transactionType:'payment',fields:{amount:20}}]),'test.json','p1','Wallet',rules,[]);
+ assert.ok(invalid[0].error);
+});
+
+test('enterprise usage separates AI, rules and fallback and respects enterprise scope',()=>{
+ const owner={id:'new',name:'New',projectIds:['p1'],deploymentStaffId:'staff'};
+ const transactions=[{projectId:'p1',scoringSource:'AI'},{projectId:'p1',scoringSource:'RULE'},{projectId:'p1',scoringSource:'RULE_FALLBACK'},{projectId:'p2',scoringSource:'AI'}];
+ const result=enterpriseData.enterpriseUsage(owner,transactions);
+ assert.equal(result.total,3);assert.equal(result.ai,1);assert.equal(result.rule,1);assert.equal(result.fallback,1);
+ assert.equal(enterpriseData.enterprisePlan(owner),undefined);
+ assert.equal(enterpriseData.enterprisePlan({...owner,id:'tenant-greenmart'}),'Free');
+ assert.equal(enterpriseData.enterprisePlan({...owner,id:'tenant-greenmart',plan:'Subscription'}),'Subscription');
+});
+test('platform view uses shared enterprises and shows no Free allowance',()=>{
+ const component=load('src/components/fraudguard-dashboard/PlatformHealthView.tsx',{
+ '@/data/fraudguard-enterprises':enterpriseData,
+ '../../data/fraudguard-platform':load('src/data/fraudguard-platform.ts'),
+ './useDialogFocus':{useDialogFocus:()=>null},'./ToastProvider':{useToast:()=>({toast(){}})},
+ './i18n/LanguageContext':{useLanguage:()=>({language:'vi',t:load('src/components/fraudguard-dashboard/i18n/translations.ts').translations.vi})},
+ './SecurityDashboard.module.css':{default:{}}
+ }).PlatformHealthView;
+ const html=renderToStaticMarkup(React.createElement(component,{enterprises:[{id:'new-company',name:'Shared Company',plan:'Free',projectIds:['p1'],deploymentStaffId:'staff'}],transactions:[],onPlanChange(){}}));
+ assert.match(html,/Shared Company/);assert.match(html,/Không áp dụng/);assert.doesNotMatch(html,/TechPay|12[.,]850|20[.,]000/);
+});
+
+test('only platform staff can provision the first enterprise administrator with a unique email',()=>{
+ const admin={role:'Platform Admin'}, existing=[{email:'owner@example.com'}];
+ assert.ok(roleData.canProvisionEnterpriseAdmin(admin,'Owner','new@example.com',existing));
+ assert.equal(roleData.canProvisionEnterpriseAdmin({role:'Implementation Staff'},'Owner','new@example.com',existing),false);
+ assert.equal(roleData.canProvisionEnterpriseAdmin(admin,'Owner',' OWNER@example.com ',existing),false);
+ assert.equal(roleData.canProvisionEnterpriseAdmin(admin,' ','new@example.com',existing),false);
+ assert.equal(roleData.canProvisionEnterpriseAdmin(admin,'Owner','invalid',existing),false);
+});
+test('active investigation KPI excludes rule alerts, missing cases and closed cases',()=>{
+ const base={scoringSource:'AI',riskLevel:'Abnormal',caseId:'case-1',caseStatus:'Investigating'};
+ assert.ok(cases.isActiveInvestigation(base));
+ for(const change of [{scoringSource:'RULE'},{scoringSource:'RULE_FALLBACK'},{caseId:undefined},{caseStatus:'Resolved'},{riskLevel:'Normal'}]) assert.equal(cases.isActiveInvestigation({...base,...change}),false);
 });

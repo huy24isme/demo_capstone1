@@ -14,6 +14,7 @@ import type {
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
 import { useLanguage } from "./i18n/LanguageContext";
+import { transactionLabel } from "./ReadableConditions";
 import styles from "./SecurityDashboard.module.css";
 
 function formatDate(iso: string, locale: string): string {
@@ -252,7 +253,7 @@ export function TransactionRiskTable({
               />
 
               <th>{t.table.columns.scoringSource}</th>
-              <th>{language === "vi" ? "Rule khớp / đã đánh giá" : "Matched / evaluated rules"}</th>
+              <th>{language === "vi" ? "Quy tắc phát hiện / đã kiểm tra" : "Matched / evaluated rules"}</th>
               <th>{language === "vi" ? "Trạng thái xử lý" : "Processing status"}</th>
               <SortHeader
                 label={t.table.columns.processedAt}
@@ -290,7 +291,7 @@ export function TransactionRiskTable({
                   <td>
                     {transaction.projectName}
                     <span className={styles.findingMeta}>
-                      {transaction.transactionType}
+                      {transactionLabel(transaction.transactionType, language === 'vi')}
                     </span>
                   </td>
 

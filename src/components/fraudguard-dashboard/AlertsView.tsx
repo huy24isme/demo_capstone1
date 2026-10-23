@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { CaseStatus, TransactionRisk } from "./types";
 import { RiskLevelBadge } from "./RiskLevelBadge";
 import { ScoringSourceBadge } from "./ScoringSourceBadge";
+import { transactionLabel } from "./ReadableConditions";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
@@ -163,7 +164,7 @@ export function AlertsView({ transactions, onReview }: AlertsViewProps) {
                     {alert.transactionReference} — {alert.projectName}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--security-muted)", marginBottom: 6 }}>
-                    {alert.transactionType} · Entity: {alert.entityReference}
+                    {transactionLabel(alert.transactionType, language === 'vi')} · {language === 'vi' ? 'Mã đối tượng:' : 'Entity reference:'} {alert.entityReference}
                     {alert.amount != null &&
                       ` · ${alert.amount.toLocaleString(numLocale)} ${alert.currency || "VND"}`}
                   </div>

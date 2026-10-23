@@ -20,6 +20,7 @@ export interface ManagedRuleSet {
 export type LegacyRuleSet = Omit<ManagedRuleSet, 'enterpriseId' | 'projectIds' | 'legacySets'> & { projectId: string };
 export function setSignature(rules: RuleTemplate[]) { return JSON.stringify(rules); }
 export function snapshotRules(rules: RuleTemplate[], scope: string | string[]): RuleTemplate[] {
+  if (new Set(rules.map(r => r.id)).size !== rules.length) throw new Error('Trùng mã quy tắc. Mỗi quy tắc chỉ được xuất hiện một lần trong tập.');
   const projectIds = typeof scope === 'string' ? [scope] : scope;
   return rules.map(source => {
     const candidate = candidateRule(source);
@@ -30,6 +31,7 @@ export function snapshotRules(rules: RuleTemplate[], scope: string | string[]): 
 }
 export function testDraft(set: ManagedRuleSet, samples: RuleSetSample[]): SetTest {
   if (!set.draft?.rules.length || !samples.length || samples.some(s => !set.projectIds.includes(s.projectId))) throw new Error('Cần bản nháp có rule và dữ liệu đúng project.');
+  if (new Set(set.draft.rules.map(r => r.id)).size !== set.draft.rules.length) throw new Error('Tập có quy tắc trùng mã. Bỏ chọn quy tắc bị trùng, chọn lại và kiểm thử.');
   const results = samples.map(sample => evaluateRuleSet(set.draft!.rules, sample));
   const covered = new Set(results.flatMap(r => r.rules.filter(rule => rule.outcome !== 'Error').map(rule => rule.id)));
   return { signature: setSignature(set.draft.rules), testedAt: new Date().toISOString(), samples: structuredClone(samples), results,
@@ -39,7 +41,7 @@ export function testDraft(set: ManagedRuleSet, samples: RuleSetSample[]): SetTes
 }
 export function canPublishSet(set: ManagedRuleSet) {
   const test = set.draft?.test;
-  return !!(set.draft?.rules.length && test && test.signature === setSignature(set.draft.rules) && test.complete && test.mismatched === 0);
+  return !!(set.draft?.rules.length && new Set(set.draft.rules.map(r => r.id)).size === set.draft.rules.length && test && test.signature === setSignature(set.draft.rules) && test.complete && test.mismatched === 0);
 }
 export function publishSet(set: ManagedRuleSet, reviewer: string, reviewNote: string): ManagedRuleSet {
   if (!canPublishSet(set) || !reviewer.trim() || !reviewNote.trim()) throw new Error('Cần kiểm thử hợp lệ và xác nhận review trước khi phát hành.');

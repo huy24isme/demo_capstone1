@@ -11,25 +11,26 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MicroserviceHealth, SmeTenantItem } from "./types";
+import type { MicroserviceHealth, TransactionRisk } from "./types";
 import {
   fallbackHourlyTrend,
   initialMicroservices,
-  initialSmeTenants,
+
 } from "../../data/fraudguard-platform";
 import { useToast } from "./ToastProvider";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 import { useDialogFocus } from './useDialogFocus';
 
-export function PlatformHealthView() {
+import { enterprisePlan, enterpriseUsage, type Enterprise, type ServicePlan } from '@/data/fraudguard-enterprises';
+export function PlatformHealthView({ enterprises, transactions, onPlanChange }: { enterprises: Enterprise[]; transactions: TransactionRisk[]; onPlanChange: (id: string, plan: ServicePlan) => void }) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [services] = useState<MicroserviceHealth[]>(initialMicroservices);
-  const [tenants] = useState<SmeTenantItem[]>(initialSmeTenants);
-  const [selectedTenant, setSelectedTenant] = useState<SmeTenantItem | null>(null);
+
+  const [selectedTenant, setSelectedTenant] = useState<Enterprise | null>(null);
   const tenantRef = useDialogFocus(!!selectedTenant, () => setSelectedTenant(null));
   const [isPinging, setIsPinging] = useState<Record<string, boolean>>({});
 
@@ -38,18 +39,6 @@ export function PlatformHealthView() {
   }, []);
 
   const handlePing = (service: MicroserviceHealth) => toast('info', language === 'vi' ? service.name + ': dữ liệu mẫu, chưa kết nối health-check API.' : service.name + ': sample data; health-check API is not connected.');
-
-  const getPlanBadgeClass = (plan: string) => {
-    switch (plan) {
-      case "Enterprise":
-        return styles.planEnterprise;
-      case "Growth":
-        return styles.planGrowth;
-      case "Free Tier":
-      default:
-        return styles.planFree;
-    }
-  };
 
   return (
     <>
@@ -101,7 +90,7 @@ export function PlatformHealthView() {
         </article>
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.platformHealthView.kpis.activeTenants}</div>
-          <strong className={styles.statValue}>{tenants.length}</strong>
+          <strong className={styles.statValue}>{enterprises.length}</strong>
           <span className={styles.statDescription}>
             {t.platformHealthView.kpis.activeTenantsDesc}
           </span>
@@ -269,111 +258,23 @@ export function PlatformHealthView() {
         </div>
       </section>
 
-      {/* SME Tenants Management Table */}
       <section className={styles.panel}>
-        <div className={styles.panelHeader} style={{ marginBottom: 16 }}>
-          <div>
-            <h2>{t.platformHealthView.tenantsTitle}</h2>
-            <span className={styles.muted}>
-              {t.platformHealthView.tenantsDesc}
-            </span>
-          </div>
-        </div>
-
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>{t.platformHealthView.tableTenants.name}</th>
-                <th>{t.platformHealthView.tableTenants.plan}</th>
-                <th>{t.platformHealthView.tableTenants.scoringEngine}</th>
-                <th>{t.platformHealthView.tableTenants.quota}</th>
-                <th>{t.platformHealthView.tableTenants.activeProjects}</th>
-                <th>{t.platformHealthView.tableTenants.status}</th>
-                <th>{t.platformHealthView.tableTenants.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tenants.map((item) => {
-                const usagePercent = Math.round((item.quotaUsed / item.quotaLimit) * 100);
-                return (
-                  <tr key={item.id}>
-                    <td>
-                      <div style={{ fontWeight: 600, color: "var(--security-text)" }}>
-                        {item.name}
-                      </div>
-                      <div style={{ fontSize: 11, color: "var(--security-subtle)" }}>
-                        {t.platformHealthView.tableTenants.code}: {item.code} · {t.platformHealthView.tableTenants.joined}: {item.joinedDate}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`${styles.badge} ${getPlanBadgeClass(item.plan)}`}>
-                        {item.plan}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: 12, color: "var(--security-text)" }}>
-                        {language === 'vi' ? (item.scoringEngine === 'AI Detection + Fallback' ? 'AI và quy tắc dự phòng' : item.scoringEngine === 'Dynamic Rules' ? 'Kiểm tra bằng quy tắc' : item.scoringEngine) : item.scoringEngine}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ width: 140 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
-                          <span>{item.quotaUsed.toLocaleString(dateLocale)}</span>
-                          <span style={{ color: usagePercent > 85 ? "var(--security-orange)" : "var(--security-muted)" }}>
-                            {usagePercent}%
-                          </span>
-                        </div>
-                        <div className={styles.quotaBarBg}>
-                          <div
-                            className={styles.quotaBarFill}
-                            style={{
-                              width: `${usagePercent}%`,
-                              backgroundColor: usagePercent > 85 ? "var(--security-orange)" : "var(--security-blue)",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: 12, fontWeight: 500 }}>
-                        {item.activeProjectsCount} {language === 'vi' ? 'dự án' : 'projects'}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${
-                          item.status === "Active" ? styles.low : styles.high
-                        }`}
-                      >
-                        {language === 'vi' ? (item.status === 'Active' ? 'Đang hoạt động' : item.status === 'Warning' ? 'Cần chú ý' : item.status) : item.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className={styles.button}
-                        onClick={() => setSelectedTenant(item)}
-                        type="button"
-                        style={{ fontSize: 11, padding: "3px 8px", minHeight: 26 }}
-                      >
-                        {t.platformHealthView.tableTenants.btnInspect}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <div className={styles.panelHeader}><div><h2>{language === 'vi' ? 'Doanh nghiệp và gói dịch vụ' : 'Enterprises and service plans'}</h2><p className={styles.muted}>{language === 'vi' ? 'Danh sách dùng chung với trang thiết lập. Số lượt bên dưới tính từ dữ liệu giao dịch demo đã lưu, không phải hóa đơn hoặc số liệu tháng.' : 'Shared with enterprise setup. Counts reflect saved demo transactions, not billing or monthly usage.'}</p></div></div>
+        <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}</th><th>{language === 'vi' ? 'Gói dịch vụ' : 'Plan'}</th><th>{language === 'vi' ? 'Kiểm tra bằng quy tắc' : 'Rule checks'}</th><th>{language === 'vi' ? 'Lượt phân tích AI' : 'AI analyses'}</th><th>{language === 'vi' ? 'Hạn mức AI' : 'AI allowance'}</th><th>{language === 'vi' ? 'Chi tiết' : 'Details'}</th></tr></thead><tbody>
+        {enterprises.map(item=>{const usage=enterpriseUsage(item,transactions),plan=enterprisePlan(item);return <tr key={item.id}>
+          <td><strong>{item.name}</strong></td><td><select className={styles.control} aria-label={(language==='vi'?'Gói dịch vụ của ':'Plan for ')+item.name} value={plan??''} onChange={e=>onPlanChange(item.id,e.target.value as ServicePlan)}><option value="" disabled>{language==='vi'?'Chưa chọn gói':'Plan not selected'}</option><option value="Free">Free — {language==='vi'?'Quy tắc':'Rules'}</option><option value="Subscription">Subscription — AI</option></select></td>
+          <td>{(usage.rule+usage.fallback).toLocaleString(dateLocale)}<p className={styles.muted}>{language==='vi'?'Không tính lượt AI':'No AI usage charged'}</p></td>
+          <td>{plan==='Free'?(language==='vi'?'Không áp dụng':'Not applicable'):plan?usage.ai.toLocaleString(dateLocale):'—'}</td>
+          <td>{plan==='Free'?(language==='vi'?'Không áp dụng':'Not applicable'):(language==='vi'?'Chưa thiết lập':'Not configured')}</td>
+          <td><button className={styles.button} onClick={()=>setSelectedTenant(item)}>{language==='vi'?'Xem chi tiết':'View details'}</button></td>
+        </tr>;})}</tbody></table></div>
+        <p className={styles.muted}>{language==='vi'?'Đổi gói chỉ cập nhật cấu hình demo. Chưa thu phí, gọi AI hay tự chuyển cơ chế xử lý trên máy chủ.':'Plan changes update demo configuration only. No billing, AI execution or server routing is performed.'}</p>
       </section>
-      {selectedTenant && <div className={styles.builderOverlay} onClick={e => { if (e.target === e.currentTarget) setSelectedTenant(null); }}>
-        <div ref={tenantRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={selectedTenant.name} className={styles.builderModal}>
-          <div className={styles.builderHeader}><h2 className={styles.builderTitle}>{selectedTenant.name}</h2><button className={styles.button} onClick={() => setSelectedTenant(null)}>{language === 'vi' ? 'Đóng' : 'Close'}</button></div>
-          <div className={styles.builderBody}><p className={styles.muted}>{language === 'vi' ? 'Thông tin minh họa, chưa kết nối hệ thống quản lý doanh nghiệp thực tế.' : 'Sample information; not connected to a live tenant management service.'}</p><dl className={styles.evaluationFields}>
-            {[[language === 'vi' ? 'Mã doanh nghiệp' : 'Business code', selectedTenant.code], [language === 'vi' ? 'Gói dịch vụ' : 'Plan', selectedTenant.plan], [language === 'vi' ? 'Trạng thái' : 'Status', selectedTenant.status], [language === 'vi' ? 'Dự án hoạt động' : 'Active projects', selectedTenant.activeProjectsCount], [language === 'vi' ? 'Hạn mức đã dùng' : 'Quota used', `${selectedTenant.quotaUsed.toLocaleString(dateLocale)} / ${selectedTenant.quotaLimit.toLocaleString(dateLocale)}`], [language === 'vi' ? 'Nguồn phát hiện' : 'Detection source', selectedTenant.scoringEngine]].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
-          </dl></div>
-        </div>
-      </div>}
+      {selectedTenant && <div className={styles.builderOverlay} onClick={e=>{if(e.target===e.currentTarget)setSelectedTenant(null);}}><div ref={tenantRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={selectedTenant.name} className={styles.builderModal}>
+        <div className={styles.builderHeader}><h2>{selectedTenant.name}</h2><button className={styles.button} onClick={()=>setSelectedTenant(null)}>{language==='vi'?'Đóng':'Close'}</button></div>
+        <div className={styles.builderBody}><dl className={styles.evaluationFields}>{Object.entries(enterpriseUsage(selectedTenant,transactions)).map(([key,value])=><div key={key}><dt>{({total:language==='vi'?'Tổng giao dịch':'Total transactions',ai:language==='vi'?'Nguồn AI':'AI source',rule:language==='vi'?'Nguồn quy tắc':'Rule source',fallback:language==='vi'?'Quy tắc dự phòng':'Rule fallback'})[key]}</dt><dd>{value.toLocaleString(dateLocale)}</dd></div>)}</dl><p className={styles.muted}>{language==='vi'?'Thống kê nguồn xử lý của dữ liệu đã lưu. Đổi gói không thay đổi lịch sử giao dịch.':'Recorded detection sources. Changing plans does not rewrite transaction history.'}</p></div>
+      </div></div>}
+
     </>
   );
 }

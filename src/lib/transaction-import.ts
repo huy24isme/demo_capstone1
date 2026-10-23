@@ -10,13 +10,18 @@ export function previewTransactionImport(text: string, filename: string, project
   try {
    if(!row||typeof row!=='object'||Array.isArray(row))throw Error('Dòng dữ liệu không hợp lệ.');
    if(row.projectId!==undefined&&row.projectId!==projectId)throw Error('Dữ liệu thuộc phạm vi khác.');
-   const ref=String(row.ref??row.transaction_reference??row.id??'').trim();
+   const rawRef=row.ref??row.transaction_reference??row.id;
+   if(typeof rawRef!=='string')throw Error('Mã giao dịch phải là chuỗi văn bản.');
+   const ref=rawRef.trim();
    if(!ref)throw Error('Thiếu mã giao dịch: ref hoặc transaction_reference.');
    if(refs.has(ref))throw Error('Mã giao dịch bị trùng: '+ref);refs.add(ref);
-   const transactionType=String(row.transactionType??row.transaction_type??'').trim();
+   const rawType=row.transactionType??row.transaction_type;
+   if(typeof rawType!=='string')throw Error('Loại giao dịch phải là chuỗi văn bản.');
+   const transactionType=rawType.trim();
    let fields=row.fields;
    if(fields===undefined){fields=Object.fromEntries(Object.entries(row).filter(([key])=>!['ref','id','projectId','transactionType','transaction_type','transaction_reference','expected'].includes(key)).map(([key,value])=>{
     if(typeof value!=='string')return [key,value];
+    if(/(hash|id|reference|name|phone|code)/i.test(key))return [key,value];
     const trimmed=value.trim();
     if(trimmed==='true'||trimmed==='false')return [key,trimmed==='true'];
     if(!/(hash|id|reference|name|phone|code)/i.test(key)&&/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(trimmed))return [key,Number(trimmed)];

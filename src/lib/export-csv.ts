@@ -111,8 +111,10 @@ export function downloadCSVTemplate() {
   const csvContent = [
     headers.join(","),
     ...sampleRows.map((values, index) =>
-      ["DEMO-IMPORT-" + (index + 1), ...values].map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-
+      ["DEMO-IMPORT-" + (index + 1), ...values]
+        .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+        .join(","),
+    ),
   ].join("\n");
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -123,4 +125,3 @@ export function downloadCSVTemplate() {
   link.click();
   URL.revokeObjectURL(url);
 }
-
