@@ -105,7 +105,7 @@ function harness(initialRules = rules, withPublisher = true, extraProps = {}) {
   const change = (id, value) => { nodes().find((n) => n.props.id === id).props.onChange({ target: { value } }); render(); };
   Object.assign(props, extraProps);
   render();
-  nodes().find(n => n.props.id === 'sandbox-single-mode').props.onClick(); render();
+  nodes().find(n => n.props.id === 'sandbox-single-mode')?.props.onClick(); render();
   return { action, click, change, nodes, toasts, published, render };
 }
 
@@ -123,6 +123,15 @@ test('sandbox isolates the selected enterprise even when active sets reuse rule 
   sandbox = ui.nodes().find(n => n.props.enterpriseLabel === 'Second');
   assert.equal(sandbox.props.rules.length, 1);
   assert.equal(sandbox.props.rules[0].appliesTo.projects[0], 'p2');
+});
+
+test('deployment sandbox directs publication to the enterprise draft instead of individual rules', () => {
+ let opened;
+ const ui = harness(rules, false, { enterprises: [{ id: 'e1', name: 'First', projectIds: ['p1'] }], onOpenDraft: id => { opened = id; } });
+ assert.equal(ui.nodes().some(n => n.props.id === 'sandbox-single-mode'), false);
+ assert.equal(ui.action('handlePublishVersion'), undefined);
+ ui.nodes().find(n => n.type === 'button' && n.props.children === 'Open rule set to test the draft').props.onClick();
+ assert.equal(opened, 'e1');
 });
 
 test('publish requires a passing current test; changing rules invalidates even if reverted', () => {
@@ -317,7 +326,7 @@ test('dataset parser accepts unlabeled samples but rejects duplicate IDs and inv
 const enterpriseData = load('src/data/fraudguard-enterprises.ts');
 test('SME transaction scope excludes foreign projects and fails closed without an enterprise', () => {
  const data = load('src/data/fraudguard-transactions.ts').fraudGuardTransactions;
- for (const role of ['SME Admin', 'Operator', 'Investigator', 'Viewer']) {
+ for (const role of ['SME Admin', 'Operator']) {
    const abc = enterpriseData.transactionsForEnterprise(data, { role, enterpriseId: 'tenant-abc' }, enterpriseData.demoEnterprises);
    assert.ok(abc.length > 0);
    assert.ok(abc.every(tx => tx.projectId === 'proj-abc-cod'));
@@ -330,7 +339,47 @@ test('SME transaction scope excludes foreign projects and fails closed without a
  assert.equal(enterpriseData.transactionsForEnterprise(data, { role: 'SME Admin', enterpriseId: 'unknown' }, enterpriseData.demoEnterprises).length, 0);
 });
 const roleData = load('src/data/fraudguard-roles.ts');
-const managed = load('src/lib/rule-set-lifecycle.ts', { '../data/fraudguard-enterprises': enterpriseData, './rule-lifecycle': lifecycle, './rule-set': ruleSet });
+
+test('route access follows each role and rejects legacy or unknown roles', () => {
+ assert.equal(roleData.canAccessView('Investigator', 'reports'), true);
+ for (const view of ['risk-overview', 'projects', 'audit-trail', 'rule-sets', 'members']) assert.equal(roleData.canAccessView('Investigator', view), false);
+ assert.equal(roleData.canAccessView('Platform Admin', 'rule-testing'), false);
+ assert.equal(roleData.canAccessView('Implementation Staff', 'reports'), false);
+ assert.equal(roleData.canAccessView('SME Admin', 'members'), true);
+ assert.equal(roleData.canAccessView('Operator', 'members'), false);
+ assert.equal(roleData.canAccessView('Viewer', 'risk-overview'), false);
+ assert.equal(roleData.canAccessView('unknown', 'reports'), false);
+ assert.equal(roleData.getRolePermissions('SME Admin').canManageCases, false);
+});
+
+test('investigator scope uses assigned user IDs and never includes foreign or unassigned cases', () => {
+ const owner = { id: 'owner', name: 'Renamed', role: 'Investigator', enterpriseId: 'e1' };
+ const enterprises = [{ id: 'e1', projectIds: ['p1'] }];
+ const base = { id: 'a', projectId: 'p1', caseId: 'c1', scoringSource: 'AI', assignedInvestigatorId: 'owner', assignedInvestigator: 'Old name' };
+ const rows = [base, { ...base, id: 'b', assignedInvestigatorId: 'other', assignedInvestigator: 'Renamed' }, { ...base, id: 'c', projectId: 'p2' }, { ...base, id: 'd', caseId: undefined }, { ...base, id: 'e', scoringSource: 'RULE' }];
+ assert.deepEqual(Array.from(enterpriseData.transactionsForEnterprise(rows, owner, enterprises), tx => tx.id), ['a']);
+ assert.equal(enterpriseData.transactionsForEnterprise(rows, { ...owner, role: 'Viewer' }, enterprises).length, 0);
+});
+
+test('audit scope includes colleagues and assigned staff but excludes foreign and unresolved events', () => {
+ const enterprises = [{ id: 'e1', name: 'One', projectIds: ['p1'], deploymentStaffId: 'staff' }, { id: 'e2', name: 'Two', projectIds: ['p2'], deploymentStaffId: 'other' }];
+ const logs = [{ id: 'a', enterpriseId: 'e1', target: 'set' }, { id: 'b', enterpriseId: 'e2', target: 'p1' }, { id: 'c', target: 'case1' }, { id: 'd', target: 'Enterprise rule sets' }];
+ const txs = [{ id: 'tx', caseId: 'case1', projectId: 'p1' }];
+ for (const user of [{ role: 'SME Admin', enterpriseId: 'e1' }, { role: 'Operator', enterpriseId: 'e1' }, { role: 'Implementation Staff', id: 'staff' }]) {
+  assert.deepEqual(Array.from(enterpriseData.auditForUser(logs, user, enterprises, txs), log => log.id), ['a', 'c']);
+ }
+ assert.equal(enterpriseData.auditForUser(logs, { role: 'Investigator', enterpriseId: 'e1' }, enterprises, txs).length, 0);
+ assert.equal(enterpriseData.auditForUser(logs, { role: 'Platform Admin' }, enterprises, txs).length, 4);
+});
+
+test('SME admins cannot mutate cases and investigators cannot change transaction scope or assigned identity', () => {
+ const previous = { id: 'tx', projectId: 'p1', scoringSource: 'AI', riskLevel: 'Abnormal', caseId: 'case', caseStatus: 'Assigned', assignedInvestigator: 'Owner', assignedInvestigatorId: 'owner' };
+ const updated = { ...previous, caseStatus: 'Investigating' };
+ assert.equal(cases.canUpdateCase(previous, updated, { id: 'owner', name: 'Owner', role: 'Investigator' }), true);
+ for (const changed of [{ ...updated, projectId: 'p2' }, { ...updated, assignedInvestigatorId: 'other' }]) assert.equal(cases.canUpdateCase(previous, changed, { id: 'owner', name: 'Owner', role: 'Investigator' }), false);
+ assert.equal(cases.canUpdateCase(previous, { ...previous, caseStatus: 'Resolved', caseDecision: { directive: 'Done' } }, { role: 'SME Admin' }), false);
+});
+const managed = load('src/lib/rule-set-lifecycle.ts', { './ingestion-validation': load('src/lib/ingestion-validation.ts'), '../data/fraudguard-enterprises': enterpriseData, './rule-lifecycle': lifecycle, './rule-set': ruleSet });
 function draftSet(id = 'set1') { return { id, name: id, enterpriseId: 'e1', projectIds: ['p1'], versions: [], draft: { rules: managed.snapshotRules([active('r1', condition('amount', '>', 10))], 'p1') } }; }
 const labeledSample = { ...inputTx, id: 's1', ref: 'TX-1', expected: 'Abnormal' };
 test('set publication requires complete current tests and reviewer evidence', () => {
@@ -375,6 +424,26 @@ test('unlabeled tests retain their unlabeled evidence and snapshots are independ
  assert.equal(release.versions[0].test.labeled, 0);
 });
 
+test('draft and publication preserve the current handover until an atomic release switch', () => {
+ const first = draftSet(); first.draft.test = managed.testDraft(first, [labeledSample]);
+ const live = managed.handoverSet(managed.publishSet(first, 'Staff', 'Checked'), 1, 'Staff');
+ const editing = { ...live, draft: { rules: structuredClone(live.versions[0].rules) } };
+ editing.draft.rules[0].conditionGroup.children[0].value = 15;
+ assert.equal(live.versions[0].rules[0].conditionGroup.children[0].value, 10);
+ assert.equal(editing.activeVersion, 1);
+ assert.equal(editing.handover.version, 1);
+ editing.draft.test = managed.testDraft(editing, [{ ...labeledSample, expected: undefined }]);
+ const published = managed.publishSet(editing, 'Staff', 'Checked updated threshold');
+ assert.equal(published.activeVersion, 1);
+ assert.equal(published.handover.version, 1);
+ const next = managed.handoverSet(published, 2, 'Staff');
+ assert.equal(next.activeVersion, 2); assert.equal(next.handover.version, 2);
+ assert.equal(published.activeVersion, 1);
+ assert.throws(() => managed.handoverSet(next, 99, 'Staff'));
+ const corrupted = structuredClone(next); corrupted.versions[1].rules.push(corrupted.versions[1].rules[0]);
+ assert.throws(() => managed.handoverSet(corrupted, 2, 'Staff'));
+});
+
 test('rule set UI creates, tests, reviews, publishes and activates a version', () => {
  const states = []; let cursor, tree;
  const react = { useState(initial) { const slot = cursor++; if (!(slot in states)) states[slot] = typeof initial === 'function' ? initial() : initial; return [states[slot], value => { states[slot] = typeof value === 'function' ? value(states[slot]) : value; }]; } };
@@ -398,7 +467,8 @@ test('rule set UI creates, tests, reviews, publishes and activates a version', (
  nodes().filter(n => n.type === 'input' && n.props.type === 'checkbox').at(-1).props.onChange({ target: { checked: true } }); render();
  click('Phát hành phiên bản tập rule');
  assert.equal(props.sets[0].versions.length, 1); assert.equal(props.sets[0].activeVersion, undefined);
- click('Kích hoạt cho doanh nghiệp'); assert.equal(props.sets[0].activeVersion, 1);
+ click('Áp dụng và bàn giao'); assert.equal(props.sets[0].activeVersion, 1);
+ assert.equal(props.sets[0].handover.version, 1);
  click('Tạo phiên bản nháp mới');
  assert.equal(props.sets[0].activeVersion, 1); assert.equal(button('Phát hành phiên bản tập rule').props.disabled, true);
 });
@@ -584,6 +654,42 @@ test('unconfirmed onboarding permits drafts but blocks publishing, activation an
 });
 
 const importPipeline = load('src/lib/transaction-import.ts', { './rule-set': ruleSet, './ingestion-validation': load('src/lib/ingestion-validation.ts') });
+
+test('configured schema validates required fields and normalizes CSV without losing text identifiers', () => {
+ const schema = [{ name: 'amount', type: 'number', required: true }, { name: 'user_hash', type: 'string', required: true }, { name: 'flag', type: 'boolean', required: false }];
+ const targetRules = [active('schema-rule', condition('amount', '>', 10))];
+ const result = importPipeline.previewTransactionImport('transaction_reference,transaction_type,amount,user_hash,flag\nA,payment,20,00123,true', 'file.csv', 'p1', 'Wallet', targetRules, [], schema);
+ assert.equal(result[0].error, ''); assert.equal(result[0].transaction.entityReference, '00123');
+ const missing = importPipeline.previewTransactionImport(JSON.stringify([{ ref:'B',transactionType:'payment',fields:{amount:20} }]),'file.json','p1','Wallet',targetRules,[],schema);
+ assert.match(missing[0].error,/user_hash/);
+ const wrong = importPipeline.previewTransactionImport(JSON.stringify([{ ref:'B',transactionType:'payment',fields:{amount:'20',user_hash:'00123'} }]),'file.json','p1','Wallet',targetRules,[],schema);
+ assert.match(wrong[0].error,/amount/);
+});
+
+test('publication freezes the schema and rejects samples that do not satisfy it', () => {
+ const schema = [{ name:'amount',type:'number',required:true }];
+ const draft = draftSet(); draft.draft.test = managed.testDraft(draft,[labeledSample],schema);
+ const published = managed.publishSet(draft,'Staff','Checked',schema);
+ schema[0].name = 'changed';
+ assert.equal(published.versions[0].schema[0].name,'amount');
+ assert.throws(()=>managed.testDraft(draft,[labeledSample],schema),/changed/);
+ assert.throws(()=>managed.publishSet(draft,'Staff','Checked',schema),/changed/);
+});
+
+test('Excel import preserves text IDs and rejects formulas and ambiguous worksheets', async () => {
+ const { Workbook } = require('exceljs');
+ const reader = load('src/lib/transaction-file.ts');
+ const workbook = new Workbook(); const sheet = workbook.addWorksheet('Transactions');
+ sheet.addRow(['transaction_reference','transaction_type','amount','user_hash']);
+ sheet.addRow(['00001','payment',20,'00123']);
+ async function file() { const bytes = await workbook.xlsx.writeBuffer(); return {name:'transactions.xlsx',size:bytes.length,arrayBuffer:async()=>bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength)}; }
+ const parsed = await reader.readTransactionFile(await file());
+ const rows = JSON.parse(parsed.text); assert.equal(rows[0].transaction_reference,'00001'); assert.equal(rows[0].user_hash,'00123');
+ sheet.getCell('C2').value = {formula:'10+10',result:20};
+ await assert.rejects(reader.readTransactionFile(await file()),/C2/);
+ sheet.getCell('C2').value = 20; workbook.addWorksheet('Other').addRow(['data']);
+ await assert.rejects(reader.readTransactionFile(await file()),/trang/);
+});
 test('file ingestion previews normal and rule alerts without creating investigation cases',()=>{
  const rules=[active('import-rule',condition('amount','>',10))];
  const rows=importPipeline.previewTransactionImport('transaction_reference,transaction_type,amount,user_hash\nA,payment,20,00123\nB,payment,5,00456','samples.csv','p1','Wallet',rules,[]);
@@ -606,7 +712,7 @@ test('ingestion blocks cross-scope data, missing rule fields, duplicate referenc
 
 test('import dialog requires preview and saves only after explicit confirmation',async()=>{
  const states=[];let cursor=0,tree,saves=0;
- const component=load('src/components/fraudguard-dashboard/DataIngestionModal.tsx',{
+ const component=load('src/components/fraudguard-dashboard/DataIngestionModal.tsx',{ '@/lib/transaction-file': load('src/lib/transaction-file.ts'),
  react:{useState(initial){const slot=cursor++;if(!(slot in states))states[slot]=initial;return [states[slot],v=>states[slot]=v];}},
  './useDialogFocus':{useDialogFocus:()=>null},'./i18n/LanguageContext':{useLanguage:()=>({language:'vi'})},'./SecurityDashboard.module.css':{default:{}}
  }).DataIngestionModal;
@@ -641,6 +747,7 @@ test('enterprise usage separates AI, rules and fallback and respects enterprise 
 });
 test('platform view uses shared enterprises and shows no Free allowance',()=>{
  const component=load('src/components/fraudguard-dashboard/PlatformHealthView.tsx',{
+ '@/lib/platform-summary':load('src/lib/platform-summary.ts'),
  '@/data/fraudguard-enterprises':enterpriseData,
  '../../data/fraudguard-platform':load('src/data/fraudguard-platform.ts'),
  './useDialogFocus':{useDialogFocus:()=>null},'./ToastProvider':{useToast:()=>({toast(){}})},
@@ -663,4 +770,22 @@ test('active investigation KPI excludes rule alerts, missing cases and closed ca
  const base={scoringSource:'AI',riskLevel:'Abnormal',caseId:'case-1',caseStatus:'Investigating'};
  assert.ok(cases.isActiveInvestigation(base));
  for(const change of [{scoringSource:'RULE'},{scoringSource:'RULE_FALLBACK'},{caseId:undefined},{caseStatus:'Resolved'},{riskLevel:'Normal'}]) assert.equal(cases.isActiveInvestigation({...base,...change}),false);
+});
+
+test('paid imports record unavailable AI as rules fallback without AI confidence or cases', () => {
+ const targetRules=[{...rules[0], appliesTo:{projects:['p1'],transactionTypes:['payment']},conditionGroup:group('AND',[condition('amount','>',10)])}];
+ const text=JSON.stringify([{ref:'PAID-1',transactionType:'payment',fields:{amount:20}}]);
+ const paid=importPipeline.previewTransactionImport(text,'x.json','p1','Wallet',targetRules,[],[],'Subscription')[0].transaction;
+ const free=importPipeline.previewTransactionImport(text,'x.json','p1','Wallet',targetRules,[],[],'Free')[0].transaction;
+ assert.equal(paid.scoringSource,'RULE_FALLBACK'); assert.equal(free.scoringSource,'RULE');
+ assert.equal(paid.riskLevel,'Abnormal');assert.equal(paid.confidence,undefined);assert.equal(paid.caseId,undefined);assert.ok(paid.alertId);
+ const usage=load('src/data/fraudguard-enterprises.ts').enterpriseUsage({projectIds:['p1']},[paid,free]);
+ assert.equal(usage.ai,0);assert.equal(usage.rule,1);assert.equal(usage.fallback,1);
+});
+
+test('platform metrics use recorded AI and fallback only and confirmed AI feedback',()=>{
+ const summary=load('src/lib/platform-summary.ts').platformSummary;
+ const base={processedAt:'2026-10-23T01:20:00Z'};
+ const result=summary([{...base,scoringSource:'RULE'}, {...base,scoringSource:'AI',caseDecision:{status:'False Alarm'}},{...base,scoringSource:'RULE_FALLBACK',caseDecision:{status:'Confirmed Fraud'}}]);
+ assert.equal(result.fallbackRate,50);assert.equal(result.feedback.length,1);assert.equal(result.trend.length,1);assert.equal(result.trend[0].aiRequests,1);assert.equal(result.trend[0].fallbackRequests,1);assert.equal(summary([]).fallbackRate,null);
 });

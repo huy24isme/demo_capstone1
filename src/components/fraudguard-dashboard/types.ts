@@ -55,6 +55,7 @@ export interface TransactionRisk {
 
   riskLevel: RiskLevel;
   confidence?: number;
+  modelVersion?: string;
   scoringSource: ScoringSource;
   triggeredRules: string[];
   ruleEvidence?: Array<{ code: string; name: string; observed: string; condition: string }>;
@@ -63,6 +64,7 @@ export interface TransactionRisk {
   caseId?: string;
   caseStatus?: CaseStatus;
   assignedInvestigator?: string;
+  assignedInvestigatorId?: string;
   assignedAt?: string;
   investigationReport?: InvestigationReport;
   investigationNotes?: CaseNote[];
@@ -205,6 +207,7 @@ export type AuditAction =
   | "EXPORT_GENERATED";
 
 export interface AuditLogEntry {
+  enterpriseId?: string;
   id: string;
   timestamp: string;
   actor: {

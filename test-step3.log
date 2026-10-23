@@ -1,0 +1,335 @@
+TAP version 13
+# Subtest: selected condition tree and nested AND/OR directly determine the result
+ok 1 - selected condition tree and nested AND/OR directly determine the result
+  ---
+  duration_ms: 3.812
+  ...
+# Subtest: all supported operators preserve number, text and boolean semantics
+ok 2 - all supported operators preserve number, text and boolean semantics
+  ---
+  duration_ms: 1.1617
+  ...
+# Subtest: invalid/missing data raises an error even in an OR branch
+ok 3 - invalid/missing data raises an error even in an OR branch
+  ---
+  duration_ms: 0.9811
+  ...
+# Subtest: results contain no risk score and a matching rule always returns abnormal
+ok 4 - results contain no risk score and a matching rule always returns abnormal
+  ---
+  duration_ms: 0.1955
+  ...
+# Subtest: project/type applicability is enforced; disabled drafts can be tested
+ok 5 - project/type applicability is enforced; disabled drafts can be tested
+  ---
+  duration_ms: 0.3234
+  ...
+# Subtest: versions advance from the selected version and reject unsupported formats
+ok 6 - versions advance from the selected version and reject unsupported formats
+  ---
+  duration_ms: 0.3363
+  ...
+# Subtest: sandbox isolates the selected enterprise even when active sets reuse rule IDs
+ok 7 - sandbox isolates the selected enterprise even when active sets reuse rule IDs
+  ---
+  duration_ms: 197.0608
+  ...
+# Subtest: deployment sandbox directs publication to the enterprise draft instead of individual rules
+ok 8 - deployment sandbox directs publication to the enterprise draft instead of individual rules
+  ---
+  duration_ms: 85.6015
+  ...
+# Subtest: publish requires a passing current test; changing rules invalidates even if reverted
+ok 9 - publish requires a passing current test; changing rules invalidates even if reverted
+  ---
+  duration_ms: 95.8827
+  ...
+# Subtest: changed conditions fail independent labels and missing fields block publishing
+ok 10 - changed conditions fail independent labels and missing fields block publishing
+  ---
+  duration_ms: 76.4139
+  ...
+# Subtest: no rules or no publish callback cannot report a successful publication
+ok 11 - no rules or no publish callback cannot report a successful publication
+  ---
+  duration_ms: 123.9273
+  ...
+# Subtest: demo rule and fallback transactions agree with triggered rules and alerts
+ok 12 - demo rule and fallback transactions agree with triggered rules and alerts
+  ---
+  duration_ms: 12.0509
+  ...
+# Subtest: CSV exports classification, source and explanation without a score
+ok 13 - CSV exports classification, source and explanation without a score
+  ---
+  duration_ms: 14.87
+  ...
+# Subtest: draft edits never overwrite the active definition; publication preserves history and activation
+ok 14 - draft edits never overwrite the active definition; publication preserves history and activation
+  ---
+  duration_ms: 0.4073
+  ...
+# Subtest: new rule first publication is v1.0 and disabled; forged lifecycle fields are discarded on save
+ok 15 - new rule first publication is v1.0 and disabled; forged lifecycle fields are discarded on save
+  ---
+  duration_ms: 0.2203
+  ...
+# Subtest: unchanged published rule cannot be republished after a passing sandbox run
+ok 16 - unchanged published rule cannot be republished after a passing sandbox run
+  ---
+  duration_ms: 81.6169
+  ...
+# Subtest: CSV and JSON validation reads content and rejects incomplete transactions
+ok 17 - CSV and JSON validation reads content and rejects incomplete transactions
+  ---
+  duration_ms: 1.12
+  ...
+# Subtest: saving an unchanged published definition does not create a publishable draft
+ok 18 - saving an unchanged published definition does not create a publishable draft
+  ---
+  duration_ms: 0.1584
+  ...
+# Subtest: custom dataset supports new rules, rejects out-of-scope samples, and edits invalidate publication
+ok 19 - custom dataset supports new rules, rejects out-of-scope samples, and edits invalidate publication
+  ---
+  duration_ms: 56.2268
+  ...
+# Subtest: case mutations require the assigned investigator and nonempty authored findings
+ok 20 - case mutations require the assigned investigator and nonempty authored findings
+  ---
+  duration_ms: 0.2694
+  ...
+# Subtest: final case decisions need a reason; closed cases and normal transactions cannot be mutated
+ok 21 - final case decisions need a reason; closed cases and normal transactions cannot be mutated
+  ---
+  duration_ms: 0.1316
+  ...
+# Subtest: rule set checks all 10 applicable rules and one match is abnormal
+ok 22 - rule set checks all 10 applicable rules and one match is abnormal
+  ---
+  duration_ms: 1.7483
+  ...
+# Subtest: only live enabled scope-matching rules run, never drafts or other project rules
+ok 23 - only live enabled scope-matching rules run, never drafts or other project rules
+  ---
+  duration_ms: 0.3289
+  ...
+# Subtest: missing fields do not abort other rules or become normal
+ok 24 - missing fields do not abort other rules or become normal
+  ---
+  duration_ms: 0.3783
+  ...
+# Subtest: evaluation snapshots survive edits and only abnormal results create alerts, not cases
+ok 25 - evaluation snapshots survive edits and only abnormal results create alerts, not cases
+  ---
+  duration_ms: 0.2707
+  ...
+# Subtest: dataset parser accepts unlabeled samples but rejects duplicate IDs and invalid field values
+ok 26 - dataset parser accepts unlabeled samples but rejects duplicate IDs and invalid field values
+  ---
+  duration_ms: 0.3299
+  ...
+# Subtest: SME transaction scope excludes foreign projects and fails closed without an enterprise
+ok 27 - SME transaction scope excludes foreign projects and fails closed without an enterprise
+  ---
+  duration_ms: 4.8413
+  ...
+# Subtest: route access follows each role and rejects legacy or unknown roles
+ok 28 - route access follows each role and rejects legacy or unknown roles
+  ---
+  duration_ms: 0.2843
+  ...
+# Subtest: investigator scope uses assigned user IDs and never includes foreign or unassigned cases
+ok 29 - investigator scope uses assigned user IDs and never includes foreign or unassigned cases
+  ---
+  duration_ms: 1.2593
+  ...
+# Subtest: audit scope includes colleagues and assigned staff but excludes foreign and unresolved events
+ok 30 - audit scope includes colleagues and assigned staff but excludes foreign and unresolved events
+  ---
+  duration_ms: 0.6778
+  ...
+# Subtest: SME admins cannot mutate cases and investigators cannot change transaction scope or assigned identity
+ok 31 - SME admins cannot mutate cases and investigators cannot change transaction scope or assigned identity
+  ---
+  duration_ms: 0.271
+  ...
+# Subtest: set publication requires complete current tests and reviewer evidence
+ok 32 - set publication requires complete current tests and reviewer evidence
+  ---
+  duration_ms: 1.0995
+  ...
+# Subtest: missing data, mismatches and unexercised members block set publication
+ok 33 - missing data, mismatches and unexercised members block set publication
+  ---
+  duration_ms: 0.4134
+  ...
+# Subtest: activation is exclusive per project and draft edits never alter runtime release
+ok 34 - activation is exclusive per project and draft edits never alter runtime release
+  ---
+  duration_ms: 0.5735
+  ...
+# Subtest: unlabeled tests retain their unlabeled evidence and snapshots are independent of library drafts
+ok 35 - unlabeled tests retain their unlabeled evidence and snapshots are independent of library drafts
+  ---
+  duration_ms: 0.3337
+  ...
+# Subtest: draft and publication preserve the current handover until an atomic release switch
+ok 36 - draft and publication preserve the current handover until an atomic release switch
+  ---
+  duration_ms: 0.8382
+  ...
+# Subtest: rule set UI creates, tests, reviews, publishes and activates a version
+ok 37 - rule set UI creates, tests, reviews, publishes and activates a version
+  ---
+  duration_ms: 119.919
+  ...
+# Subtest: enterprise roles separate platform administration from assigned deployment
+ok 38 - enterprise roles separate platform administration from assigned deployment
+  ---
+  duration_ms: 0.8022
+  ...
+# Subtest: one enterprise set accepts multiple owned projects but rejects foreign samples
+ok 39 - one enterprise set accepts multiple owned projects but rejects foreign samples
+  ---
+  duration_ms: 0.6233
+  ...
+# Subtest: legacy migration preserves single releases, archives ambiguous project sets and retains unknown projects
+ok 40 - legacy migration preserves single releases, archives ambiguous project sets and retains unknown projects
+  ---
+  duration_ms: 0.4108
+  ...
+# Subtest: duplicate rule IDs cannot be snapshotted, tested or published as a set
+ok 41 - duplicate rule IDs cannot be snapshotted, tested or published as a set
+  ---
+  duration_ms: 0.4175
+  ...
+# Subtest: SME pending view explains handover without a dead details button or draft exposure
+ok 42 - SME pending view explains handover without a dead details button or draft exposure
+  ---
+  duration_ms: 11.087
+  ...
+# Subtest: SME sees readable handed-over conditions, never draft definitions or review evidence
+ok 43 - SME sees readable handed-over conditions, never draft definitions or review evidence
+  ---
+  duration_ms: 6.6415
+  ...
+# Subtest: activation keeps last handover visible but marks it as no longer active until new handover
+ok 44 - activation keeps last handover visible but marks it as no longer active until new handover
+  ---
+  duration_ms: 2.5514
+  ...
+# Subtest: readable conditions preserve nested AND/OR and strict versus inclusive comparisons
+ok 45 - readable conditions preserve nested AND/OR and strict versus inclusive comparisons
+  ---
+  duration_ms: 1.2543
+  ...
+# Subtest: initial and switched demo accounts land on their role homepage
+ok 46 - initial and switched demo accounts land on their role homepage
+  ---
+  duration_ms: 8.0386
+  ...
+# Subtest: rule and fallback alerts cannot enter investigation
+ok 47 - rule and fallback alerts cannot enter investigation
+  ---
+  duration_ms: 0.2263
+  ...
+# Subtest: operator can investigate an AI alert and submit their own findings
+ok 48 - operator can investigate an AI alert and submit their own findings
+  ---
+  duration_ms: 0.3549
+  ...
+# Subtest: rule and fallback detail UI hides case creation, assignment and self-investigation
+ok 49 - rule and fallback detail UI hides case creation, assignment and self-investigation
+  ---
+  duration_ms: 158.4934
+  ...
+# Subtest: operator detail UI supports self-investigation, notes and report submission end to end
+ok 50 - operator detail UI supports self-investigation, notes and report submission end to end
+  ---
+  duration_ms: 84.6497
+  ...
+# Subtest: demo membership enforces enterprise boundary, role restrictions and unique identity
+ok 51 - demo membership enforces enterprise boundary, role restrictions and unique identity
+  ---
+  duration_ms: 6.0297
+  ...
+# Subtest: unconfirmed onboarding permits drafts but blocks publishing, activation and handover
+ok 52 - unconfirmed onboarding permits drafts but blocks publishing, activation and handover
+  ---
+  duration_ms: 0.5943
+  ...
+# Subtest: configured schema validates required fields and normalizes CSV without losing text identifiers
+ok 53 - configured schema validates required fields and normalizes CSV without losing text identifiers
+  ---
+  duration_ms: 1.2408
+  ...
+# Subtest: publication freezes the schema and rejects samples that do not satisfy it
+ok 54 - publication freezes the schema and rejects samples that do not satisfy it
+  ---
+  duration_ms: 0.8052
+  ...
+# Subtest: Excel import preserves text IDs and rejects formulas and ambiguous worksheets
+ok 55 - Excel import preserves text IDs and rejects formulas and ambiguous worksheets
+  ---
+  duration_ms: 1860.5534
+  ...
+# Subtest: file ingestion previews normal and rule alerts without creating investigation cases
+ok 56 - file ingestion previews normal and rule alerts without creating investigation cases
+  ---
+  duration_ms: 1.5415
+  ...
+# Subtest: ingestion blocks cross-scope data, missing rule fields, duplicate references and unsupported files
+ok 57 - ingestion blocks cross-scope data, missing rule fields, duplicate references and unsupported files
+  ---
+  duration_ms: 1.826
+  ...
+# Subtest: import dialog requires preview and saves only after explicit confirmation
+ok 58 - import dialog requires preview and saves only after explicit confirmation
+  ---
+  duration_ms: 32.1683
+  ...
+# Subtest: file import preserves text identifiers and rejects object metadata
+ok 59 - file import preserves text identifiers and rejects object metadata
+  ---
+  duration_ms: 1.494
+  ...
+# Subtest: enterprise usage separates AI, rules and fallback and respects enterprise scope
+ok 60 - enterprise usage separates AI, rules and fallback and respects enterprise scope
+  ---
+  duration_ms: 0.4313
+  ...
+# Subtest: platform view uses shared enterprises and shows no Free allowance
+ok 61 - platform view uses shared enterprises and shows no Free allowance
+  ---
+  duration_ms: 1570.7526
+  ...
+# Subtest: only platform staff can provision the first enterprise administrator with a unique email
+ok 62 - only platform staff can provision the first enterprise administrator with a unique email
+  ---
+  duration_ms: 0.4119
+  ...
+# Subtest: active investigation KPI excludes rule alerts, missing cases and closed cases
+ok 63 - active investigation KPI excludes rule alerts, missing cases and closed cases
+  ---
+  duration_ms: 0.3653
+  ...
+# Subtest: paid imports record unavailable AI as rules fallback without AI confidence or cases
+ok 64 - paid imports record unavailable AI as rules fallback without AI confidence or cases
+  ---
+  duration_ms: 12.4545
+  ...
+# Subtest: platform metrics use recorded AI and fallback only and confirmed AI feedback
+ok 65 - platform metrics use recorded AI and fallback only and confirmed AI feedback
+  ---
+  duration_ms: 9.7916
+  ...
+1..65
+# tests 65
+# suites 0
+# pass 65
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5093.1812

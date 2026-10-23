@@ -1,5 +1,6 @@
 "use client";
 
+import { canAccessView } from "../../data/fraudguard-roles";
 import { useMemo } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -38,6 +39,10 @@ interface NavSection {
 }
 
 export function getSectionsForRole(role?: string, t?: TranslationKey): NavSection[] {
+  return roleSections(role, t).map(section => ({ ...section, items: section.items.filter(item => canAccessView(role as UserProfile['role'], item.id)) })).filter(section => section.items.length);
+}
+
+function roleSections(role?: string, t?: TranslationKey): NavSection[] {
   const nav = t?.nav;
   if (role === "Platform Admin") return [{ title: nav?.sections.platformSystem || "PLATFORM", items: [
     { id: "onboarding", label: nav?.items.onboarding || "Enterprise setup", icon: Building2 },

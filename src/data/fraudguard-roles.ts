@@ -103,6 +103,17 @@ export function getRoleHomeView(role: UserRole): SecondaryView {
   }
 }
 
+export function canAccessView(role: UserRole, view: SecondaryView): boolean {
+  const views: Partial<Record<UserRole, SecondaryView[]>> = {
+    'Platform Admin': ['onboarding', 'platform-health', 'rule-sets', 'audit-trail'],
+    'Implementation Staff': ['onboarding', 'rule-sets', 'rule-templates', 'rule-testing', 'projects', 'audit-trail'],
+    'SME Admin': ['risk-overview', 'recent-alerts', 'active-cases', 'reports', 'members', 'projects', 'rule-sets', 'audit-trail'],
+    'Operator': ['risk-overview', 'recent-alerts', 'active-cases', 'reports', 'audit-trail'],
+    'Investigator': ['active-cases', 'my-cases', 'reports'],
+  };
+  return views[role]?.includes(view) ?? false;
+}
+
 export function getRolePermissions(role: UserRole): RolePermissions {
   switch (role) {
     case "Platform Admin":
@@ -137,7 +148,7 @@ export function getRolePermissions(role: UserRole): RolePermissions {
       return {
         canManageProjects: true,
         canManageRules: false,
-        canManageCases: true,
+        canManageCases: false,
         canInvestigateCases: false,
         canViewAllCases: true,
         canViewAudit: true,
@@ -205,11 +216,11 @@ export interface PermissionMatrixItem {
 
 export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
   {
-    capability: "Onboarding doanh nghiệp & thiết lập Schema ban đầu",
+    capability: "Thiết lập doanh nghiệp và xác nhận đặc tả",
     category: "Onboarding",
-    platformAdmin: "Chỉ xem trạng thái",
+    platformAdmin: "Tạo doanh nghiệp, phân công; xem đặc tả",
     deploymentStaff: "Có (Doanh nghiệp được phân công)",
-    smeAdmin: "Gửi đặc tả",
+    smeAdmin: "Cung cấp qua nhân viên triển khai",
     operation: "Không",
     investigator: "Không",
   },
@@ -218,7 +229,7 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     category: "Rule Lifecycle",
     platformAdmin: "Chỉ xem tập rule",
     deploymentStaff: "Có (Doanh nghiệp được phân công)",
-    smeAdmin: "Gửi Change Request",
+    smeAdmin: "Chỉ xem tập đã bàn giao",
     operation: "Không",
     investigator: "Không",
   },
@@ -229,7 +240,7 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     deploymentStaff: "Không",
     smeAdmin: "Toàn doanh nghiệp",
     operation: "Toàn doanh nghiệp",
-    investigator: "Chỉ theo dõi ca trực",
+    investigator: "Không",
   },
   {
     capability: "Xem danh sách giao dịch & AI Detection Explanation",
@@ -238,14 +249,14 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     deploymentStaff: "Không",
     smeAdmin: "Có",
     operation: "Có",
-    investigator: "Theo ca trực / case",
+    investigator: "Chỉ hồ sơ được giao",
   },
   {
     capability: "Phân công Case cho Điều tra viên (Assign Case)",
     category: "Case Management",
     platformAdmin: "Không can thiệp prod",
     deploymentStaff: "Không",
-    smeAdmin: "Có quyền",
+    smeAdmin: "Không (chỉ xem kết quả)",
     operation: "Có (Trách nhiệm chính)",
     investigator: "Không",
   },
@@ -263,7 +274,7 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     category: "Investigation",
     platformAdmin: "Không can thiệp prod",
     deploymentStaff: "Không",
-    smeAdmin: "Có quyền",
+    smeAdmin: "Không (chỉ xem kết quả)",
     operation: "Có quyền",
     investigator: "Có (Nhiệm vụ chính)",
   },
@@ -273,7 +284,7 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
     category: "Case Decision",
     platformAdmin: "Không can thiệp prod",
     deploymentStaff: "Không",
-    smeAdmin: "Có quyền",
+    smeAdmin: "Không (chỉ xem kết quả)",
     operation: "Có (Duyệt báo cáo)",
     investigator: "Không có quyền đóng",
   },
@@ -289,17 +300,17 @@ export const PERMISSION_MATRIX_DATA: PermissionMatrixItem[] = [
   {
     capability: "Xem Báo cáo phân tích & Xuất dữ liệu CSV",
     category: "Reporting",
-    platformAdmin: "Toàn hệ thống",
+    platformAdmin: "Không",
     deploymentStaff: "Không",
     smeAdmin: "Toàn doanh nghiệp",
     operation: "Toàn doanh nghiệp",
-    investigator: "Không",
+    investigator: "Xem lịch sử hồ sơ được giao; không xuất CSV",
   },
   {
     capability: "Xem Security Audit Trail (Nhật ký tuân thủ)",
     category: "Audit & Compliance",
     platformAdmin: "Toàn hệ thống",
-    deploymentStaff: "Không",
+    deploymentStaff: "Doanh nghiệp được phân công",
     smeAdmin: "Trong doanh nghiệp",
     operation: "Trong doanh nghiệp",
     investigator: "Không",

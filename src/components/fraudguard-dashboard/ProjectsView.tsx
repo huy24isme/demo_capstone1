@@ -15,10 +15,12 @@ import type { ProjectItem, RolePermissions, TransactionRisk } from "./types";
 import { useToast } from "./ToastProvider";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
+import { IngestionInstructions } from './IngestionInstructions';
 
 import { enterprisePlan, type Enterprise } from '@/data/fraudguard-enterprises';
 
 interface ProjectsViewProps {
+  dataSchema?: import('@/lib/ingestion-validation').DataField[];
   enterprise?: Enterprise;
   transactions: TransactionRisk[];
   initialProjects: ProjectItem[];
@@ -28,7 +30,7 @@ interface ProjectsViewProps {
 }
 
 export function ProjectsView({
-  enterprise, transactions,
+  enterprise, transactions, dataSchema,
   initialProjects,
   onProjectsChange,
   permissions,
@@ -40,6 +42,7 @@ export function ProjectsView({
   const canManage = permissions ? permissions.canManageProjects : true;
   const { toast } = useToast();
   const projects = initialProjects;
+  const canCreateScope = canManage && !enterprise?.projectIds.length;
   const setProjects = onProjectsChange;
   const [filterEnv, setFilterEnv] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
@@ -143,14 +146,14 @@ export function ProjectsView({
     toast(
       "success",
       language === "vi"
-        ? `Đã cập nhật Webhook cho "${editingWebhookProject.name}"`
-        : `Webhook updated for "${editingWebhookProject.name}"`,
+        ? `Đã lưu địa chỉ nhận cảnh báo cho "${editingWebhookProject.name}"`
+        : `Alert destination saved for "${editingWebhookProject.name}"`,
     );
     setEditingWebhookProject(null);
   };
 
   const handleCreateProject = () => {
-    if (!canManage) return;
+    if (!canCreateScope) return;
     if (projects.some(p => p.code.toUpperCase() === newProjectCode.trim().toUpperCase())) { toast('error', language === 'vi' ? 'Mã dự án đã tồn tại.' : 'Project code already exists.'); return; }
     if (!newProjectName.trim() || !newProjectCode.trim()) {
       toast(
@@ -210,9 +213,9 @@ export function ProjectsView({
         </div>
         <button
           className={`${styles.btnPrimary} ${!canManage ? styles.actionDisabledTooltip : ""}`}
-          onClick={() => canManage && setCreateModalOpen(true)}
-          disabled={!canManage}
-          title={!canManage ? "SME Admin permission required" : undefined}
+          onClick={() => canCreateScope && setCreateModalOpen(true)}
+          disabled={!canCreateScope}
+          title={enterprise?.projectIds.length ? (language === 'vi' ? 'Doanh nghiệp đã có phạm vi triển khai chính.' : 'This enterprise already has its primary deployment scope.') : undefined}
           type="button"
         >
           <Plus size={15} style={{ marginRight: 6 }} />
@@ -220,6 +223,9 @@ export function ProjectsView({
         </button>
       </div>
 
+      <p className={styles.muted}>{language === 'vi' ? 'Mỗi doanh nghiệp dùng một phạm vi triển khai chính và một tập quy tắc. Các dự án cũ vẫn được giữ để đối chiếu.' : 'Each enterprise uses one primary deployment scope and one rule set. Existing projects are preserved for reference.'}</p>
+
+      {projects.map(project => <IngestionInstructions key={project.id} projectId={project.id} schema={dataSchema} />)}
       {/* KPI Stats */}
       <section className={styles.metricsGrid} style={{ marginTop: 24 }}>
         <article className={styles.statCard}>
@@ -394,7 +400,7 @@ export function ProjectsView({
                         letterSpacing: "0.04em",
                       }}
                     >
-                      {t.projectsView.card.webhook}
+                      {language === 'vi' ? 'Địa chỉ nhận cảnh báo' : 'Alert notification destination'}
                     </span>
                     <button
                       className={`${styles.button} ${!canManage ? styles.actionDisabledTooltip : ""}`}

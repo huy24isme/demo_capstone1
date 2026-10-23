@@ -13,8 +13,10 @@ import { useToast } from "./ToastProvider";
 import { useLanguage } from "./i18n/LanguageContext";
 
 interface RuleTestingViewProps {
+  onOpenDraft?: (enterpriseId: string) => void;
   rules: RuleTemplate[];
   activeRules?: RuleTemplate[];
+  schemasByEnterprise?: Record<string, import('@/lib/ingestion-validation').DataField[]>;
   enterprises?: Enterprise[];
   setContext?: Record<string, { id: string; name: string; version: number }>;
   projects?: ProjectItem[];
@@ -95,7 +97,7 @@ const EXPECTED_BY_RULE: Record<string, boolean[]> = {
   "rule-002": [false, false, false, false, false],
 };
 
-export function RuleTestingView({ rules, enterprises = [], activeRules, setContext, projects, onPublishRule, onAddDemoTransactions }: RuleTestingViewProps) {
+export function RuleTestingView({ rules, enterprises = [], schemasByEnterprise, activeRules, setContext, projects, onPublishRule, onAddDemoTransactions, onOpenDraft }: RuleTestingViewProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
@@ -191,16 +193,17 @@ export function RuleTestingView({ rules, enterprises = [], activeRules, setConte
     <>
       <div className={styles.pageHeading}>
         <div>
-          <h1>{language === "vi" ? "Kiểm thử Sandbox" : "Sandbox testing"}</h1>
-          <p>{language === "vi" ? "Kiểm tra giao dịch trên tập rule của project hoặc xác minh từng rule trước khi phát hành." : "Test transactions against project rules or validate a single rule before publication."}</p>
+          <h1>{language === "vi" ? "Kiểm tra giao dịch thử" : "Try sample transactions"}</h1>
+          <p>{language === "vi" ? "Kiểm tra lại tập quy tắc đang áp dụng. Để chuẩn bị phiên bản mới, hãy kiểm thử bản nháp trong Tập rule doanh nghiệp." : "Check the current release. To prepare a new release, test its draft in Enterprise rule sets."}</p>
         </div>
       </div>
 
-      <div className={styles.tabs} role="group" aria-label="Sandbox mode">
+      {!onOpenDraft && <div className={styles.tabs} role="group" aria-label="Sandbox mode">
         <button type="button" className={`${styles.tab} ${mode === 'set' ? styles.tabActive : ''}`} aria-pressed={mode === 'set'} onClick={() => setMode('set')}>{language === 'vi' ? 'Kiểm thử tập rule' : 'Rule set test'}</button>
         <button id="sandbox-single-mode" type="button" className={`${styles.tab} ${mode === 'single' ? styles.tabActive : ''}`} aria-pressed={mode === 'single'} onClick={() => setMode('single')}>{language === 'vi' ? 'Kiểm thử & phát hành từng rule' : 'Single rule testing & publication'}</button>
-      </div>
-      {mode === 'set' ? <><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={enterpriseId} onChange={e => setEnterpriseId(e.target.value)}>{enterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>{enterprise ? <RuleSetTestingView key={enterprise.id} projects={projects?.filter(p => enterprise.projectIds.includes(p.id))} allowedProjectIds={enterprise.projectIds} enterpriseLabel={enterprise.name} rules={enterpriseRules} setContext={setContext} onAddDemoTransactions={onAddDemoTransactions} /> : <p>{language === 'vi' ? 'Chưa được phân công doanh nghiệp.' : 'No enterprise assigned.'}</p>}</> : <>
+      </div>}
+      {onOpenDraft && enterprise && <section className={styles.panel}><h2>{language === 'vi' ? 'Chuẩn bị phiên bản mới' : 'Prepare a new release'}</h2><p>{language === 'vi' ? 'Kết quả thử trên trang này không dùng để phát hành. Mở tập quy tắc để chọn thành phần, kiểm thử và review bản nháp.' : 'Tests on this page do not authorize publication. Open the rule set to select members, test and review the draft.'}</p><button className={styles.button} onClick={() => onOpenDraft(enterprise.id)}>{language === 'vi' ? 'Mở tập quy tắc để kiểm thử bản nháp' : 'Open rule set to test the draft'}</button></section>}
+      {mode === 'set' ? <><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={enterpriseId} onChange={e => setEnterpriseId(e.target.value)}>{enterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>{enterprise ? <RuleSetTestingView key={enterprise.id} validationSchema={schemasByEnterprise?.[enterprise.id]} projects={projects?.filter(p => enterprise.projectIds.includes(p.id))} allowedProjectIds={enterprise.projectIds} enterpriseLabel={enterprise.name} rules={enterpriseRules} setContext={setContext} onAddDemoTransactions={onAddDemoTransactions} /> : <p>{language === 'vi' ? 'Chưa được phân công doanh nghiệp.' : 'No enterprise assigned.'}</p>}</> : <>
       {/* Overview Grid */}
       <div className={styles.metricsGrid} style={{ marginTop: 20 }}>
         <article className={styles.statCard}>

@@ -40,7 +40,7 @@ const rawTranslations = {
       "auditTrail": "Nhật ký Tuân thủ",
       "ruleTemplates": "Thư viện rule",
       "ruleSets": "Tập rule doanh nghiệp",
-      "ruleTesting": "Kiểm thử Sandbox",
+      "ruleTesting": "Kiểm tra giao dịch thử",
       "onboarding": "Thiết lập Doanh nghiệp",
       "projects": "Dự án & Tích hợp",
       "platformHealth": "Sức khỏe Nền tảng",
@@ -473,11 +473,11 @@ const rawTranslations = {
       "quota": "Hạn mức tháng",
     },
     "modalWebhook": {
-      "title": "Cấu hình Webhook — {name}",
+      "title": "Địa chỉ nhận cảnh báo — {name}",
       "desc": "FraudGuard gửi thông báo cảnh báo tới URL này.",
       "urlLabel": "Webhook Endpoint URL",
       "btnCancel": "Hủy",
-      "btnSave": "Lưu Webhook"
+      "btnSave": "Lưu địa chỉ"
     },
     "modalCreate": {
       "title": "Tạo Dự Án Mới",
@@ -797,7 +797,7 @@ const rawTranslations = {
       "auditTrail": "Audit Trail",
       "ruleTemplates": "Rule library",
       "ruleSets": "Enterprise rule sets",
-      "ruleTesting": "Rule Testing Sandbox",
+      "ruleTesting": "Try sample transactions",
       "onboarding": "Onboarding & Handover",
       "projects": "Projects & Integrations",
       "platformHealth": "Platform Health & Tenants",
@@ -1230,11 +1230,11 @@ const rawTranslations = {
       "quota": "Monthly Quota",
     },
     "modalWebhook": {
-      "title": "Configure Webhook — {name}",
+      "title": "Alert destination — {name}",
       "desc": "FraudGuard sends alert notifications to this endpoint.",
       "urlLabel": "Webhook Endpoint URL",
       "btnCancel": "Cancel",
-      "btnSave": "Save Webhook"
+      "btnSave": "Save destination"
     },
     "modalCreate": {
       "title": "Create New Project",

@@ -24,7 +24,7 @@ interface UserProfileMenuProps {
 }
 
 export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [matrixOpen, setMatrixOpen] = useState(false);
@@ -220,7 +220,7 @@ export function UserProfileMenu({ currentUser, onNavigate }: UserProfileMenuProp
                       key={interval}
                       type="button"
                       disabled={interval !== "off"}
-                      title="Demo: live refresh is not connected"
+                      title={language === 'vi' ? 'Chưa khả dụng' : 'Unavailable'}
                       className={`${styles.refreshIntervalBtn} ${refreshInterval === interval ? styles.refreshIntervalBtnActive : ""}`}
                       onClick={() => setRefreshInterval(interval)}
                     >

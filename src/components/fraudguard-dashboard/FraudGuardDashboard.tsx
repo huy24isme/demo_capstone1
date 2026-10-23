@@ -1,4 +1,5 @@
 "use client";
+import { enterprisePlan } from '@/data/fraudguard-enterprises';
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import type {
@@ -14,9 +15,10 @@ import type {
   UserProfile,
 } from "./types";
 import { previewTransactionImport } from "@/lib/transaction-import";
+import { normalizeFields, validateDataSchema } from '@/lib/ingestion-validation';
 import { parseRuleSetSamples } from "@/lib/rule-set";
 import { canUpdateCase, isActiveInvestigation } from "@/lib/case-workflow";
-import { demoEnterprises, visibleEnterprises, canDeploy, transactionsForEnterprise, type Enterprise } from '@/data/fraudguard-enterprises';
+import { auditForUser, demoEnterprises, visibleEnterprises, canDeploy, transactionsForEnterprise, type Enterprise } from '@/data/fraudguard-enterprises';
 import { MembersView } from "./MembersView";
 import { Sidebar } from "./Sidebar";
 import { ProductHeader } from "./ProductHeader";
@@ -38,7 +40,7 @@ import { AuditTrailView } from "./AuditTrailView";
 import { PlatformHealthView } from "./PlatformHealthView";
 import { initialProjects } from "../../data/fraudguard-projects";
 import { initialAuditLogs } from "../../data/fraudguard-audit-logs";
-import { DEMO_USERS, DEFAULT_DEMO_USER, canSaveMember, canProvisionEnterpriseAdmin, getRoleHomeView, getRolePermissions } from "../../data/fraudguard-roles";
+import { DEMO_USERS, DEFAULT_DEMO_USER, canSaveMember, canProvisionEnterpriseAdmin, getRoleHomeView, getRolePermissions, canAccessView } from "../../data/fraudguard-roles";
 import { ToastProvider } from "./ToastProvider";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
 import { OnboardingView } from "./OnboardingView";
@@ -130,8 +132,8 @@ function FraudGuardDashboardContent({
     setActiveNavItem(getRoleHomeView(user.role));
   }, []);
 
-  const recordAudit = (action: AuditLogEntry['action'], target: string, details: string) => {
-    setAuditLogs(logs => [{ id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: { name: currentUser.name, email: currentUser.email, role: currentUser.role }, action, target, details, ipAddress: 'Demo' }, ...logs]);
+  const recordAudit = (action: AuditLogEntry['action'], target: string, details: string, enterpriseId = enterprises.find(e => e.id === target || e.name === target || e.projectIds.includes(target))?.id) => {
+    setAuditLogs(logs => [{ enterpriseId, id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: { name: currentUser.name, email: currentUser.email, role: currentUser.role }, action, target, details, ipAddress: 'Demo' }, ...logs]);
   };
   const changeRules: React.Dispatch<React.SetStateAction<RuleTemplate[]>> = action => {
     if (!deploymentEnterprise || !canDeploy(currentUser, deploymentEnterprise)) return;
@@ -159,6 +161,7 @@ function FraudGuardDashboardContent({
     const requested = typeof action === 'function' ? action(scopedProjects) : action;
     if (requested.some(p => projects.some(old => old.id === p.id) && !assignedProjectIds.includes(p.id))) return;
     const created = requested.filter(p => !projects.some(old => old.id === p.id));
+    if (created.length && (created.length > 1 || deploymentEnterprise?.projectIds.length)) return;
     if (created.length) { if (!deploymentEnterprise || !(canDeploy(currentUser, deploymentEnterprise) || currentUser.role === 'SME Admin' && deploymentEnterprise.id === currentUser.enterpriseId)) return; setEnterprises(prev => prev.map(e => e.id === deploymentEnterprise.id ? { ...e, projectIds: [...e.projectIds, ...created.map(p => p.id)] } : e)); }
     const next = [...projects.filter(p => !assignedProjectIds.includes(p.id)), ...requested];
     for (const project of next) if (JSON.stringify(projects.find(p => p.id === project.id)) !== JSON.stringify(project)) recordAudit('PROJECT_UPDATED', project.id, project.name);
@@ -322,10 +325,14 @@ function FraudGuardDashboardContent({
     (updated: TransactionRisk) => {
       if (currentUser.role === 'Viewer' || currentUser.role === 'Platform Admin' || currentUser.role === 'Implementation Staff') return;
       const previous = transactions.find(tx => tx.id === updated.id);
+      if (!previous) return;
+      const assignee = users.find(u => u.enterpriseId === currentUser.enterpriseId && u.name === updated.assignedInvestigator && (u.role === 'Investigator' || u.id === currentUser.id && u.role === 'Operator'));
+      if (updated.assignedInvestigator && !assignee) return;
+      updated = { ...updated, assignedInvestigatorId: assignee?.id };
       if (!previous || !enterprises.some(e => e.id === currentUser.enterpriseId && e.projectIds.includes(previous.projectId)) || !canUpdateCase(previous, updated, currentUser)) return;
       if (updated.caseStatus === 'Assigned' && !users.some(u => u.enterpriseId === currentUser.enterpriseId && u.role === 'Investigator' && u.name === updated.assignedInvestigator)) return;
       if (currentUser.role === 'Investigator' && (previous.assignedInvestigator !== currentUser.name || !['Assigned', 'Investigating'].includes(previous.caseStatus || '') || !['Investigating', 'Reported'].includes(updated.caseStatus || ''))) return;
-      setAuditLogs(logs => [{ id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: { name: currentUser.name, email: currentUser.email, role: currentUser.role }, action: 'CASE_STATUS_UPDATED', target: updated.caseId || updated.id, ipAddress: 'Demo', details: JSON.stringify({ before: previous.caseStatus, after: updated.caseStatus, report: updated.investigationReport, decision: updated.caseDecision }) }, ...logs]);
+      setAuditLogs(logs => [{ enterpriseId: currentUser.enterpriseId, id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: { name: currentUser.name, email: currentUser.email, role: currentUser.role }, action: 'CASE_STATUS_UPDATED', target: updated.caseId || updated.id, ipAddress: 'Demo', details: JSON.stringify({ before: previous.caseStatus, after: updated.caseStatus, report: updated.investigationReport, decision: updated.caseDecision }) }, ...logs]);
       setTransactions((prev) =>
         prev.map((t) => (t.id === updated.id ? updated : t)),
       );
@@ -352,13 +359,16 @@ function FraudGuardDashboardContent({
     const owner = enterprises.find(e => e.id === currentUser.enterpriseId && e.projectIds.includes(projectId));
     const set = ruleSets.find(s => s.enterpriseId === owner?.id);
     if (!owner || !set?.activeVersion || set.handover?.version !== set.activeVersion) throw Error('Cần tập quy tắc đang hoạt động và đã bàn giao trước khi nhập dữ liệu.');
+    const plan = enterprisePlan(owner);
+    if (!plan) throw Error('Doanh nghiệp chưa được thiết lập gói dịch vụ.');
     const rules = set.versions.find(v => v.version === set.activeVersion)?.rules ?? [];
-    const preview = previewTransactionImport(text, filename, projectId, projects.find(p=>p.id===projectId)?.name ?? owner.name, rules, transactions);
+    const preview = previewTransactionImport(text, filename, projectId, projects.find(p=>p.id===projectId)?.name ?? owner.name, rules, transactions, set.versions.find(v=>v.version===set.activeVersion)?.schema ?? [], plan);
     return preview.map(row=>row.transaction ? {...row, transaction:{...row.transaction, ruleEvaluation:{...row.transaction.ruleEvaluation!, ruleSet:{id:set.id,name:set.name,version:set.activeVersion!}}}} : row);
   };
 
   /* ── Render active view ── */
   const renderView = () => {
+    if (!canAccessView(currentUser.role, activeNavItem)) return <p role="status">{language === "vi" ? "Vai trò này không có quyền truy cập trang này." : "This role cannot access this page."}</p>;
     if (['rule-testing', 'rule-templates'].includes(activeNavItem) && currentUser.role !== 'Implementation Staff') return <p>{language === 'vi' ? 'Chỉ nhân viên triển khai được sử dụng chức năng này.' : 'Deployment staff only.'}</p>;
     if (activeNavItem === 'platform-health' && currentUser.role !== 'Platform Admin') return <p>Platform Admin only.</p>;
     if (['risk-overview', 'recent-alerts', 'active-cases', 'my-cases', 'reports'].includes(activeNavItem) && ['Implementation Staff', 'Platform Admin'].includes(currentUser.role)) return <p>{language === 'vi' ? 'Vai trò này không truy cập nghiệp vụ điều tra của doanh nghiệp.' : 'Enterprise operations are not available to this role.'}</p>;
@@ -367,7 +377,12 @@ function FraudGuardDashboardContent({
         return <MembersView users={users} currentUser={currentUser} onSave={user => {
           if (!canSaveMember(currentUser, user, users)) return false;
           const old = users.find(u => u.id === user.id);
-          if (old?.role === 'Investigator' && user.role !== old.role && enterpriseTransactions.some(tx => tx.scoringSource === 'AI' && tx.assignedInvestigator === old.name && ['Assigned','Investigating','Reported'].includes(tx.caseStatus || ''))) return false;
+          if (old && user.role !== old.role && enterpriseTransactions.some(tx => tx.scoringSource === 'AI' && (tx.assignedInvestigatorId ? tx.assignedInvestigatorId === old.id : tx.assignedInvestigator === old.name) && ['Assigned','Investigating','Reported'].includes(tx.caseStatus || ''))) return false;
+          if (old && old.name !== user.name) setTransactions(prev => prev.map(tx => {
+            if (!enterprises.some(e => e.id === user.enterpriseId && e.projectIds.includes(tx.projectId))) return tx;
+            if (tx.assignedInvestigatorId ? tx.assignedInvestigatorId !== old.id : tx.assignedInvestigator !== old.name) return tx;
+            return { ...tx, assignedInvestigatorId: old.id, assignedInvestigator: user.name };
+          }));
           setUsers(prev => [...prev.filter(u => u.id !== user.id), user]);
           recordAudit('PROJECT_UPDATED', currentUser.enterpriseId!, 'Cập nhật thành viên: ' + user.email + ' / ' + user.role);
           return true;
@@ -380,21 +395,22 @@ function FraudGuardDashboardContent({
           setUsers(prev=>[...prev,{id:crypto.randomUUID(),enterpriseId:id,name:adminName.trim(),email:adminEmail.trim().toLowerCase(),role:'SME Admin',title:'Quản trị doanh nghiệp',avatarLetter:adminName.trim().charAt(0).toUpperCase(),avatarBg:'#7c3aed',description:'Tài khoản quản trị demo của '+name.trim()}]);
           setEnterprises(prev=>[...prev,{id,name:name.trim(),deploymentStaffId:staffId,projectIds:[projectId],specification:{requirements:'',fields:'',conditions:'',sampleJson:'',updatedAt:new Date().toISOString()}}]);
           setProjects(prev=>[...prev,{id:projectId,name:name.trim(),code:id,description:'Phạm vi triển khai chính',environment:'Staging',apiKey:'',quota:{used:0,total:0,resetDate:''},status:'Inactive',createdAt:new Date().toISOString()}]);
-          recordAudit('PROJECT_UPDATED',id,'Tạo workspace và phân công triển khai: '+staffId);return true;
+          recordAudit('PROJECT_UPDATED',id,'Tạo workspace và phân công triển khai: '+staffId,id);return true;
         }} onSave={(id,specification)=>{
           const owner=enterprises.find(e=>e.id===id);if(!owner||!canDeploy(currentUser,owner))return false;
-          if(specification.confirmedAt){try{if(!specification.requirements.trim()||!specification.fields.trim()||!specification.conditions.trim()||parseRuleSetSamples(specification.sampleJson).some(s=>!owner.projectIds.includes(s.projectId)))return false;}catch{return false;}}
+          if(specification.confirmedAt){try{if(!specification.schema?.length)return false;validateDataSchema(specification.schema);parseRuleSetSamples(specification.sampleJson).forEach(sample=>normalizeFields(sample.fields,specification.schema!));if(!specification.requirements.trim()||!specification.fields.trim()||!specification.conditions.trim()||parseRuleSetSamples(specification.sampleJson).some(s=>!owner.projectIds.includes(s.projectId)))return false;}catch{return false;}}
           const spec={...specification,confirmedBy:specification.confirmedAt?currentUser.id:undefined};
           setEnterprises(prev=>prev.map(e=>e.id===id?{...e,specification:spec}:e));
           setRuleSets(prev=>prev.map(set=>set.enterpriseId===id&&set.draft?{...set,draft:{...set.draft,test:undefined}}:set));
           recordAudit('PROJECT_UPDATED',id,spec.confirmedAt?'Xác nhận đặc tả':'Lưu đặc tả nháp');return true;
         }} onOpenRules={id=>{setDeploymentEnterpriseId(id);setActiveNavItem('rule-sets');}} />;
       case "rule-sets":
-        return <RuleSetsView initialEnterpriseId={deploymentEnterpriseId} key={currentUser.id + deploymentEnterpriseId} sets={ruleSets} rules={rules} projects={projects} enterprises={enterprises} currentUser={currentUser} reviewer={currentUser.name} onOpenLibrary={id => { setDeploymentEnterpriseId(id); setActiveNavItem('rule-templates'); }} onAssign={(enterpriseId, staffId) => { if (currentUser.role !== 'Platform Admin' || !DEMO_USERS.some(u => u.id === staffId && u.role === 'Implementation Staff')) return; setEnterprises(prev => prev.map(e => e.id === enterpriseId ? { ...e, deploymentStaffId: staffId } : e)); recordAudit('PROJECT_UPDATED', enterpriseId, 'Phân công triển khai: ' + staffId); }} onChange={(next, event) => { if (!canChangeEnterpriseSets(ruleSets, next, currentUser, enterprises)) return; setRuleSets(next); recordAudit('RULE_UPDATED', 'Enterprise rule sets', event); }} />;
+        return <RuleSetsView initialEnterpriseId={deploymentEnterpriseId} key={currentUser.id + deploymentEnterpriseId} sets={ruleSets} rules={rules} projects={projects} enterprises={enterprises} currentUser={currentUser} reviewer={currentUser.name} onOpenLibrary={id => { setDeploymentEnterpriseId(id); setActiveNavItem('rule-templates'); }} onAssign={(enterpriseId, staffId) => { if (currentUser.role !== 'Platform Admin' || !DEMO_USERS.some(u => u.id === staffId && u.role === 'Implementation Staff')) return; setEnterprises(prev => prev.map(e => e.id === enterpriseId ? { ...e, deploymentStaffId: staffId } : e)); recordAudit('PROJECT_UPDATED', enterpriseId, 'Phân công triển khai: ' + staffId); }} onChange={(next, event) => { if (!canChangeEnterpriseSets(ruleSets, next, currentUser, enterprises)) return; setRuleSets(next); for (const changed of next.filter(set => JSON.stringify(ruleSets.find(old => old.id === set.id)) !== JSON.stringify(set))) recordAudit('RULE_UPDATED', changed.id, event, changed.enterpriseId); }} />;
 
       case "rule-testing":
         return (
           <RuleTestingView
+            schemasByEnterprise={Object.fromEntries(ruleSets.filter(s => s.activeVersion).map(s => [s.enterpriseId, s.versions.find(v => v.version === s.activeVersion)?.schema ?? []]))}
             enterprises={accessibleEnterprises}
             activeRules={activeSetRules(ruleSets.filter(s => accessibleEnterprises.some(e => e.id === s.enterpriseId)))}
             setContext={Object.fromEntries(ruleSets.filter(s => s.activeVersion && accessibleEnterprises.some(e => e.id === s.enterpriseId)).flatMap(s => s.projectIds.map(projectId => [projectId, { id: s.id, name: s.name, version: s.activeVersion! }])))}
@@ -405,9 +421,7 @@ function FraudGuardDashboardContent({
               setTransactions(previous => [...items.filter(item => !previous.some(old => old.id === item.id)).map(item => ({ ...item, projectName: projects.find(project => project.id === item.projectId)?.name ?? item.projectName })), ...previous]);
               recordAudit('ALERT_REVIEWED', 'Sandbox demo', 'Added rule-set evaluation results: ' + items.length);
             }}
-            onPublishRule={(publishedRule) => {
-              changeRules((prev) => [publishedRule, ...prev.filter((r) => r.id !== publishedRule.id)]);
-            }}
+            onOpenDraft={id => { setDeploymentEnterpriseId(id); setActiveNavItem("rule-sets"); }}
           />
         );
       case "recent-alerts":
@@ -437,12 +451,12 @@ function FraudGuardDashboardContent({
             onRulesChange={changeRules}
             initialRules={scopedRules}
             permissions={permissions}
-            onNavigateToTesting={() => setActiveNavItem("rule-testing")}
+            onNavigateToTesting={() => setActiveNavItem("rule-sets")}
           /></>
         );
       case "projects":
         return (<><label className={styles.drawerLabel}>{language === 'vi' ? 'Doanh nghiệp' : 'Enterprise'}<select className={styles.control} value={deploymentEnterprise?.id ?? ''} onChange={e => setDeploymentEnterpriseId(e.target.value)}>{accessibleEnterprises.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>
-          <ProjectsView enterprise={deploymentEnterprise} transactions={transactions}
+          <ProjectsView enterprise={deploymentEnterprise} transactions={transactions} dataSchema={(() => { const set = ruleSets.find(item=>item.enterpriseId===deploymentEnterprise?.id); return set?.activeVersion ? set.versions.find(version=>version.version===set.activeVersion)?.schema : deploymentEnterprise?.specification?.schema; })()}
             initialProjects={projects.filter(p => deploymentEnterprise?.projectIds.includes(p.id))}
             onProjectsChange={action => { const selectedProjects = projects.filter(p => deploymentEnterprise?.projectIds.includes(p.id)); const next = typeof action === 'function' ? action(selectedProjects) : action; changeProjects([...projects.filter(p => assignedProjectIds.includes(p.id) && !deploymentEnterprise?.projectIds.includes(p.id)), ...next]); }}
             permissions={permissions}
@@ -460,7 +474,7 @@ function FraudGuardDashboardContent({
           />
         );
       case "audit-trail":
-        return <AuditTrailView initialLogs={currentUser.role === 'Platform Admin' ? auditLogs : auditLogs.filter(log => log.actor.email === currentUser.email || accessibleEnterprises.some(e => log.target === e.id || log.target === e.name))} />;
+        return <AuditTrailView initialLogs={auditForUser(auditLogs, currentUser, enterprises, transactions)} />;
       case "platform-health":
         return <PlatformHealthView enterprises={enterprises} transactions={transactions} onPlanChange={(id,plan)=>{if(currentUser.role!=='Platform Admin'||!['Free','Subscription'].includes(plan))return;setEnterprises(prev=>prev.map(e=>e.id===id?{...e,plan}:e));recordAudit('PROJECT_UPDATED',id,'Đổi gói demo: '+plan);}} />;
       case "risk-overview":
@@ -658,7 +672,7 @@ function FraudGuardDashboardContent({
           onToggleCollapse={handleToggleSidebar}
         />
         <div className={styles.workspace}>
-          <ProductHeader users={users}
+          <ProductHeader users={users} notificationTransactions={enterpriseTransactions} onOpenNotification={handleReview}
             enterprises={enterprises}
             activeViewTitle={currentViewTitle}
             theme={theme}
@@ -668,7 +682,7 @@ function FraudGuardDashboardContent({
             onNavigate={setActiveNavItem}
           />
           <main className={styles.main}>
-            <p className={styles.muted} role="status">{language === 'vi' ? 'Môi trường demo: dữ liệu, phân quyền và API key chưa kết nối backend.' : 'Demo: data, permissions and API keys are not connected to a backend.'}{storageError && (language === 'vi' ? ' Không thể lưu thay đổi trên trình duyệt.' : ' Browser storage is unavailable.')}</p>
+            {storageError && <p className={styles.muted} role="alert">{language === 'vi' ? 'Không thể lưu thay đổi trên trình duyệt.' : 'Browser storage is unavailable.'}</p>}
             {legacyUnassigned.length > 0 && currentUser.role === 'Platform Admin' && <details className={styles.panel}><summary>{language === 'vi' ? 'Tập rule cũ chưa xác định doanh nghiệp' : 'Unassigned legacy sets'} ({legacyUnassigned.length})</summary><pre className={styles.sandboxJson}>{JSON.stringify(legacyUnassigned, null, 2)}</pre></details>}{renderView()}
           </main>
         </div>

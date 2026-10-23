@@ -42,7 +42,7 @@ export const initialMicroservices: MicroserviceHealth[] = [
     cpuUsage: 19,
     memoryUsage: 42,
     uptime: "99.99% (120d)",
-    details: "Topics: 'txn.ingest', 'scoring.result', 'alert.dispatch'. Consumer lag: 0 msgs.",
+    details: "Topics: 'txn.ingest', 'detection.result', 'alert.dispatch'. Consumer lag: 0 msgs.",
   },
   {
     id: "srv-storage",

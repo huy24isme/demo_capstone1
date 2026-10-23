@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import type { MicroserviceHealth, TransactionRisk } from "./types";
 import {
-  fallbackHourlyTrend,
+
   initialMicroservices,
 
 } from "../../data/fraudguard-platform";
@@ -22,9 +22,11 @@ import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 import { useDialogFocus } from './useDialogFocus';
 
+import { platformSummary } from '@/lib/platform-summary';
 import { enterprisePlan, enterpriseUsage, type Enterprise, type ServicePlan } from '@/data/fraudguard-enterprises';
 export function PlatformHealthView({ enterprises, transactions, onPlanChange }: { enterprises: Enterprise[]; transactions: TransactionRisk[]; onPlanChange: (id: string, plan: ServicePlan) => void }) {
   const { t, language } = useLanguage();
+  const summary = platformSummary(transactions);
   const dateLocale = language === "vi" ? "vi-VN" : "en-US";
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
@@ -45,7 +47,7 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
       <div className={styles.pageHeading}>
         <div>
           <h1>{t.platformHealthView.title}</h1>
-          <p>{language === 'vi' ? 'Số liệu minh họa; chưa có giám sát hoặc đo độ trễ trực tiếp.' : 'Sample metrics; live monitoring and latency measurements are not connected.'}</p>
+          <p>{language === 'vi' ? 'Theo dõi doanh nghiệp và phương pháp đánh giá giao dịch. Dấu — là chỉ số chưa có dữ liệu.' : 'Review enterprises and transaction evaluation methods. — indicates an unavailable metric.'}</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button
@@ -64,7 +66,7 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.platformHealthView.kpis.uptime}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-green)" }}>
-            99.98%
+            —
           </strong>
           <span className={styles.statDescription}>
             {t.platformHealthView.kpis.uptimeDesc}
@@ -73,7 +75,7 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.platformHealthView.kpis.latency}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-blue)" }}>
-            42ms
+            —
           </strong>
           <span className={styles.statDescription}>
             {t.platformHealthView.kpis.latencyDesc}
@@ -82,10 +84,10 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
         <article className={styles.statCard}>
           <div className={styles.statLabel}>{t.platformHealthView.kpis.fallback}</div>
           <strong className={styles.statValue} style={{ color: "var(--security-orange)" }}>
-            1.2%
+            {summary.fallbackRate === null ? '—' : summary.fallbackRate.toFixed(1) + '%'}
           </strong>
           <span className={styles.statDescription}>
-            {t.platformHealthView.kpis.fallbackDesc}
+            {language === 'vi' ? 'Tỷ lệ dự phòng trong lượt AI và dự phòng đã ghi nhận' : 'Fallback share of recorded AI and fallback evaluations'}
           </span>
         </article>
         <article className={styles.statCard}>
@@ -120,7 +122,7 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
             fontSize: 11,
           }}
         >
-          {t.platformHealthView.failoverBadge}
+          {language === 'vi' ? 'Quy tắc dự phòng' : 'Rules fallback'}
         </span>
       </div>
 
@@ -134,11 +136,11 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
             <div className={styles.serviceCardHeader}>
               <div>
                 <h3 className={styles.serviceTitle}>{svc.name}</h3>
-                <span className={styles.serviceType}>{svc.type} · {svc.version}</span>
+                <span className={styles.serviceType}>{svc.type}</span>
               </div>
-              <span className={`${styles.serviceStatusBadge} ${styles.serviceStatusHealthy}`}>
-                <span className={styles.statusPulseHealthy} />
-                {language === 'vi' && svc.status === 'Healthy' ? 'Hoạt động tốt' : svc.status}
+              <span className={styles.serviceStatusBadge}>
+                
+                {language === 'vi' ? 'Chưa có số liệu' : 'No measurements'}
               </span>
             </div>
 
@@ -148,36 +150,36 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
                   {t.platformHealthView.metrics.latency}
                 </span>
                 <span className={styles.serviceMetricVal} style={{ color: "var(--security-blue)" }}>
-                  {svc.latencyMs} ms
+                  —
                 </span>
               </div>
               <div className={styles.serviceMetricItem}>
                 <span className={styles.serviceMetricLabel}>
                   {t.platformHealthView.metrics.throughput}
                 </span>
-                <span className={styles.serviceMetricVal}>{svc.throughput}</span>
+                <span className={styles.serviceMetricVal}>—</span>
               </div>
               <div className={styles.serviceMetricItem}>
                 <span className={styles.serviceMetricLabel}>
                   {t.platformHealthView.metrics.cpuLoad}
                 </span>
-                <span className={styles.serviceMetricVal}>{svc.cpuUsage}%</span>
+                <span className={styles.serviceMetricVal}>—</span>
               </div>
               <div className={styles.serviceMetricItem}>
                 <span className={styles.serviceMetricLabel}>
                   {t.platformHealthView.metrics.memory}
                 </span>
-                <span className={styles.serviceMetricVal}>{svc.memoryUsage}%</span>
+                <span className={styles.serviceMetricVal}>—</span>
               </div>
             </div>
 
             <div className={styles.serviceFooter}>
-              <span>{t.platformHealthView.metrics.uptime}: {svc.uptime}</span>
+              <span>{t.platformHealthView.metrics.uptime}: —</span>
               <button
                 className={styles.button}
                 style={{ fontSize: 11, padding: "3px 8px", minHeight: 26 }}
                 onClick={() => handlePing(svc)}
-                disabled={isPinging[svc.id]}
+                disabled
                 type="button"
               >
                 {isPinging[svc.id]
@@ -189,13 +191,14 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
         ))}
       </div>
 
+      <section className={styles.panel}><h2>{language === 'vi' ? 'Kết luận điều tra đã lưu' : 'Saved investigation conclusions'}</h2><p>{language === 'vi' ? 'Các kết luận này có thể dùng để đối chiếu và chuẩn bị dữ liệu cải thiện AI; chưa đồng nghĩa với việc mô hình đã được huấn luyện lại.' : 'These conclusions support review and preparation of AI improvement data; they do not mean the model has been retrained.'}</p><strong>{summary.feedback.length} {language === 'vi' ? 'kết luận đã xác nhận' : 'confirmed conclusions'}</strong></section>
       {/* Fallback & Traffic Hourly Chart */}
       <section className={styles.panel} style={{ marginBottom: 28 }}>
         <div className={styles.panelHeader} style={{ marginBottom: 14 }}>
           <div>
             <h2>{t.platformHealthView.chart.title}</h2>
             <span className={styles.muted}>
-              {t.platformHealthView.chart.subtitle}
+              {language === 'vi' ? 'Theo thời điểm ghi nhận (UTC)' : 'By recorded timestamp (UTC)'}
             </span>
           </div>
           <div className={styles.legend}>
@@ -213,7 +216,7 @@ export function PlatformHealthView({ enterprises, transactions, onPlanChange }: 
         <div className={styles.chartArea} style={{ height: 260 }}>
           {mounted ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={fallbackHourlyTrend}>
+              <AreaChart data={summary.trend}>
                 <defs>
                   <linearGradient id="aiGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--security-purple)" stopOpacity={0.4} />

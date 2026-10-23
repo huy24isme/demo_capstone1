@@ -1,4 +1,5 @@
 "use client";
+import { normalizeFields, type DataField } from '@/lib/ingestion-validation';
 import { Fragment, useMemo, useState } from 'react';
 import { Play, Upload, Sliders } from 'lucide-react';
 import type { ProjectItem, RuleTemplate, TransactionRisk } from './types';
@@ -9,7 +10,7 @@ import { RiskLevelBadge } from './RiskLevelBadge';
 import { useLanguage } from './i18n/LanguageContext';
 import styles from './SecurityDashboard.module.css';
 const EXAMPLE = JSON.stringify([{ id: 'sample-1', ref: 'DEMO-TX-1', projectId: 'proj-abc-cod', transactionType: 'payment', fields: { amount: 12500000, currency: 'VND', channel: 'COD', 'device.is_new': true, 'velocity.failed_tx.24h': 4, 'identity.address_reuse_count': 3, 'velocity.tx_count.1h': 1, 'velocity.tx_count.24h': 1, 'geo.distance_km': 0, time_since_last_tx_min: 60, 'device.is_blacklisted': false, 'entity.age_days': 100 } }], null, 2);
-export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions, lockedProjectId, allowedProjectIds, enterpriseLabel, draftMode, initialSamples, onTestCompleted, onTestInvalidated, setContext }: { allowedProjectIds?: string[]; enterpriseLabel?: string; initialSamples?: RuleSetSample[]; lockedProjectId?: string; draftMode?: boolean; onTestCompleted?: (samples: RuleSetSample[]) => void; onTestInvalidated?: () => void; setContext?: Record<string, { id: string; name: string; version: number }>; rules: RuleTemplate[]; projects?: ProjectItem[]; onAddDemoTransactions?: (transactions: TransactionRisk[]) => void }) {
+export function RuleSetTestingView({ rules, validationSchema, projects = [], onAddDemoTransactions, lockedProjectId, allowedProjectIds, enterpriseLabel, draftMode, initialSamples, onTestCompleted, onTestInvalidated, setContext }: { validationSchema?: DataField[]; allowedProjectIds?: string[]; enterpriseLabel?: string; initialSamples?: RuleSetSample[]; lockedProjectId?: string; draftMode?: boolean; onTestCompleted?: (samples: RuleSetSample[]) => void; onTestInvalidated?: () => void; setContext?: Record<string, { id: string; name: string; version: number }>; rules: RuleTemplate[]; projects?: ProjectItem[]; onAddDemoTransactions?: (transactions: TransactionRisk[]) => void }) {
   const { language } = useLanguage(); const vi = language === 'vi';
   const [input, setInput] = useState(() => initialSamples ? JSON.stringify(initialSamples, null, 2) : (lockedProjectId || allowedProjectIds?.length) ? JSON.stringify(JSON.parse(EXAMPLE).map((s: RuleSetSample) => ({ ...s, projectId: lockedProjectId ?? allowedProjectIds?.[0] })), null, 2) : EXAMPLE);
   const [fileError, setFileError] = useState('');
@@ -20,7 +21,7 @@ export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions
   const [added, setAdded] = useState(false);
   const duplicateRules = new Set(rules.map(r => r.id)).size !== rules.length;
   const ruleError = duplicateRules ? (vi ? 'Tập quy tắc đang chọn có mã bị trùng. Mở Tập rule doanh nghiệp để kiểm tra bản nháp, kiểm thử và phát hành lại.' : 'The selected rule set contains duplicate IDs. Review its draft, retest and publish a corrected release.') : '';
-  const preview = useMemo(() => { try { return { samples: parseRuleSetSamples(input), error: '' }; } catch (e) { return { samples: [], error: e instanceof Error ? e.message : String(e) }; } }, [input]);
+  const preview = useMemo(() => { try { const parsed = parseRuleSetSamples(input); parsed.forEach(sample => normalizeFields(sample.fields, validationSchema ?? [])); return { samples: parsed, error: '' }; } catch (e) { return { samples: [], error: e instanceof Error ? e.message : String(e) }; } }, [input, validationSchema]);
   const projectIds = [...new Set([...projects.map(p => p.id), ...preview.samples.map(s => s.projectId), ...rules.flatMap(r => r.appliesTo.projects).filter(id => id !== '*')])];
   const samples = preview.samples.filter(s => allowedProjectIds ? allowedProjectIds.includes(s.projectId) : s.projectId === projectId);
   const outsideScope = !!allowedProjectIds && preview.samples.some(s => !allowedProjectIds.includes(s.projectId));
@@ -65,6 +66,6 @@ export function RuleSetTestingView({ rules, projects = [], onAddDemoTransactions
       </tbody></table></div>
       {current && !draftMode && <div className={styles.sandboxFooter}><button type="button" className={styles.button} disabled={added || !onAddDemoTransactions} onClick={() => { if (!added && onAddDemoTransactions) { onAddDemoTransactions(current.transactions); setAdded(true); } }}>{added ? (vi ? 'Đã thêm vào dashboard demo' : 'Added to demo dashboard') : (vi ? 'Thêm kết quả vào dashboard demo' : 'Add results to demo dashboard')}</button><p className={styles.muted}>{vi ? 'Chỉ giao dịch bất thường tạo cảnh báo. Doanh nghiệp chủ động tạo case và quyết định xử lý.' : 'Only abnormal transactions create alerts. The enterprise creates cases and decides what to do.'}</p></div>}
     </section>
-    <p className={styles.muted}>{vi ? 'Sandbox dùng dữ liệu mẫu, chưa kết nối API thật. Các trường lịch sử cần được cung cấp trong bộ mẫu. Không có nhãn kỳ vọng thì không tính độ chính xác.' : 'Sandbox uses sample data, with no live API. Historical fields must be supplied. Accuracy is not computed without expected labels.'}</p>
+    <p className={styles.muted}>{vi ? 'Cung cấp các trường lịch sử cần thiết trong bộ mẫu. Chỉ tính độ chính xác khi có nhãn kỳ vọng để đối chiếu.' : 'Include the required historical fields in the sample data. Accuracy requires expected labels for comparison.'}</p>
   </div>;
 }

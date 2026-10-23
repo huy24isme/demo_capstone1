@@ -1,3 +1,31 @@
+export interface DataField { name: string; type: 'string' | 'number' | 'boolean'; required: boolean }
+export function validateDataSchema(schema: DataField[]) {
+  const names = new Set<string>();
+  for (const field of schema) {
+    if (!/^[a-zA-Z_][\w.]*$/.test(field.name) || names.has(field.name) || !['string', 'number', 'boolean'].includes(field.type) || typeof field.required !== 'boolean') throw Error('Tên trường phải hợp lệ, không trùng và có kiểu dữ liệu.');
+    names.add(field.name);
+  }
+}
+export function normalizeFields(fields: Record<string, unknown>, schema: DataField[], coerce = false) {
+  validateDataSchema(schema);
+  const normalized = { ...fields };
+  for (const field of schema) {
+    let value = normalized[field.name];
+    if (value === undefined || value === null || value === '') {
+      if (field.required) throw Error('Thiếu trường bắt buộc: ' + field.name);
+      delete normalized[field.name]; continue;
+    }
+    if (coerce && typeof value === 'string') {
+      const text = value.trim();
+      if (field.type === 'number' && /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(text)) value = Number(text);
+      if (field.type === 'boolean' && ['true', 'false'].includes(text)) value = text === 'true';
+    }
+    if (typeof value !== field.type || typeof value === 'number' && !Number.isFinite(value)) throw Error('Sai kiểu dữ liệu: ' + field.name + ' (' + field.type + ')');
+    normalized[field.name] = value;
+  }
+  return normalized;
+}
+
 export function parseIngestionRows(text: string, filename: string): Record<string, unknown>[] {
   let rows: Record<string, unknown>[];
   if (filename.toLowerCase().endsWith('.json')) rows = JSON.parse(text);

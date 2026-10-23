@@ -1,5 +1,5 @@
-import type { TransactionRisk, UserProfile } from '../components/fraudguard-dashboard/types';
-export interface DeploymentSpecification { requirements: string; fields: string; conditions: string; sampleJson: string; updatedAt: string; confirmedAt?: string; confirmedBy?: string }
+import type { AuditLogEntry, TransactionRisk, UserProfile } from '../components/fraudguard-dashboard/types';
+export interface DeploymentSpecification { schema?: import('../lib/ingestion-validation').DataField[]; requirements: string; fields: string; conditions: string; sampleJson: string; updatedAt: string; confirmedAt?: string; confirmedBy?: string }
 export type ServicePlan = "Free" | "Subscription";
 export interface Enterprise { plan?: ServicePlan; specification?: DeploymentSpecification; id: string; name: string; projectIds: string[]; deploymentStaffId: string }
 // Synthetic ownership and staff assignments used by the local demo.
@@ -13,7 +13,20 @@ export const demoEnterprises: Enterprise[] = [
 export function canDeploy(user: UserProfile, enterprise: Enterprise) { return user.role === 'Implementation Staff' && user.id === enterprise.deploymentStaffId; }
 export function transactionsForEnterprise(transactions: TransactionRisk[], user: UserProfile, enterprises: Enterprise[]) {
  const projects = enterprises.find(e => e.id === user.enterpriseId)?.projectIds ?? [];
- return transactions.filter(tx => projects.includes(tx.projectId));
+ if (!['SME Admin', 'Operator', 'Investigator'].includes(user.role)) return [];
+ return transactions.filter(tx => projects.includes(tx.projectId) && (user.role !== 'Investigator' ||
+   tx.scoringSource === 'AI' && !!tx.caseId && (tx.assignedInvestigatorId ? tx.assignedInvestigatorId === user.id : tx.assignedInvestigator === user.name)));
+}
+
+export function auditForUser(logs: AuditLogEntry[], user: UserProfile, enterprises: Enterprise[], transactions: TransactionRisk[]) {
+ if (user.role === 'Platform Admin') return logs;
+ if (!['Implementation Staff', 'SME Admin', 'Operator'].includes(user.role)) return [];
+ const allowed = visibleEnterprises(user, enterprises);
+ return logs.filter(log => {
+   if (log.enterpriseId) return allowed.some(e => e.id === log.enterpriseId);
+   const transaction = transactions.find(tx => tx.id === log.target || tx.caseId === log.target);
+   return allowed.some(e => log.target === e.id || log.target === e.name || e.projectIds.includes(log.target) || !!transaction && e.projectIds.includes(transaction.projectId));
+ });
 }
 export function visibleEnterprises(user: UserProfile, enterprises: Enterprise[]) {
  if (user.role === 'Platform Admin') return enterprises;

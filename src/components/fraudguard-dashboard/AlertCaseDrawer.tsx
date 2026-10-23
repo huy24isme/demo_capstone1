@@ -172,13 +172,12 @@ export function AlertCaseDrawer({
 
   // Role permissions
   const isPlatformAdmin = currentRole === "Platform Admin";
-  const isSMEAdmin = currentRole === "SME Admin";
   const isAIAlert = transaction.scoringSource === "AI" && transaction.riskLevel === "Abnormal";
-  const isOperation = isAIAlert && (currentRole === "Operator" || isSMEAdmin) && permissions?.canManageCases !== false;
+  const isOperation = isAIAlert && currentRole === "Operator" && permissions?.canManageCases !== false;
   const isInvestigator = currentRole === "Investigator";
   const canWorkOnCase = isAIAlert && (isInvestigator || currentRole === "Operator") && transaction.assignedInvestigator === currentUserName;
   const canSelfInvestigate = isAIAlert && currentRole === "Operator" && (!transaction.caseId || transaction.caseStatus === "Open");
-  const isViewer = currentRole === "Viewer" || isPlatformAdmin || permissions?.isReadOnly;
+  const isViewer = currentRole === "Viewer" || currentRole === "SME Admin" || isPlatformAdmin || permissions?.isReadOnly;
 
   const currentStep = getWorkflowStepIndex(transaction.caseStatus);
 
@@ -567,7 +566,8 @@ export function AlertCaseDrawer({
               <span className={styles.drawerLabel}>{t.drawer.scoringSource}</span>
               <ScoringSourceBadge source={transaction.scoringSource} />
             </div>
-            {transaction.confidence != null && (
+            {transaction.scoringSource === 'AI' && <div className={styles.drawerRow}><span className={styles.drawerLabel}>{language === 'vi' ? 'Phiên bản mô hình' : 'Model version'}</span><span>{transaction.modelVersion || (language === 'vi' ? 'Chưa có thông tin' : 'Not provided')}</span></div>}
+            {transaction.scoringSource === 'AI' && transaction.confidence != null && (
               <div className={styles.drawerRow}>
                 <span className={styles.drawerLabel}>{t.drawer.confidence}</span>
                 <span style={{ color: "var(--security-blue)", fontWeight: 600 }}>

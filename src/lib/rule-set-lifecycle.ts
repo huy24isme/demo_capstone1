@@ -3,11 +3,13 @@ import { canDeploy, type Enterprise } from '../data/fraudguard-enterprises';
 import type { UserProfile } from '../components/fraudguard-dashboard/types';
 import { candidateRule } from './rule-lifecycle';
 import { evaluateRuleSet, type RuleSetSample } from './rule-set';
+import { normalizeFields, type DataField } from './ingestion-validation';
 export interface SetTest {
   signature: string; testedAt: string; samples: RuleSetSample[];
   results: RuleSetEvaluation[]; labeled: number; mismatched: number; complete: boolean;
 }
 export interface SetVersion {
+  schema?: DataField[];
   version: number; rules: RuleTemplate[]; publishedAt: string; reviewer: string; reviewNote: string; test: SetTest;
 }
 export interface ManagedRuleSet {
@@ -29,9 +31,10 @@ export function snapshotRules(rules: RuleTemplate[], scope: string | string[]): 
     return { ...rule, version: source.draft || source.status !== 'Published' ? `${rule.version} [draft]` : rule.version, status: 'Published', enabled: true, appliesTo: { ...rule.appliesTo, projects: candidate.appliesTo.projects.includes('*') ? [...projectIds] : candidate.appliesTo.projects.filter(id => projectIds.includes(id)) } };
   });
 }
-export function testDraft(set: ManagedRuleSet, samples: RuleSetSample[]): SetTest {
+export function testDraft(set: ManagedRuleSet, samples: RuleSetSample[], schema: DataField[] = []): SetTest {
   if (!set.draft?.rules.length || !samples.length || samples.some(s => !set.projectIds.includes(s.projectId))) throw new Error('Cần bản nháp có rule và dữ liệu đúng project.');
   if (new Set(set.draft.rules.map(r => r.id)).size !== set.draft.rules.length) throw new Error('Tập có quy tắc trùng mã. Bỏ chọn quy tắc bị trùng, chọn lại và kiểm thử.');
+  samples.forEach(sample => normalizeFields(sample.fields, schema));
   const results = samples.map(sample => evaluateRuleSet(set.draft!.rules, sample));
   const covered = new Set(results.flatMap(r => r.rules.filter(rule => rule.outcome !== 'Error').map(rule => rule.id)));
   return { signature: setSignature(set.draft.rules), testedAt: new Date().toISOString(), samples: structuredClone(samples), results,
@@ -43,10 +46,11 @@ export function canPublishSet(set: ManagedRuleSet) {
   const test = set.draft?.test;
   return !!(set.draft?.rules.length && new Set(set.draft.rules.map(r => r.id)).size === set.draft.rules.length && test && test.signature === setSignature(set.draft.rules) && test.complete && test.mismatched === 0);
 }
-export function publishSet(set: ManagedRuleSet, reviewer: string, reviewNote: string): ManagedRuleSet {
+export function publishSet(set: ManagedRuleSet, reviewer: string, reviewNote: string, schema: DataField[] = []): ManagedRuleSet {
   if (!canPublishSet(set) || !reviewer.trim() || !reviewNote.trim()) throw new Error('Cần kiểm thử hợp lệ và xác nhận review trước khi phát hành.');
+  set.draft!.test!.samples.forEach(sample => normalizeFields(sample.fields, schema));
   const version = Math.max(0, ...set.versions.map(v => v.version)) + 1;
-  const release: SetVersion = { version, rules: structuredClone(set.draft!.rules), test: structuredClone(set.draft!.test!), reviewer, reviewNote: reviewNote.trim(), publishedAt: new Date().toISOString() };
+  const release: SetVersion = { version, schema: structuredClone(schema), rules: structuredClone(set.draft!.rules), test: structuredClone(set.draft!.test!), reviewer, reviewNote: reviewNote.trim(), publishedAt: new Date().toISOString() };
   return { ...set, draft: undefined, versions: [...set.versions, release] };
 }
 export function activateSet(sets: ManagedRuleSet[], id: string, version: number): ManagedRuleSet[] {
@@ -56,6 +60,14 @@ export function activateSet(sets: ManagedRuleSet[], id: string, version: number)
 }
 export function activeSetRules(sets: ManagedRuleSet[]): RuleTemplate[] {
   return sets.flatMap(s => s.versions.find(v => v.version === s.activeVersion)?.rules ?? []);
+}
+
+export function handoverSet(set: ManagedRuleSet, version: number, by: string): ManagedRuleSet {
+  const release = set.versions.find(item => item.version === version);
+  if (!release || !by.trim() || !canPublishSet({ ...set, draft: { rules: release.rules, test: release.test } })) {
+    throw new Error('Phiên bản chưa có kiểm thử hợp lệ. Tạo bản nháp và kiểm thử lại trước khi bàn giao.');
+  }
+  return { ...set, activeVersion: version, handover: { version, by: by.trim(), at: new Date().toISOString() } };
 }
 
 export function canChangeEnterpriseSets(previous: ManagedRuleSet[], next: ManagedRuleSet[], user: UserProfile, enterprises: Enterprise[]) {

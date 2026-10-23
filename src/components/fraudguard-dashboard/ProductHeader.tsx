@@ -6,12 +6,16 @@ import type { Enterprise } from '@/data/fraudguard-enterprises';
 import { getSectionsForRole } from './Sidebar';
 import { useDialogFocus } from './useDialogFocus';
 import type { SecondaryView, UserProfile } from "./types";
+import { NotificationCenter } from './NotificationCenter';
+import type { TransactionRisk } from './types';
 import { RoleSwitcher } from "./RoleSwitcher";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { useLanguage } from "./i18n/LanguageContext";
 import styles from "./SecurityDashboard.module.css";
 
 interface ProductHeaderProps {
+  notificationTransactions?: TransactionRisk[];
+  onOpenNotification?: (tx: TransactionRisk) => void;
   users: UserProfile[];
   enterprises: Enterprise[];
   activeViewTitle?: string;
@@ -24,6 +28,7 @@ interface ProductHeaderProps {
 
 export function ProductHeader({
   users,
+  notificationTransactions = [], onOpenNotification,
   enterprises,
   activeViewTitle = "Risk Overview",
   theme = "dark",
@@ -54,6 +59,7 @@ export function ProductHeader({
           <RoleSwitcher users={users} currentUser={currentUser} onSwitchUser={onSwitchUser} enterprises={enterprises} />
         )}
 
+        {currentUser && onOpenNotification && ['SME Admin','Operator','Investigator'].includes(currentUser.role) && <NotificationCenter key={currentUser.id} userId={currentUser.id} transactions={notificationTransactions} onOpen={onOpenNotification} />}
         {/* Language Toggle Button */}
         <button
           className={styles.languageToggleBtn}

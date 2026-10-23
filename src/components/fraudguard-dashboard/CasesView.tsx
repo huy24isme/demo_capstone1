@@ -122,6 +122,7 @@ export function CasesView({
   };
 
   const isInvestigator = currentRole === "Investigator";
+  const canOperate = currentRole === 'Operator' && permissions?.canManageCases !== false;
   const investigatorName = currentUserName || "Nguyễn Văn An";
 
   // All valid cases across the system
@@ -279,6 +280,7 @@ export function CasesView({
   }, [allCases, opTab, filterProject]);
 
   const handleQuickAssign = (tx: TransactionRisk, assignTarget: string) => {
+    if (!canOperate) return;
     const updated: TransactionRisk = {
       ...tx,
       assignedInvestigator: assignTarget,
@@ -1043,7 +1045,7 @@ export function CasesView({
                       width: 165,
                     }}
                   >
-                    {isUnassigned && (
+                    {canOperate && isUnassigned && (
                       <select
                         className={styles.control}
                         value=""
@@ -1082,7 +1084,7 @@ export function CasesView({
                       </select>
                     )}
 
-                    {isReported && (
+                    {canOperate && isReported && (
                       <button
                         className={styles.btnPrimary}
                         onClick={() => onReview(tx)}
